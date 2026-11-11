@@ -23,7 +23,7 @@ const DEFAULT_ROLES: {
 	{
 		name: 'Moderatore',
 		description: 'Gestisce gli account e consulta il registro.',
-		capabilities: ['admin.access', 'users.view', 'users.manage', 'audit.view']
+		capabilities: ['admin.access', 'users.view', 'users.manage', 'audit.view', 'chat.moderate']
 	},
 	{
 		name: 'Master',

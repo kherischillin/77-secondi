@@ -14,6 +14,8 @@ COPY --from=build /app/package.json ./
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/build ./build
 COPY --from=build /app/drizzle ./drizzle
+# Cartella delle immagini caricate (mappe, luoghi): montata su un volume in docker-compose.
+RUN mkdir -p /app/uploads && chown node:node /app/uploads
 USER node
 EXPOSE 3000
 CMD ["node", "build"]

@@ -39,5 +39,13 @@ export const AUDIT_LABELS: Record<string, string> = {
 	'role.create': 'Creazione ruolo',
 	'role.update': 'Modifica ruolo',
 	'role.delete': 'Cancellazione ruolo',
-	'settings.update': 'Modifica impostazioni'
+	'settings.update': 'Modifica impostazioni',
+	'map.create': 'Creazione mappa',
+	'map.update': 'Modifica mappa',
+	'map.delete': 'Cancellazione mappa',
+	'location.create': 'Creazione luogo',
+	'location.update': 'Modifica luogo',
+	'location.delete': 'Cancellazione luogo',
+	'chat.hide': 'Messaggio nascosto in chat',
+	'chat.unhide': 'Messaggio ripristinato in chat'
 };

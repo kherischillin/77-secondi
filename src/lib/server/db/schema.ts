@@ -16,6 +16,7 @@ import {
 	jsonb,
 	pgTable,
 	primaryKey,
+	real,
 	text,
 	timestamp,
 	uniqueIndex
@@ -144,7 +145,103 @@ export const auditLog = pgTable(
 	]
 );
 
+// ---------------------------------------------------------------------------
+// Mondo di gioco
+// ---------------------------------------------------------------------------
+
+/** Mappe: immagini su cui sono posizionati i luoghi. */
+export const maps = pgTable('maps', {
+	id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+	name: text('name').notNull(),
+	description: text('description').notNull().default(''),
+	/** Nome del file immagine caricato (servito da /media/...). */
+	image: text('image'),
+	/** La mappa su cui arrivano i personaggi al primo ingresso. */
+	isStart: boolean('is_start').notNull().default(false),
+	sortOrder: integer('sort_order').notNull().default(0),
+	createdAt: createdAt()
+});
+
+/**
+ * Luoghi. Un luogo di tipo "chat" è una locazione dove si gioca;
+ * un luogo di tipo "map_link" è un collegamento verso un'altra mappa (es. "Porta della città").
+ */
+export const locations = pgTable(
+	'locations',
+	{
+		id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+		mapId: integer('map_id')
+			.notNull()
+			.references(() => maps.id, { onDelete: 'cascade' }),
+		name: text('name').notNull(),
+		description: text('description').notNull().default(''),
+		image: text('image'),
+		kind: text('kind', { enum: ['chat', 'map_link'] }).notNull().default('chat'),
+		linkedMapId: integer('linked_map_id').references(() => maps.id, { onDelete: 'set null' }),
+		/** Posizione sulla mappa, in percentuale (0-100) della larghezza e dell'altezza. */
+		x: real('x'),
+		y: real('y'),
+		isActive: boolean('is_active').notNull().default(true),
+		sortOrder: integer('sort_order').notNull().default(0),
+		createdAt: createdAt()
+	},
+	(t) => [index('locations_map_idx').on(t.mapId)]
+);
+
+/** Messaggi della chat di un luogo. */
+export const chatMessages = pgTable(
+	'chat_messages',
+	{
+		id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+		locationId: integer('location_id')
+			.notNull()
+			.references(() => locations.id, { onDelete: 'cascade' }),
+		/** Personaggio che scrive (null per i messaggi di sistema). */
+		characterId: integer('character_id').references(() => characters.id, { onDelete: 'set null' }),
+		/** Account che ha scritto: resta tracciato anche per i messaggi Master e PNG. */
+		authorUserId: integer('author_user_id').references(() => users.id, { onDelete: 'set null' }),
+		kind: text('kind', { enum: ['action', 'whisper', 'master', 'npc', 'dice', 'system'] }).notNull(),
+		/** Tag di posizione dentro il luogo, es. "TAVOLO VERDE". */
+		tag: text('tag'),
+		/** Nome mostrato per i PNG. */
+		npcName: text('npc_name'),
+		/** Destinatario dei sussurri. */
+		recipientCharacterId: integer('recipient_character_id').references(() => characters.id, {
+			onDelete: 'set null'
+		}),
+		body: text('body').notNull(),
+		/** Dati aggiuntivi (es. risultati dei dadi). */
+		meta: jsonb('meta'),
+		createdAt: createdAt(),
+		deletedAt: timestamp('deleted_at', { withTimezone: true }),
+		deletedByUserId: integer('deleted_by_user_id').references(() => users.id, { onDelete: 'set null' })
+	},
+	(t) => [
+		index('chat_messages_location_idx').on(t.locationId, t.id),
+		index('chat_messages_character_idx').on(t.characterId)
+	]
+);
+
+/** Dove si trova ogni personaggio e quando è stato visto l'ultima volta. */
+export const characterPresence = pgTable(
+	'character_presence',
+	{
+		characterId: integer('character_id')
+			.primaryKey()
+			.references(() => characters.id, { onDelete: 'cascade' }),
+		mapId: integer('map_id').references(() => maps.id, { onDelete: 'set null' }),
+		locationId: integer('location_id').references(() => locations.id, { onDelete: 'set null' }),
+		lastSeenAt: timestamp('last_seen_at', { withTimezone: true }).notNull().defaultNow(),
+		/** Ultimo intervento in chat: serve a mostrare la turnazione. */
+		lastPostAt: timestamp('last_post_at', { withTimezone: true })
+	},
+	(t) => [index('character_presence_location_idx').on(t.locationId)]
+);
+
 export type User = typeof users.$inferSelect;
 export type Character = typeof characters.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
 export type Role = typeof roles.$inferSelect;
+export type GameMap = typeof maps.$inferSelect;
+export type Location = typeof locations.$inferSelect;
+export type ChatMessage = typeof chatMessages.$inferSelect;

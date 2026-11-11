@@ -12,13 +12,17 @@ Il proprietario del progetto non programma: tutto il codice lo scrive Claude. Sp
 - Regola anti-abuso: non si concedono permessi che non si hanno, non si agisce su chi ha più poteri (src/lib/server/admin-rules.ts).
 - Azioni rilevanti: scrivere nel registro con `audit()` e aggiungere l'etichetta in `AUDIT_LABELS`.
 - Schema DB: modificare `src/lib/server/db/schema.ts`, poi `npm run db:generate`. Le migrazioni si applicano all'avvio.
+- Nessun modulo server deve leggere variabili d'ambiente o aprire il DB al momento dell'import: `npm run build` (anche in Docker) importa i moduli senza DATABASE_URL. `db` è un proxy pigro.
+- Tempo reale: Server-Sent Events (`/gioco/luogo/[id]/eventi`) + hub in memoria (`src/lib/server/realtime.ts`). I messaggi si inviano con form action `?/invia`. La visibilità (sussurri, nascosti) si applica sia nello storico sia negli eventi.
+- Design della chat basato sulle linee guida "Play by chat" salvate nel Project: niente tipo fuori gioco, Master/PNG con permesso, tag di posizione, turnazione nei presenti.
+- Immagini: `saveImage()` controlla i magic bytes, nomi casuali, servite da `/media/[name]`. In Docker stanno nel volume `immagini`.
 
 ## Verifiche prima di consegnare
 `npm run check`, `npm test`, `npm run build`, e una prova reale dei flussi nel browser.
 
 ## Roadmap
 1. ✅ Fondamenta: account, personaggi, sessioni, ruoli/permessi, gestione.
-2. Mondo e chat in tempo reale (mappe, luoghi, WebSocket, tipi di intervento, dadi, presenti).
+2. ✅ Mondo e chat in tempo reale (mappe, luoghi, SSE, tipi di intervento, dadi, presenti, moderazione).
 3. Scheda e regole (statistiche dinamiche, abilità, oggetti, PX).
 4. Social (messaggi privati, bacheche, gilde).
 5. Strumenti master (esiti, giocate, moderazione).

@@ -27,9 +27,16 @@ services:
       DATABASE_URL: postgres://gdr:gdr@db:5432/gdr
       ORIGIN: http://localhost:3000
       PORT: 3000
+      UPLOAD_DIR: /app/uploads
+      # Dimensione massima di un invio (le immagini possono arrivare a 5 MB).
+      BODY_SIZE_LIMIT: 6M
+    volumes:
+      - immagini:/app/uploads
     ports:
       - '3000:3000'
 
 volumes:
   # I dati del gioco restano qui anche se spegni o ricostruisci i container.
   dati-db:
+  # Le immagini caricate dal pannello (mappe, luoghi).
+  immagini:

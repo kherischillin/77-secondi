@@ -9,6 +9,7 @@
 			{ href: '/gestione', label: 'Panoramica', cap: 'admin.access' },
 			{ href: '/gestione/utenti', label: 'Account', cap: 'users.view' },
 			{ href: '/gestione/ruoli', label: 'Ruoli', cap: 'roles.manage' },
+			{ href: '/gestione/mondo', label: 'Mappe e luoghi', cap: 'world.manage' },
 			{ href: '/gestione/impostazioni', label: 'Impostazioni', cap: 'settings.manage' },
 			{ href: '/gestione/registro', label: 'Registro attività', cap: 'audit.view' }
 		].filter((l) => data.adminCapabilities.includes(l.cap))

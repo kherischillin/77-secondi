@@ -22,6 +22,7 @@ export const CAPABILITY_GROUPS = [
 		capabilities: {
 			'chat.master': 'Intervenire in chat come Master',
 			'chat.npc': 'Intervenire in chat come PNG',
+			'chat.moderate': 'Nascondere messaggi in chat (moderazione)',
 			'characters.manage': 'Modificare i personaggi altrui',
 			'world.manage': 'Gestire mappe e luoghi'
 		}
