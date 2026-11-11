@@ -19,7 +19,8 @@ import {
 	real,
 	text,
 	timestamp,
-	uniqueIndex
+	uniqueIndex,
+	type AnyPgColumn
 } from 'drizzle-orm/pg-core';
 
 const createdAt = () => timestamp('created_at', { withTimezone: true }).notNull().defaultNow();
@@ -55,6 +56,20 @@ export const characters = pgTable(
 		name: text('name').notNull(),
 		surname: text('surname'),
 		bio: text('bio'),
+		/** Scheda: aspetto fisico (l'unica parte che si "vede" in gioco). */
+		appearance: text('appearance'),
+		/** Scheda: carattere e modi di fare. */
+		personality: text('personality'),
+		/** Scheda: storia passata. Pubblica o riservata secondo le regole del gioco. */
+		background: text('background'),
+		/** Immagine del presta-volto. */
+		portrait: text('portrait'),
+		/** Nome del presta-volto (attore, illustrazione...). */
+		portraitCredit: text('portrait_credit'),
+		/** Il giocatore ha già distribuito i punti iniziali delle caratteristiche. */
+		statsAllocated: boolean('stats_allocated').notNull().default(false),
+		/** Punti esperienza già spesi per migliorare il personaggio. */
+		xpSpent: integer('xp_spent').notNull().default(0),
 		createdAt: createdAt(),
 		lastPlayedAt: timestamp('last_played_at', { withTimezone: true }),
 		/** Cancellazione "morbida": il PG sparisce dal gioco ma resta nei log e nelle giocate. */
@@ -200,7 +215,9 @@ export const chatMessages = pgTable(
 		characterId: integer('character_id').references(() => characters.id, { onDelete: 'set null' }),
 		/** Account che ha scritto: resta tracciato anche per i messaggi Master e PNG. */
 		authorUserId: integer('author_user_id').references(() => users.id, { onDelete: 'set null' }),
-		kind: text('kind', { enum: ['action', 'whisper', 'master', 'npc', 'dice', 'system'] }).notNull(),
+		kind: text('kind', { enum: ['action', 'whisper', 'master', 'npc', 'dice', 'check', 'system'] }).notNull(),
+		/** Quest in corso quando il messaggio è stato scritto (per le giocate e i PX). */
+		questId: integer('quest_id').references((): AnyPgColumn => quests.id, { onDelete: 'set null' }),
 		/** Tag di posizione dentro il luogo, es. "TAVOLO VERDE". */
 		tag: text('tag'),
 		/** Nome mostrato per i PNG. */
@@ -238,6 +255,102 @@ export const characterPresence = pgTable(
 	(t) => [index('character_presence_location_idx').on(t.locationId)]
 );
 
+// ---------------------------------------------------------------------------
+// Regole di gioco (sistema ibrido: descrittivo nel gioco libero, numerico in quest)
+// ---------------------------------------------------------------------------
+
+/** Caratteristiche del personaggio (es. Forza, Destrezza), definite dallo staff. */
+export const stats = pgTable('stats', {
+	id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+	name: text('name').notNull(),
+	description: text('description').notNull().default(''),
+	/** Valore di partenza, prima di distribuire i punti. */
+	minValue: integer('min_value').notNull().default(1),
+	/** Valore massimo raggiungibile. */
+	maxValue: integer('max_value').notNull().default(10),
+	sortOrder: integer('sort_order').notNull().default(0),
+	createdAt: createdAt()
+});
+
+/** Abilità, eventualmente legate a una caratteristica che si somma nelle prove. */
+export const skills = pgTable('skills', {
+	id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+	name: text('name').notNull(),
+	description: text('description').notNull().default(''),
+	statId: integer('stat_id').references(() => stats.id, { onDelete: 'set null' }),
+	maxRank: integer('max_rank').notNull().default(5),
+	sortOrder: integer('sort_order').notNull().default(0),
+	createdAt: createdAt()
+});
+
+export const characterStats = pgTable(
+	'character_stats',
+	{
+		characterId: integer('character_id')
+			.notNull()
+			.references(() => characters.id, { onDelete: 'cascade' }),
+		statId: integer('stat_id')
+			.notNull()
+			.references(() => stats.id, { onDelete: 'cascade' }),
+		value: integer('value').notNull()
+	},
+	(t) => [primaryKey({ columns: [t.characterId, t.statId] })]
+);
+
+export const characterSkills = pgTable(
+	'character_skills',
+	{
+		characterId: integer('character_id')
+			.notNull()
+			.references(() => characters.id, { onDelete: 'cascade' }),
+		skillId: integer('skill_id')
+			.notNull()
+			.references(() => skills.id, { onDelete: 'cascade' }),
+		rank: integer('rank').notNull()
+	},
+	(t) => [primaryKey({ columns: [t.characterId, t.skillId] })]
+);
+
+/** Quest: episodio di trama guidato da un Master in un luogo. Durante la quest vale il sistema numerico. */
+export const quests = pgTable(
+	'quests',
+	{
+		id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+		locationId: integer('location_id')
+			.notNull()
+			.references(() => locations.id, { onDelete: 'cascade' }),
+		title: text('title').notNull(),
+		masterUserId: integer('master_user_id').references(() => users.id, { onDelete: 'set null' }),
+		masterCharacterId: integer('master_character_id').references(() => characters.id, { onDelete: 'set null' }),
+		startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
+		endedAt: timestamp('ended_at', { withTimezone: true }),
+		/** Quando il Master ha assegnato i PX di fine quest. */
+		xpAwardedAt: timestamp('xp_awarded_at', { withTimezone: true })
+	},
+	(t) => [
+		index('quests_location_idx').on(t.locationId),
+		// Al massimo una quest aperta per luogo.
+		uniqueIndex('quests_one_active_idx').on(t.locationId).where(sql`${t.endedAt} is null`)
+	]
+);
+
+/** Punti esperienza assegnati (o tolti) ai personaggi, con il motivo. */
+export const xpAwards = pgTable(
+	'xp_awards',
+	{
+		id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+		characterId: integer('character_id')
+			.notNull()
+			.references(() => characters.id, { onDelete: 'cascade' }),
+		amount: integer('amount').notNull(),
+		reason: text('reason').notNull(),
+		awardedByUserId: integer('awarded_by_user_id').references(() => users.id, { onDelete: 'set null' }),
+		questId: integer('quest_id').references(() => quests.id, { onDelete: 'set null' }),
+		createdAt: createdAt()
+	},
+	(t) => [index('xp_awards_character_idx').on(t.characterId)]
+);
+
 export type User = typeof users.$inferSelect;
 export type Character = typeof characters.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
@@ -245,3 +358,6 @@ export type Role = typeof roles.$inferSelect;
 export type GameMap = typeof maps.$inferSelect;
 export type Location = typeof locations.$inferSelect;
 export type ChatMessage = typeof chatMessages.$inferSelect;
+export type Stat = typeof stats.$inferSelect;
+export type Skill = typeof skills.$inferSelect;
+export type Quest = typeof quests.$inferSelect;

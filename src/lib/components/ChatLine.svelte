@@ -33,6 +33,12 @@
 			<span class="who">{message.recipientName ?? 'qualcuno'}</span>
 		{:else if message.kind === 'dice'}
 			<span class="who">{message.characterName ?? 'Qualcuno'}</span><span class="muted">tira i dadi</span>
+		{:else if message.kind === 'check'}
+			<span class="who">{message.characterName ?? 'Qualcuno'}</span><span class="muted">fa una prova</span>
+		{:else if message.kind === 'system'}
+			<span class="system-label">Quest</span>
+		{:else if message.characterId}
+			<a class="who" href="/scheda/{message.characterId}" target="_blank">{message.characterName ?? 'Qualcuno'}</a>
 		{:else}
 			<span class="who">{message.characterName ?? 'Qualcuno'}</span>
 		{/if}
@@ -47,7 +53,18 @@
 		{/if}
 	</header>
 
-	{#if message.kind === 'dice' && message.meta?.dice}
+	{#if message.kind === 'check' && message.meta?.check}
+		{@const c = message.meta.check}
+		<p class="body roll">
+			<span class="expr">{c.skill?.name ?? c.stat?.name}</span>
+			<span class="rolls">
+				d{c.die}: {c.roll}{#if c.stat}{' + '}{c.stat.name} {c.stat.value}{/if}{#if c.skill}{' + '}rango {c.skill.rank}{/if}
+			</span>
+			<span class="total">= {c.total}</span>
+			{#if c.natural === 'max'}<span class="badge accent">massimo naturale</span>{/if}
+			{#if c.natural === 'min'}<span class="badge danger">minimo naturale</span>{/if}
+		</p>
+	{:else if message.kind === 'dice' && message.meta?.dice}
 		<p class="body roll">
 			<span class="expr">{message.meta.dice.expression}</span>
 			<span class="rolls">{message.meta.dice.rolls.join(' + ')}{#if message.meta.dice.modifier}{' '}({message.meta.dice.modifier > 0 ? '+' : ''}{message.meta.dice.modifier}){/if}</span>
@@ -87,6 +104,10 @@
 	.who {
 		font-weight: 700;
 		color: var(--accent);
+		text-decoration: none;
+	}
+	a.who:hover {
+		text-decoration: underline;
 	}
 	.body {
 		margin: 0.15rem 0 0;
@@ -157,6 +178,29 @@
 		font-weight: 700;
 		font-size: 1.1rem;
 		color: var(--accent-strong);
+	}
+
+	.check {
+		border-left-color: var(--accent);
+		background: rgba(212, 162, 76, 0.07);
+	}
+	.system {
+		border-left-color: #8a7bb0;
+		background: rgba(138, 123, 176, 0.12);
+		text-align: center;
+	}
+	.system header {
+		justify-content: center;
+	}
+	.system .body {
+		font-family: var(--font-title);
+		font-size: 1.05rem;
+	}
+	.system-label {
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: #c6b8ea;
+		font-weight: 700;
 	}
 
 	.hidden {

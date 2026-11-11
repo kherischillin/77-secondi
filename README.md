@@ -2,7 +2,7 @@
 
 Motore per giochi di ruolo testuali online, ricostruito da zero in chiave moderna prendendo come riferimento [GDRCD](https://github.com/GDRCD/GDRCD).
 
-**Stato:** fasi 1 e 2 completate. Ci sono account e personaggi, accesso sicuro, ruoli e permessi, pannello di gestione, mappe con luoghi e chat in tempo reale.
+**Stato:** fasi 1, 2 e 3 completate. Ci sono account e personaggi, accesso sicuro, ruoli e permessi, pannello di gestione, mappe con luoghi, chat in tempo reale, scheda del personaggio, regole di gioco, quest e punti esperienza.
 
 ---
 
@@ -75,6 +75,14 @@ I dati (account, personaggi, impostazioni) restano salvati anche se spegni il gi
 
 Invio manda il messaggio, Maiusc+Invio va a capo. Accanto alla chat c'è l'elenco dei presenti con il tempo dall'ultima azione di ognuno, utile per la turnazione.
 
+## Sistema di gioco ibrido
+
+- **Gioco libero (descrittivo)**: si scrive e basta. I tiri di dado sono disattivati (si possono riattivare in **Gestione → Regole di gioco**).
+- **Quest (numerico)**: un Master entra in un luogo e clicca **Avvia una quest**. Tutti vedono l'avviso e compare il pannello **Prova**: si sceglie un'abilità o una caratteristica e il server tira il dado sommando caratteristica e rango.
+- **Fine quest**: il Master clicca **Termina quest** e arriva alla pagina dei punti esperienza, con l'elenco dei partecipanti. Il Master e i suoi personaggi sono esclusi.
+- **Scheda**: ogni personaggio ha aspetto, carattere, background (pubblico o riservato, a scelta del gioco) e presta-volto. Alla prima apertura il giocatore distribuisce i punti iniziali; poi migliora spendendo PX.
+- **Regole**: caratteristiche, abilità, punti iniziali, costi in PX e dado delle quest si cambiano da **Gestione → Regole di gioco**. Al primo avvio ci sono 6 caratteristiche e 10 abilità di esempio.
+
 ---
 
 ## Cosa c'è nella fase 1
@@ -94,6 +102,15 @@ Invio manda il messaggio, Maiusc+Invio va a capo. Accanto alla chat c'è l'elenc
 - **Presenti**: nel luogo (con l'ultima azione di ognuno) e in tutto il gioco; sulla mappa si vede quanti sono in ogni luogo.
 - **Moderazione**: messaggi nascosti in diretta, tracciati nel registro attività.
 - **Sicurezza**: le immagini caricate sono controllate nel contenuto, i permessi di Master e PNG sono verificati sul server, limite anti-spam sui messaggi.
+
+## Cosa c'è nella fase 3
+
+- **Scheda del personaggio** pubblica, con presta-volto e sezioni descrittive; modifica da parte del proprietario o dello staff.
+- **Regole come dati**: caratteristiche e abilità configurabili, con limiti, collegamenti e ordine.
+- **Distribuzione iniziale** dei punti con contatori in tempo reale; **avanzamento** spendendo PX con costi crescenti.
+- **Quest** avviate e chiuse dal Master, con avviso in diretta, prove calcolate dal server, dadi liberi solo in quest.
+- **Punti esperienza**: assegnati a fine quest o singolarmente dallo staff, con motivo e storico; nessuno può assegnarli a sé stesso e i PX di una quest si assegnano una volta sola.
+- **Strumenti dello staff** sulla scheda: correzione dei valori e azzeramento della distribuzione.
 
 ---
 
@@ -117,7 +134,10 @@ src/
       presence.ts         chi è dove
       world.ts            mappe e luoghi
       uploads.ts          immagini caricate
+      sheet.ts            scheda, distribuzione, avanzamento, PX
+      quests.ts           quest e partecipanti
     chat.ts               regole della chat condivise (comandi, dadi, dialoghi)
+    rules.ts              regole numeriche (punti, costi, prove)
     components/           MapCanvas, ChatRoom, ChatLine
   routes/                 pagine (accesso, registrazione, account, gioco, gestione/…)
 drizzle/                  migrazioni SQL, applicate automaticamente all'avvio

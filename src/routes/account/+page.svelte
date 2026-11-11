@@ -66,6 +66,7 @@
 							{c.id === data.activeCharacterId ? 'Torna in gioco' : 'Gioca'}
 						</button>
 					</form>
+					<a class="button secondary" href="/scheda/{c.id}">Scheda</a>
 					<button class="danger" type="button" onclick={() => (deleting = deleting === c.id ? null : c.id)}>
 						Elimina
 					</button>

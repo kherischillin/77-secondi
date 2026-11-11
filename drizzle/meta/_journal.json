@@ -15,6 +15,13 @@
       "when": 1794432241887,
       "tag": "0001_mondo_e_chat",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794433586712,
+      "tag": "0002_regole_scheda_quest",
+      "breakpoints": true
     }
   ]
 }

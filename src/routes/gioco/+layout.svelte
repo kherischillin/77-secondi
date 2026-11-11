@@ -12,6 +12,7 @@
 	<span class="who">In gioco come <strong>{fullName(data.playing)}</strong></span>
 	<a href={mapHref} aria-current={page.url.pathname.startsWith('/gioco/mappa') ? 'page' : undefined}>Mappa</a>
 	<a href="/gioco/presenti" aria-current={page.url.pathname === '/gioco/presenti' ? 'page' : undefined}>Presenti</a>
+	<a href="/scheda/{data.playing.id}">La mia scheda</a>
 	<a href="/account">Cambia personaggio</a>
 </nav>
 

@@ -14,7 +14,12 @@
 		initialMessages,
 		initialHasMore,
 		initialPresent,
-		can
+		can,
+		quest,
+		questDie,
+		diceAllowed,
+		statsAllocated,
+		checkOptions
 	}: {
 		locationId: number;
 		me: number;
@@ -22,7 +27,16 @@
 		initialHasMore: boolean;
 		initialPresent: Present[];
 		can: { master: boolean; npc: boolean; moderate: boolean };
+		quest: { id: number; title: string; masterName: string | null } | null;
+		questDie: number;
+		diceAllowed: boolean;
+		statsAllocated: boolean;
+		checkOptions: { stats: { id: number; name: string }[]; skills: { id: number; name: string }[] };
 	} = $props();
+
+	let checkTarget = $state('');
+	let checking = $state(false);
+	let checkError = $state('');
 
 	// Il componente viene ricreato a ogni cambio di luogo, quindi i valori iniziali si leggono una volta.
 	// svelte-ignore state_referenced_locally
@@ -101,6 +115,7 @@
 		});
 		source.addEventListener('presence', (e) => (present = JSON.parse(e.data)));
 		source.addEventListener('location', () => invalidateAll());
+		source.addEventListener('quest', () => invalidateAll());
 
 		const clock = setInterval(() => (now = Date.now()), 30_000);
 		return () => {
@@ -144,6 +159,45 @@
 				<p class="empty muted">Nessuno ha ancora scritto qui. Sii il primo a dare vita a questo luogo.</p>
 			{/each}
 		</div>
+
+		{#if quest}
+			<form
+				method="post"
+				action="?/prova"
+				class="check card"
+				use:enhance={() => {
+					checking = true;
+					checkError = '';
+					return async ({ result }) => {
+						checking = false;
+						if (result.type === 'failure') checkError = String(result.data?.error ?? 'Prova non riuscita.');
+						else if (result.type === 'error') checkError = 'Prova non riuscita. Riprova.';
+					};
+				}}
+			>
+				<span class="check-title">Prova <span class="muted">d{questDie}</span></span>
+				{#if !statsAllocated}
+					<span class="muted small">Per fare le prove distribuisci prima i punti nella <a href="/scheda/{me}" target="_blank">tua scheda</a>.</span>
+				{:else}
+					<label class="grow">
+						<span class="visually-hidden">Abilità o caratteristica</span>
+						<select name="target" bind:value={checkTarget} required>
+							<option value="">Scegli abilità o caratteristica…</option>
+							{#if checkOptions.skills.length}
+								<optgroup label="Abilità">
+									{#each checkOptions.skills as s (s.id)}<option value="skill:{s.id}">{s.name}</option>{/each}
+								</optgroup>
+							{/if}
+							<optgroup label="Caratteristiche">
+								{#each checkOptions.stats as s (s.id)}<option value="stat:{s.id}">{s.name}</option>{/each}
+							</optgroup>
+						</select>
+					</label>
+					<button type="submit" disabled={checking || !checkTarget}>{checking ? 'Tiro…' : 'Tira'}</button>
+				{/if}
+				{#if checkError}<p class="field-error full" role="alert">{checkError}</p>{/if}
+			</form>
+		{/if}
 
 		<form
 			method="post"
@@ -225,7 +279,7 @@
 
 			<div class="actions">
 				<span class="muted hint">
-					Invio per mandare · Maiusc+Invio per andare a capo · <code>@Nome@</code> sussurro · <code>#2d6</code> dadi
+					Invio per mandare · Maiusc+Invio per andare a capo · <code>@Nome@</code> sussurro{#if diceAllowed} · <code>#2d6</code> dadi{/if}
 				</span>
 				<span class="counter muted" class:warn={text.length > MAX_MESSAGE_LENGTH * 0.9}>{text.length}/{MAX_MESSAGE_LENGTH}</span>
 				<button type="submit" disabled={sending || !text.trim()}>{sending ? 'Invio…' : 'Invia'}</button>
@@ -241,7 +295,7 @@
 			<ul>
 				{#each present as p (p.characterId)}
 					<li>
-						<span class="name" class:me={p.characterId === me}>{fullName(p)}</span>
+						<a class="name" class:me={p.characterId === me} href="/scheda/{p.characterId}" target="_blank">{fullName(p)}</a>
 						<span class="muted small">ultima azione: {timeAgo(p.lastPostAt, now)}</span>
 						{#if p.characterId !== me}
 							<button type="button" class="link small" onclick={() => whisperTo(p)}>sussurra</button>
@@ -370,6 +424,31 @@
 	.name {
 		font-weight: 600;
 		width: 100%;
+		color: var(--text);
+		text-decoration: none;
+	}
+	.name:hover {
+		color: var(--accent);
+	}
+	.check {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem 0.75rem;
+		padding: 0.75rem 1rem;
+		border-color: var(--accent);
+	}
+	.check-title {
+		font-family: var(--font-title);
+		font-weight: 600;
+	}
+	.check .grow {
+		flex: 1 1 220px;
+		margin: 0;
+	}
+	.check .full {
+		width: 100%;
+		margin: 0;
 	}
 	.name.me::after {
 		content: ' (tu)';

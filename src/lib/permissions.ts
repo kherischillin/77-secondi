@@ -14,6 +14,7 @@ export const CAPABILITY_GROUPS = [
 			'users.manage': 'Assegnare ruoli e sospendere account',
 			'roles.manage': 'Creare e modificare i ruoli',
 			'settings.manage': 'Modificare le impostazioni del sito',
+			'rules.manage': 'Modificare le regole di gioco (caratteristiche, abilità, costi)',
 			'audit.view': 'Consultare il registro delle attività'
 		}
 	},
@@ -23,7 +24,8 @@ export const CAPABILITY_GROUPS = [
 			'chat.master': 'Intervenire in chat come Master',
 			'chat.npc': 'Intervenire in chat come PNG',
 			'chat.moderate': 'Nascondere messaggi in chat (moderazione)',
-			'characters.manage': 'Modificare i personaggi altrui',
+			'characters.manage': 'Modificare le schede e i valori dei personaggi altrui',
+			'xp.award': 'Assegnare punti esperienza',
 			'world.manage': 'Gestire mappe e luoghi'
 		}
 	}

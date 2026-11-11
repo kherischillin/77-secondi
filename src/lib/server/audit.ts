@@ -47,5 +47,20 @@ export const AUDIT_LABELS: Record<string, string> = {
 	'location.update': 'Modifica luogo',
 	'location.delete': 'Cancellazione luogo',
 	'chat.hide': 'Messaggio nascosto in chat',
-	'chat.unhide': 'Messaggio ripristinato in chat'
+	'chat.unhide': 'Messaggio ripristinato in chat',
+	'quest.start': 'Inizio quest',
+	'quest.end': 'Fine quest',
+	'xp.award': 'Assegnazione PX',
+	'sheet.update': 'Modifica scheda',
+	'sheet.allocate': 'Distribuzione punti iniziali',
+	'sheet.raise': 'Avanzamento con PX',
+	'sheet.staff_set': 'Correzione valori della scheda (staff)',
+	'sheet.reset': 'Azzeramento distribuzione (staff)',
+	'rules.update': 'Modifica regole di gioco',
+	'stat.create': 'Creazione caratteristica',
+	'stat.update': 'Modifica caratteristica',
+	'stat.delete': 'Cancellazione caratteristica',
+	'skill.create': 'Creazione abilità',
+	'skill.update': 'Modifica abilità',
+	'skill.delete': 'Cancellazione abilità'
 };

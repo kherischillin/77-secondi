@@ -20,7 +20,7 @@
 				</h2>
 				<ul>
 					{#each g.people as p (p.characterId)}
-						<li>{fullName(p)}</li>
+						<li><a href="/scheda/{p.characterId}">{fullName(p)}</a></li>
 					{/each}
 				</ul>
 			</section>

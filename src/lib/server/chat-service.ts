@@ -3,6 +3,7 @@ import { and, desc, eq, gt, isNull, lt, or, sql, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { db, schema } from './db/index.ts';
 import { rollDice, type ChatMessageView, type ParsedMessage } from '../chat.ts';
+import { describeCheck, type CheckResult } from '../rules.ts';
 import { listPresentAt, markPosted } from './presence.ts';
 import { broadcastPresence, publishMessage, publishVisibility } from './realtime.ts';
 import { RateLimiter } from './rate-limit.ts';
@@ -46,7 +47,8 @@ function toView(r: Row): ChatMessageView {
 		body: m.body,
 		meta: (m.meta as ChatMessageView['meta']) ?? null,
 		createdAt: m.createdAt.toISOString(),
-		hidden: m.deletedAt !== null
+		hidden: m.deletedAt !== null,
+		questId: m.questId
 	};
 }
 
@@ -107,13 +109,34 @@ export type Author = {
 	capabilities: ReadonlySet<string>;
 };
 
-/** Registra un messaggio e lo invia a chi è nel luogo. */
-export async function postMessage(locationId: number, author: Author, parsed: ParsedMessage) {
-	const key = String(author.characterId);
+/** Contesto di gioco: quest in corso e regole (il gioco libero è descrittivo). */
+export type PlayContext = { questId: number | null; diceOutsideQuest: boolean };
+
+function checkRate(characterId: number) {
+	const key = String(characterId);
 	if (postLimiter.isLimited(key)) throw new ChatError('Stai scrivendo troppo in fretta: aspetta qualche secondo.');
+	postLimiter.hit(key);
+}
+
+async function insertAndPublish(values: typeof schema.chatMessages.$inferInsert) {
+	const [inserted] = await db.insert(schema.chatMessages).values(values).returning({ id: schema.chatMessages.id });
+	if (values.characterId && values.kind !== 'system') await markPosted(values.characterId);
+	const view = await loadOne(inserted.id);
+	if (view) publishMessage(values.locationId, view);
+	// Aggiorna la turnazione ("ultima azione") nell'elenco dei presenti.
+	void broadcastPresence(values.locationId);
+	return view;
+}
+
+/** Registra un messaggio e lo invia a chi è nel luogo. */
+export async function postMessage(locationId: number, author: Author, parsed: ParsedMessage, play: PlayContext) {
+	if (parsed.kind === 'dice' && !play.questId && !play.diceOutsideQuest) {
+		throw new ChatError('Fuori dalle quest il gioco è descrittivo: i tiri di dado sono disattivati.');
+	}
+	checkRate(author.characterId);
 
 	let values: typeof schema.chatMessages.$inferInsert;
-	const base = { locationId, characterId: author.characterId, authorUserId: author.userId };
+	const base = { locationId, characterId: author.characterId, authorUserId: author.userId, questId: play.questId };
 
 	switch (parsed.kind) {
 		case 'master':
@@ -151,15 +174,26 @@ export async function postMessage(locationId: number, author: Author, parsed: Pa
 			values = { ...base, kind: 'action', body: parsed.body, tag: parsed.tag };
 	}
 
-	postLimiter.hit(key);
-	const [inserted] = await db.insert(schema.chatMessages).values(values).returning({ id: schema.chatMessages.id });
-	await markPosted(author.characterId);
+	return insertAndPublish(values);
+}
 
-	const view = await loadOne(inserted.id);
-	if (view) publishMessage(locationId, view);
-	// Aggiorna la turnazione ("ultima azione") nell'elenco dei presenti.
-	void broadcastPresence(locationId);
-	return view;
+/** Prova di abilità o caratteristica (solo in quest). Il risultato è calcolato dal server. */
+export async function postCheck(locationId: number, author: Author, questId: number, check: CheckResult) {
+	checkRate(author.characterId);
+	return insertAndPublish({
+		locationId,
+		characterId: author.characterId,
+		authorUserId: author.userId,
+		questId,
+		kind: 'check',
+		body: describeCheck(check),
+		meta: { check }
+	});
+}
+
+/** Messaggio di sistema nel luogo (inizio e fine quest...). */
+export async function postSystem(locationId: number, body: string, questId: number | null, characterId: number | null = null) {
+	return insertAndPublish({ locationId, characterId, kind: 'system', body, questId });
 }
 
 /** Moderazione: nasconde o ripristina un messaggio. */

@@ -1,3 +1,5 @@
+import type { CheckResult } from './rules.ts';
+
 /**
  * Logica della chat condivisa tra server e browser.
  * Nessun accesso al database qui: solo regole, così si possono testare facilmente.
@@ -7,7 +9,7 @@ export const MAX_MESSAGE_LENGTH = 4000;
 export const MAX_TAG_LENGTH = 40;
 export const MAX_NPC_NAME_LENGTH = 40;
 
-export type MessageKind = 'action' | 'whisper' | 'master' | 'npc' | 'dice' | 'system';
+export type MessageKind = 'action' | 'whisper' | 'master' | 'npc' | 'dice' | 'check' | 'system';
 
 /** Tipi che il giocatore può scegliere dal menu. */
 export type ChosenKind = 'action' | 'whisper' | 'master' | 'npc';
@@ -18,6 +20,7 @@ export const KIND_LABELS: Record<MessageKind, string> = {
 	master: 'Master',
 	npc: 'PNG',
 	dice: 'Dado',
+	check: 'Prova',
 	system: 'Sistema'
 };
 
@@ -32,7 +35,8 @@ export type ChatMessageView = {
 	npcName: string | null;
 	tag: string | null;
 	body: string;
-	meta: { dice?: DiceResult } | null;
+	meta: { dice?: DiceResult; check?: CheckResult } | null;
+	questId: number | null;
 	createdAt: string;
 	hidden: boolean;
 };

@@ -71,3 +71,8 @@ export async function broadcastPresence(locationId: number) {
 export function broadcastLocationChanged(locationId: number) {
 	for (const s of channels.get(locationId) ?? []) s.send('location', { id: locationId });
 }
+
+/** Una quest è iniziata o finita nel luogo: i browser ricaricano lo stato (avviso, strumenti numerici). */
+export function broadcastQuestChanged(locationId: number) {
+	for (const s of channels.get(locationId) ?? []) s.send('quest', { locationId });
+}
