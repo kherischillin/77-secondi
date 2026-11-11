@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import type { PageProps } from './$types';
 	import { formatDate, formatDateTime, fullName } from '#lib/format.ts';
+	import ReportButton from '#lib/components/ReportButton.svelte';
 
 	let { data, form }: PageProps = $props();
 
@@ -57,6 +58,7 @@
 			{#if data.viewer.canEdit}
 				<a class="button secondary" href="/scheda/{c.id}/modifica">Modifica descrizione</a>
 			{/if}
+			{#if !owner}<p class="report-sheet"><ReportButton targetType="character" targetId={c.id} label="Segnala questa scheda" /></p>{/if}
 		</div>
 	</header>
 
@@ -185,6 +187,20 @@
 			</div>
 		{/if}
 	</section>
+
+	{#if data.giocate.length}
+		<section class="card giocate">
+			<h2>Giocate pubbliche</h2>
+			<ul class="history">
+				{#each data.giocate as g (g.id)}
+					<li>
+						<a href="/giocate/{g.id}">{g.title}</a>
+						<span class="muted small">{g.locationName} · {formatDate(g.fromAt)}</span>
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
 
 	{#if data.xp}
 		<section class="card xp">

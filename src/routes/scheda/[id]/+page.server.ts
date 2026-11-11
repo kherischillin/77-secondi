@@ -17,6 +17,7 @@ import {
 import { getRules } from '#lib/server/settings.ts';
 import { skillRaiseCost, statRaiseCost, type Allocation } from '#lib/rules.ts';
 import { audit } from '#lib/server/audit.ts';
+import { listPublicForCharacter } from '#lib/server/giocate.ts';
 import { fullName } from '#lib/format.ts';
 import { membershipsOf } from '#lib/server/guilds.ts';
 
@@ -47,6 +48,7 @@ export const load: PageServerLoad = async (event) => {
 			background: rules.backgroundPublic || seesPrivate ? character.background : null,
 			backgroundHidden: !rules.backgroundPublic && !seesPrivate && !!character.background
 		},
+		giocate: await listPublicForCharacter(character.id),
 		guilds: guilds.map((g) => ({ id: g.guildId, name: g.guildName, rank: g.rankName, symbolUrl: g.symbolUrl })),
 		stats: sheet.stats.map((s) => ({ ...s, raiseCost: statRaiseCost(s.value, rules) })),
 		skills: sheet.skills.map((s) => ({ ...s, raiseCost: skillRaiseCost(s.rank, rules) })),

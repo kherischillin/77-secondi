@@ -208,3 +208,35 @@ export async function setHidden(messageId: number, moderatorUserId: number, hidd
 	if (view) publishVisibility(row.locationId, view);
 	return view;
 }
+
+/**
+ * Tutti i messaggi di un luogo in un intervallo di tempo, oppure di una quest.
+ * Usato per registrare le giocate: i filtri (sussurri, nascosti) si applicano dopo.
+ */
+export async function loadRange(locationId: number, range: { from: Date; to: Date } | { questId: number }) {
+	const rows = await baseQuery()
+		.where(
+			and(
+				eq(schema.chatMessages.locationId, locationId),
+				'questId' in range
+					? eq(schema.chatMessages.questId, range.questId)
+					: and(gt(schema.chatMessages.createdAt, range.from), lt(schema.chatMessages.createdAt, range.to))
+			)
+		)
+		.orderBy(schema.chatMessages.id)
+		.limit(3000);
+	return rows.map(toView);
+}
+
+/** Un singolo messaggio con il nome del luogo (per le segnalazioni). */
+export async function getMessageWithLocation(id: number) {
+	if (!Number.isInteger(id) || id <= 0) return null;
+	const view = await loadOne(id);
+	if (!view) return null;
+	const [row] = await db
+		.select({ locationId: schema.locations.id, locationName: schema.locations.name })
+		.from(schema.chatMessages)
+		.innerJoin(schema.locations, eq(schema.chatMessages.locationId, schema.locations.id))
+		.where(eq(schema.chatMessages.id, id));
+	return row ? { view, ...row } : null;
+}

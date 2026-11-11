@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import type { PageProps } from './$types';
 	import { formatDateTime, fullName } from '#lib/format.ts';
+	import ReportButton from '#lib/components/ReportButton.svelte';
 
 	let { data, form }: PageProps = $props();
 	let body = $state('');
@@ -34,6 +35,7 @@
 			<header>
 				<strong>{m.senderName}</strong>
 				<span class="muted small">{formatDateTime(m.createdAt)}</span>
+				{#if m.senderId !== data.me}<span class="rep"><ReportButton targetType="private_message" targetId={m.id} /></span>{/if}
 			</header>
 			<p>{m.body}</p>
 		</article>
@@ -90,6 +92,9 @@
 		justify-self: end;
 		border-color: rgba(212, 162, 76, 0.4);
 		background: rgba(212, 162, 76, 0.06);
+	}
+	.rep {
+		margin-left: auto;
 	}
 	.msg header {
 		display: flex;

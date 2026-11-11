@@ -530,6 +530,101 @@ export const boardReads = pgTable(
 	(t) => [primaryKey({ columns: [t.userId, t.threadId] })]
 );
 
+// ---------------------------------------------------------------------------
+// Strumenti per i Master: esiti, giocate, segnalazioni
+// ---------------------------------------------------------------------------
+
+/** Richiesta di esito: il giocatore chiede ai Master l'esito di un'azione fuori chat. */
+export const esiti = pgTable(
+	'esiti',
+	{
+		id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+		characterId: integer('character_id')
+			.notNull()
+			.references(() => characters.id, { onDelete: 'cascade' }),
+		title: text('title').notNull(),
+		status: text('status', { enum: ['open', 'closed'] }).notNull().default('open'),
+		/** Il Master che se ne occupa. */
+		masterUserId: integer('master_user_id').references(() => users.id, { onDelete: 'set null' }),
+		createdAt: createdAt(),
+		lastActivityAt: timestamp('last_activity_at', { withTimezone: true }).notNull().defaultNow(),
+		closedAt: timestamp('closed_at', { withTimezone: true }),
+		/** Ultima lettura del giocatore e del Master, per evidenziare le novità. */
+		playerReadAt: timestamp('player_read_at', { withTimezone: true }),
+		masterReadAt: timestamp('master_read_at', { withTimezone: true })
+	},
+	(t) => [index('esiti_character_idx').on(t.characterId), index('esiti_status_idx').on(t.status, t.lastActivityAt)]
+);
+
+export const esitoMessages = pgTable(
+	'esito_messages',
+	{
+		id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+		esitoId: integer('esito_id')
+			.notNull()
+			.references(() => esiti.id, { onDelete: 'cascade' }),
+		authorUserId: integer('author_user_id').references(() => users.id, { onDelete: 'set null' }),
+		fromMaster: boolean('from_master').notNull().default(false),
+		/** Racconto ON game (azione del personaggio o esito del Master). */
+		body: text('body').notNull().default(''),
+		/** Note OFF game: chiarimenti tra giocatore e Master. */
+		offNote: text('off_note'),
+		/** Prova tirata dal Master: risultato e difficoltà. */
+		check: jsonb('check'),
+		createdAt: createdAt()
+	},
+	(t) => [index('esito_messages_esito_idx').on(t.esitoId, t.id)]
+);
+
+/** Giocata registrata: copia permanente di un tratto di chat. */
+export const giocate = pgTable(
+	'giocate',
+	{
+		id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+		title: text('title').notNull(),
+		locationId: integer('location_id').references(() => locations.id, { onDelete: 'set null' }),
+		locationName: text('location_name').notNull(),
+		questId: integer('quest_id').references(() => quests.id, { onDelete: 'set null' }),
+		createdByUserId: integer('created_by_user_id').references(() => users.id, { onDelete: 'set null' }),
+		createdByCharacterId: integer('created_by_character_id').references(() => characters.id, { onDelete: 'set null' }),
+		fromAt: timestamp('from_at', { withTimezone: true }).notNull(),
+		toAt: timestamp('to_at', { withTimezone: true }).notNull(),
+		/** Messaggi copiati al momento della registrazione (senza sussurri né messaggi nascosti). */
+		messages: jsonb('messages').notNull(),
+		/** Id dei personaggi che hanno scritto nella giocata. */
+		participantIds: integer('participant_ids').array().notNull(),
+		/** Visibile a tutti gli iscritti oppure solo a partecipanti e staff. */
+		isPublic: boolean('is_public').notNull().default(false),
+		/** Inviata ai Master per la revisione (ed eventuali PX). */
+		reviewRequestedAt: timestamp('review_requested_at', { withTimezone: true }),
+		reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
+		reviewedByUserId: integer('reviewed_by_user_id').references(() => users.id, { onDelete: 'set null' }),
+		reviewNote: text('review_note'),
+		createdAt: createdAt()
+	},
+	(t) => [index('giocate_created_idx').on(t.createdAt)]
+);
+
+/** Segnalazione allo staff di un contenuto (messaggio in chat, bacheca, missiva, scheda). */
+export const reports = pgTable(
+	'reports',
+	{
+		id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+		reporterUserId: integer('reporter_user_id').references(() => users.id, { onDelete: 'set null' }),
+		targetType: text('target_type', { enum: ['chat_message', 'board_post', 'private_message', 'character'] }).notNull(),
+		targetId: integer('target_id').notNull(),
+		/** Copia del contenuto al momento della segnalazione. */
+		snapshot: jsonb('snapshot').notNull(),
+		reason: text('reason').notNull(),
+		status: text('status', { enum: ['open', 'in_progress', 'closed'] }).notNull().default('open'),
+		handledByUserId: integer('handled_by_user_id').references(() => users.id, { onDelete: 'set null' }),
+		resolution: text('resolution'),
+		createdAt: createdAt(),
+		closedAt: timestamp('closed_at', { withTimezone: true })
+	},
+	(t) => [index('reports_status_idx').on(t.status, t.createdAt)]
+);
+
 export type User = typeof users.$inferSelect;
 export type Character = typeof characters.$inferSelect;
 export type Session = typeof sessions.$inferSelect;

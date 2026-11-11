@@ -124,6 +124,15 @@ Invio manda il messaggio, Maiusc+Invio va a capo. Accanto alla chat c'è l'elenc
 - **Bacheche** con sezioni ON/OFF, visibilità tutti/gilda/staff, discussioni riservate allo staff (o ai capi per le bacheche di gilda), novità evidenziate, modifica dei propri messaggi, moderazione (nascondi, chiudi, metti in evidenza, elimina).
 - **Gilde** con simbolo, statuto, gradi configurabili, ingresso libero/su candidatura/su invito, gerarchia rispettata (si agisce solo su chi sta sotto), bacheca di gilda automatica, gilde visibili nella scheda, limite di gilde per personaggio.
 
+## Cosa c'è nella fase 5 (strumenti master)
+
+- **Esiti** (menu in alto): il giocatore chiede ai Master di raccontare cosa succede fuori dalla chat (un'indagine, un viaggio, un lavoro). Il primo Master che risponde se ne occupa; può aggiungere una **prova** sul personaggio con difficoltà (riuscita/fallita calcolata dal server). Il numero di risposte non lette compare accanto a "Esiti". Un Master non può arbitrare gli esiti dei propri personaggi.
+- **Giocate**: in ogni luogo c'è "Registra la giocata". Salva una copia permanente della chat (tutta la quest, oppure le ultime ore), **senza sussurri né messaggi nascosti**, con l'elenco dei partecipanti. Si può scaricare in HTML, rendere pubblica (compare nella scheda dei partecipanti) e **inviare ai Master**, che la rivedono, lasciano una nota e assegnano PX a ciascun partecipante.
+- **Spazio Master** (link "Master" in alto, con il numero di cose da fare): esiti da assegnare, seguiti da te, aperti e chiusi; giocate da rivedere.
+- **Segnalazioni**: il pulsante "Segnala" compare sui messaggi in chat, nelle bacheche, nelle missive e nelle schede. Lo staff le trova in **Gestione → Segnalazioni** (il numero compare accanto a "Gestione"), con una copia del testo com'era al momento della segnalazione; le prende in carico e le chiude scrivendo com'è stata gestita.
+
+> **Se avevi già avviato il gioco prima di questo aggiornamento:** i ruoli esistenti non ricevono da soli i nuovi permessi. Vai in **Gestione → Ruoli** e aggiungi al ruolo **Master** i permessi "Rispondere alle richieste di esito" e "Rivedere le giocate registrate e leggerle tutte", e al ruolo **Moderatore** "Gestire le segnalazioni dei giocatori". L'Amministratore li ha già tutti.
+
 ---
 
 ## Per sviluppatori

@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { splitSpeech, type ChatMessageView } from '#lib/chat.ts';
+	import ReportButton from './ReportButton.svelte';
 
 	let {
 		message,
 		me,
-		canModerate = false
-	}: { message: ChatMessageView; me: number; canModerate?: boolean } = $props();
+		canModerate = false,
+		reportable = false
+	}: { message: ChatMessageView; me: number; canModerate?: boolean; reportable?: boolean } = $props();
 
 	const time = $derived(
 		new Date(message.createdAt).toLocaleTimeString('it-IT', {
@@ -45,6 +47,9 @@
 
 		{#if message.hidden}<span class="badge danger">nascosto</span>{/if}
 
+		{#if reportable && message.characterId !== me && message.kind !== 'system' && !message.hidden}
+			<span class="report-slot"><ReportButton targetType="chat_message" targetId={message.id} /></span>
+		{/if}
 		{#if canModerate}
 			<form method="post" action={message.hidden ? '?/ripristina' : '?/nascondi'} class="mod" use:enhance={() => async () => {}}>
 				<input type="hidden" name="id" value={message.id} />
@@ -208,6 +213,12 @@
 	}
 	.mod {
 		margin-left: auto;
+	}
+	.report-slot {
+		margin-left: auto;
+	}
+	.report-slot + .mod {
+		margin-left: 0.5rem;
 	}
 	.mod button {
 		font-size: 0.8rem;

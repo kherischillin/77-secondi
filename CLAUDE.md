@@ -22,6 +22,7 @@ Il proprietario del progetto non programma: tutto il codice lo scrive Claude. Sp
 - Gli oggetti sono rimandati alla fase dell'economia (mercato, inventario).
 - Social: permessi di bacheche e gerarchia di gilda sono funzioni pure in `src/lib/social.ts` (`boardAccess`, `canActOnMember`, `canAssignRank`), usate sia dal server sia dall'interfaccia. Una bacheca/discussione/missiva non accessibile risponde 404, non 403.
 - Missive tra personaggi (non account), con `onGame` sulla conversazione. Bacheche ON GAME firmate dal personaggio attivo, OFF GAME dall'account.
+- Strumenti master: logica pura in `src/lib/master.ts` (`judgeCheck`, `giocataMessages`, `renderGiocataHtml`). Esiti (`esiti.manage`), giocate come copia JSON dei messaggi senza sussurri/nascosti (`giocate.review`, PX atomici in `reviewGiocata`), segnalazioni con copia del contenuto verificando che il segnalante lo veda (`reports.handle`). Spazio `/master`, contatori nell'intestazione da `+layout.server.ts`.
 - Gilde create dallo staff (`guilds.manage`) con gradi predefiniti e bacheca di gilda; il livello del grado decide la gerarchia.
 
 ## Verifiche prima di consegnare
@@ -32,6 +33,6 @@ Il proprietario del progetto non programma: tutto il codice lo scrive Claude. Sp
 2. ✅ Mondo e chat in tempo reale (mappe, luoghi, SSE, tipi di intervento, dadi, presenti, moderazione).
 3. ✅ Scheda e regole (sistema ibrido, caratteristiche e abilità dinamiche, quest, prove, PX). Oggetti spostati alla fase 6.
 4. ✅ Social (missive ON/OFF, bacheche con sezioni e visibilità, gilde con gradi e candidature).
-5. Strumenti master (esiti, giocate, moderazione).
+5. ✅ Strumenti master (esiti con prove, giocate registrate e revisionate, segnalazioni allo staff).
 6. Economia ed extra (oggetti e inventario, banca, mercato, stanze private, meteo).
 7. Importatore da GDRCD, documentazione, temi.

@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import type { PageProps } from './$types';
 	import { formatDateTime } from '#lib/format.ts';
+	import ReportButton from '#lib/components/ReportButton.svelte';
 
 	let { data, form }: PageProps = $props();
 	let editing = $state<number | null>(null);
@@ -48,6 +49,7 @@
 				<span class="muted small">{formatDateTime(p.createdAt)}{#if p.editedAt} · modificato{/if}</span>
 				{#if p.hidden}<span class="badge danger">nascosto</span>{/if}
 				<span class="tools">
+					{#if !p.mine && !p.hidden}<ReportButton targetType="board_post" targetId={p.id} />{/if}
 					{#if p.mine && !p.hidden && editing !== p.id}
 						<button class="link" type="button" onclick={() => (editing = p.id)}>Modifica</button>
 					{/if}

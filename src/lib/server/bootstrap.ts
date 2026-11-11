@@ -24,12 +24,12 @@ const DEFAULT_ROLES: {
 	{
 		name: 'Moderatore',
 		description: 'Gestisce gli account, modera chat e bacheche, consulta il registro.',
-		capabilities: ['admin.access', 'users.view', 'users.manage', 'audit.view', 'chat.moderate', 'boards.moderate']
+		capabilities: ['admin.access', 'users.view', 'users.manage', 'audit.view', 'chat.moderate', 'boards.moderate', 'reports.handle']
 	},
 	{
 		name: 'Master',
 		description: 'Narra le giocate, guida le quest e assegna i PX.',
-		capabilities: ['chat.master', 'chat.npc', 'xp.award']
+		capabilities: ['chat.master', 'chat.npc', 'xp.award', 'esiti.manage', 'giocate.review']
 	},
 	{
 		name: 'Giocatore',

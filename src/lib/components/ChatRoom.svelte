@@ -154,7 +154,7 @@
 				</div>
 			{/if}
 			{#each messages as m (m.id)}
-				<ChatLine message={m} {me} canModerate={can.moderate} />
+				<ChatLine message={m} {me} canModerate={can.moderate} reportable />
 			{:else}
 				<p class="empty muted">Nessuno ha ancora scritto qui. Sii il primo a dare vita a questo luogo.</p>
 			{/each}

@@ -67,12 +67,22 @@
 					<a href="/missive" class="with-count">
 						Missive{#if unread > 0}<span class="count" aria-label="{unread} non lette">{unread}</span>{/if}
 					</a>
+					<a href="/esiti" class="with-count">
+						Esiti{#if data.esitiUnread > 0}<span class="count" aria-label="{data.esitiUnread} con novità">{data.esitiUnread}</span>{/if}
+					</a>
 				{/if}
 				<a href="/bacheche">Bacheche</a>
 				<a href="/gilde">Gilde</a>
 				<a href="/account">Il mio account</a>
+				{#if data.masterPending !== null}
+					<a href="/master" class="with-count">
+						Master{#if data.masterPending > 0}<span class="count" aria-label="{data.masterPending} da gestire">{data.masterPending}</span>{/if}
+					</a>
+				{/if}
 				{#if canManage}
-					<a href="/gestione">Gestione</a>
+					<a href="/gestione" class="with-count">
+						Gestione{#if data.reportsOpen > 0}<span class="count" aria-label="{data.reportsOpen} segnalazioni aperte">{data.reportsOpen}</span>{/if}
+					</a>
 				{/if}
 				<form method="post" action="/esci">
 					<button class="link" type="submit">Esci</button>

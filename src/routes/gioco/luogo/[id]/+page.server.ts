@@ -14,6 +14,8 @@ import { broadcastQuestChanged } from '#lib/server/realtime.ts';
 import { checkValues, getCharacter, listSkills, listStats } from '#lib/server/sheet.ts';
 import { computeCheck } from '#lib/rules.ts';
 import { fullName } from '#lib/format.ts';
+import { createGiocata, GiocataError, recentQuest } from '#lib/server/giocate.ts';
+import { giocataSchema } from '#lib/master.ts';
 
 async function loadPlayable(idParam: string) {
 	const location = await getLocation(Number(idParam));
@@ -32,14 +34,15 @@ export const load: PageServerLoad = async (event) => {
 	await enterLocation(character.id, location.mapId, location.id);
 
 	const canModerate = user.capabilities.has('chat.moderate');
-	const [history, present, quest, rules, stats, skills, me] = await Promise.all([
+	const [history, present, quest, rules, stats, skills, me, lastQuest] = await Promise.all([
 		loadHistory(location.id, { characterId: character.id, canModerate }),
 		listPresentAt(location.id),
 		getActiveQuest(location.id),
 		getRules(),
 		listStats(),
 		listSkills(),
-		getCharacter(character.id)
+		getCharacter(character.id),
+		recentQuest(location.id)
 	]);
 
 	return {
@@ -52,6 +55,7 @@ export const load: PageServerLoad = async (event) => {
 		questDie: rules.questDie,
 		diceAllowed: !!quest || rules.diceOutsideQuest,
 		statsAllocated: me?.statsAllocated ?? false,
+		recordableQuest: lastQuest ? { id: lastQuest.id, title: lastQuest.title, active: !lastQuest.endedAt } : null,
 		checkOptions: {
 			stats: stats.map((s) => ({ id: s.id, name: s.name })),
 			skills: skills.map((s) => ({ id: s.id, name: s.name }))
@@ -179,6 +183,43 @@ export const actions: Actions = {
 		});
 		if (user.capabilities.has('xp.award')) redirect(303, `/gioco/quest/${ended.id}`);
 		return { questEnded: true };
+	},
+
+	/** Registra la giocata: copia permanente di un tratto di chat. */
+	registra: async (event) => {
+		const { user, character } = requireCharacter(event);
+		const location = await loadPlayable(event.params.id);
+		const form = await event.request.formData();
+		const parsed = giocataSchema.safeParse({ title: String(form.get('title') ?? ''), isPublic: form.get('isPublic') === 'on' });
+		if (!parsed.success) return fail(400, { recordError: parsed.error.issues[0].message });
+
+		const span = String(form.get('span') ?? '120');
+		let range: { from: Date; to: Date } | { questId: number };
+		if (span.startsWith('quest:')) {
+			const quest = await recentQuest(location.id);
+			if (!quest || quest.id !== Number(span.slice(6))) return fail(400, { recordError: 'Quest non trovata.' });
+			range = { questId: quest.id };
+		} else {
+			const minutes = Number(span);
+			if (![30, 60, 120, 180, 360, 720].includes(minutes)) return fail(400, { recordError: 'Intervallo non valido.' });
+			range = { from: new Date(Date.now() - minutes * 60_000), to: new Date() };
+		}
+
+		let giocata;
+		try {
+			giocata = await createGiocata({
+				location: { id: location.id, name: location.name },
+				range,
+				title: parsed.data.title,
+				isPublic: parsed.data.isPublic,
+				creator: { userId: user.id, characterId: character.id, isReviewer: user.capabilities.has('giocate.review') }
+			});
+		} catch (e) {
+			if (e instanceof GiocataError) return fail(400, { recordError: e.message });
+			throw e;
+		}
+		await audit({ actorUserId: user.id, action: 'giocata.create', targetType: 'giocata', targetId: giocata.id, details: { titolo: giocata.title, luogo: location.name }, ip: clientIp(event) });
+		redirect(303, `/giocate/${giocata.id}`);
 	},
 
 	nascondi: async (event) => moderate(event, true),

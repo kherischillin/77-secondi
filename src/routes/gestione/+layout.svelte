@@ -13,6 +13,7 @@
 			{ href: '/gestione/regole', label: 'Regole di gioco', cap: 'rules.manage' },
 			{ href: '/gestione/gilde', label: 'Gilde', cap: 'guilds.manage' },
 			{ href: '/gestione/bacheche', label: 'Bacheche', cap: 'boards.manage' },
+			{ href: '/gestione/segnalazioni', label: 'Segnalazioni', cap: 'reports.handle' },
 			{ href: '/gestione/impostazioni', label: 'Impostazioni', cap: 'settings.manage' },
 			{ href: '/gestione/registro', label: 'Registro attività', cap: 'audit.view' }
 		].filter((l) => data.adminCapabilities.includes(l.cap))

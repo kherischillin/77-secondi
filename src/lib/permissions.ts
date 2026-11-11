@@ -18,7 +18,8 @@ export const CAPABILITY_GROUPS = [
 			'audit.view': 'Consultare il registro delle attività',
 			'boards.manage': 'Creare e modificare le bacheche',
 			'boards.moderate': 'Moderare le bacheche (nascondere, bloccare, fissare) e leggere quelle dello staff',
-			'guilds.manage': 'Creare le gilde e gestirle tutte'
+			'guilds.manage': 'Creare le gilde e gestirle tutte',
+			'reports.handle': 'Gestire le segnalazioni dei giocatori'
 		}
 	},
 	{
@@ -29,6 +30,8 @@ export const CAPABILITY_GROUPS = [
 			'chat.moderate': 'Nascondere messaggi in chat (moderazione)',
 			'characters.manage': 'Modificare le schede e i valori dei personaggi altrui',
 			'xp.award': 'Assegnare punti esperienza',
+			'esiti.manage': 'Rispondere alle richieste di esito',
+			'giocate.review': 'Rivedere le giocate registrate e leggerle tutte',
 			'world.manage': 'Gestire mappe e luoghi'
 		}
 	}

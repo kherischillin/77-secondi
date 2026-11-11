@@ -76,5 +76,17 @@ export const AUDIT_LABELS: Record<string, string> = {
 	'board.create': 'Creazione bacheca',
 	'board.update': 'Modifica bacheca',
 	'board.delete': 'Cancellazione bacheca',
-	'board.moderate': 'Moderazione bacheca'
+	'board.moderate': 'Moderazione bacheca',
+	'esito.create': 'Richiesta di esito',
+	'esito.reply': 'Risposta a un esito',
+	'esito.assign': 'Esito preso in carico o lasciato',
+	'esito.close': 'Esito chiuso',
+	'esito.reopen': 'Esito riaperto',
+	'giocata.create': 'Registrazione giocata',
+	'giocata.review_request': 'Giocata inviata ai Master',
+	'giocata.review': 'Revisione giocata',
+	'giocata.delete': 'Cancellazione giocata',
+	'report.create': 'Segnalazione allo staff',
+	'report.take': 'Segnalazione presa in carico',
+	'report.close': 'Segnalazione chiusa'
 };

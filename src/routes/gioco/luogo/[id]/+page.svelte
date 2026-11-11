@@ -5,6 +5,11 @@
 
 	let { data, form }: PageProps = $props();
 	let showStart = $state(false);
+	let showRecord = $state(false);
+	const recordError = $derived(form && 'recordError' in form ? form.recordError : '');
+	$effect(() => {
+		if (recordError) showRecord = true;
+	});
 	let confirmEnd = $state(false);
 	const questError = $derived(form && 'questError' in form ? form.questError : '');
 </script>
@@ -70,6 +75,39 @@
 	</div>
 {/if}
 {#if questError}<div class="alert error">{questError}</div>{/if}
+
+<div class="record">
+	<button type="button" class="link" onclick={() => (showRecord = !showRecord)}>
+		{showRecord ? 'Chiudi' : 'Registra la giocata'}
+	</button>
+	{#if showRecord}
+		<form method="post" action="?/registra" class="card stack record-form" use:enhance={() => async ({ update }) => update({ reset: false })}>
+			<p class="muted small">
+				Salva una copia permanente di questo tratto di chat (senza sussurri né messaggi nascosti), con l'elenco dei partecipanti.
+			</p>
+			<div class="row">
+				<label class="grow">Titolo <input name="title" type="text" maxlength="120" required placeholder="Es. L'incontro alla locanda" /></label>
+				<label>
+					Cosa registrare
+					<select name="span">
+						{#if data.recordableQuest}
+							<option value="quest:{data.recordableQuest.id}">Tutta la quest «{data.recordableQuest.title}»{data.recordableQuest.active ? ' (in corso)' : ''}</option>
+						{/if}
+						<option value="30">Ultimi 30 minuti</option>
+						<option value="60">Ultima ora</option>
+						<option value="120" selected={!data.recordableQuest}>Ultime 2 ore</option>
+						<option value="180">Ultime 3 ore</option>
+						<option value="360">Ultime 6 ore</option>
+						<option value="720">Ultime 12 ore</option>
+					</select>
+				</label>
+			</div>
+			<label class="checkbox"><input type="checkbox" name="isPublic" /><span>Pubblica<span class="hint">Leggibile da tutti gli iscritti e mostrata nelle schede dei partecipanti. Altrimenti solo partecipanti e Master.</span></span></label>
+			{#if recordError}<p class="field-error">{recordError}</p>{/if}
+			<div><button type="submit">Registra</button></div>
+		</form>
+	{/if}
+</div>
 
 {#key data.location.id}
 	<ChatRoom
@@ -151,6 +189,23 @@
 	}
 	.small {
 		font-size: 0.85rem;
+	}
+	.record {
+		margin-bottom: 1rem;
+		text-align: right;
+	}
+	.record-form {
+		text-align: left;
+		margin-top: 0.5rem;
+		max-width: none;
+	}
+	.record-form .row label {
+		font-weight: 400;
+		font-size: 0.9rem;
+		margin: 0;
+	}
+	.record-form .grow {
+		flex: 1 1 260px;
 	}
 	.master-tools {
 		margin-bottom: 1rem;
