@@ -1,0 +1,35 @@
+# Avvia il gioco completo (sito + database) con:  docker compose up --build
+# Poi apri http://localhost:3000
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: gdr
+      POSTGRES_PASSWORD: gdr
+      POSTGRES_DB: gdr
+    volumes:
+      - dati-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U gdr -d gdr']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://gdr:gdr@db:5432/gdr
+      ORIGIN: http://localhost:3000
+      PORT: 3000
+    ports:
+      - '3000:3000'
+
+volumes:
+  # I dati del gioco restano qui anche se spegni o ricostruisci i container.
+  dati-db:
