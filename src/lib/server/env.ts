@@ -1,6 +1,9 @@
 /**
  * Configurazione letta dalle variabili d'ambiente.
  * In sviluppo viene caricato anche il file .env, se presente.
+ *
+ * I valori si leggono solo quando servono davvero: durante la costruzione del sito
+ * (npm run build, anche dentro Docker) le variabili non esistono ancora, e non è un errore.
  */
 if (!process.env.DATABASE_URL) {
 	try {
@@ -21,6 +24,10 @@ function required(name: string): string {
 }
 
 export const env = {
-	databaseUrl: required('DATABASE_URL'),
-	isProduction: process.env.NODE_ENV === 'production'
+	get databaseUrl() {
+		return required('DATABASE_URL');
+	},
+	get isProduction() {
+		return process.env.NODE_ENV === 'production';
+	}
 };
