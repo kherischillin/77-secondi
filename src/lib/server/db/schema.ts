@@ -351,6 +351,185 @@ export const xpAwards = pgTable(
 	(t) => [index('xp_awards_character_idx').on(t.characterId)]
 );
 
+// ---------------------------------------------------------------------------
+// Social: missive, bacheche, gilde
+// ---------------------------------------------------------------------------
+
+/** Conversazione privata tra due personaggi. ON game (tra personaggi) oppure OFF game (tra giocatori). */
+export const messageThreads = pgTable('message_threads', {
+	id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+	subject: text('subject').notNull(),
+	onGame: boolean('on_game').notNull().default(true),
+	createdAt: createdAt(),
+	lastMessageAt: timestamp('last_message_at', { withTimezone: true }).notNull().defaultNow()
+});
+
+export const messageParticipants = pgTable(
+	'message_participants',
+	{
+		threadId: integer('thread_id')
+			.notNull()
+			.references(() => messageThreads.id, { onDelete: 'cascade' }),
+		characterId: integer('character_id')
+			.notNull()
+			.references(() => characters.id, { onDelete: 'cascade' }),
+		/** Ultima lettura: i messaggi più recenti sono "non letti". */
+		lastReadAt: timestamp('last_read_at', { withTimezone: true }),
+		/** Archiviata da questo partecipante: torna visibile se arriva un nuovo messaggio. */
+		archivedAt: timestamp('archived_at', { withTimezone: true })
+	},
+	(t) => [primaryKey({ columns: [t.threadId, t.characterId] }), index('message_participants_character_idx').on(t.characterId)]
+);
+
+export const privateMessages = pgTable(
+	'private_messages',
+	{
+		id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+		threadId: integer('thread_id')
+			.notNull()
+			.references(() => messageThreads.id, { onDelete: 'cascade' }),
+		senderCharacterId: integer('sender_character_id').references(() => characters.id, { onDelete: 'set null' }),
+		body: text('body').notNull(),
+		createdAt: createdAt()
+	},
+	(t) => [index('private_messages_thread_idx').on(t.threadId, t.id)]
+);
+
+/** Gilde: gruppi organizzati (mercantili, religiosi, militari, politici, criminali...). */
+export const guilds = pgTable(
+	'guilds',
+	{
+		id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+		name: text('name').notNull(),
+		/** Tipo libero, es. "Religiosa", "Mercantile". */
+		category: text('category').notNull().default(''),
+		description: text('description').notNull().default(''),
+		statute: text('statute').notNull().default(''),
+		symbol: text('symbol'),
+		/** Come si entra: libero, su candidatura, solo su invito dei capi. */
+		joinMode: text('join_mode', { enum: ['open', 'apply', 'closed'] }).notNull().default('apply'),
+		isActive: boolean('is_active').notNull().default(true),
+		createdAt: createdAt()
+	},
+	(t) => [uniqueIndex('guilds_name_lower_idx').on(sql`lower(${t.name})`)]
+);
+
+/** Gradi interni di una gilda. Livello più alto = grado più importante. */
+export const guildRanks = pgTable(
+	'guild_ranks',
+	{
+		id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+		guildId: integer('guild_id')
+			.notNull()
+			.references(() => guilds.id, { onDelete: 'cascade' }),
+		name: text('name').notNull(),
+		level: integer('level').notNull(),
+		/** I membri con questo grado possono gestire la gilda (accettare, promuovere, espellere chi sta sotto). */
+		canManage: boolean('can_manage').notNull().default(false)
+	},
+	(t) => [index('guild_ranks_guild_idx').on(t.guildId)]
+);
+
+export const guildMembers = pgTable(
+	'guild_members',
+	{
+		guildId: integer('guild_id')
+			.notNull()
+			.references(() => guilds.id, { onDelete: 'cascade' }),
+		characterId: integer('character_id')
+			.notNull()
+			.references(() => characters.id, { onDelete: 'cascade' }),
+		rankId: integer('rank_id')
+			.notNull()
+			.references(() => guildRanks.id, { onDelete: 'restrict' }),
+		joinedAt: timestamp('joined_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(t) => [primaryKey({ columns: [t.guildId, t.characterId] }), index('guild_members_character_idx').on(t.characterId)]
+);
+
+export const guildApplications = pgTable(
+	'guild_applications',
+	{
+		id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+		guildId: integer('guild_id')
+			.notNull()
+			.references(() => guilds.id, { onDelete: 'cascade' }),
+		characterId: integer('character_id')
+			.notNull()
+			.references(() => characters.id, { onDelete: 'cascade' }),
+		message: text('message').notNull().default(''),
+		createdAt: createdAt()
+	},
+	(t) => [uniqueIndex('guild_applications_unique_idx').on(t.guildId, t.characterId)]
+);
+
+/** Bacheche (forum). Sezione ON GAME: si scrive come personaggio. OFF GAME: come giocatore. */
+export const boards = pgTable('boards', {
+	id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+	name: text('name').notNull(),
+	description: text('description').notNull().default(''),
+	section: text('section', { enum: ['on', 'off'] }).notNull().default('off'),
+	/** Chi può leggere: tutti, solo i membri di una gilda, solo lo staff. */
+	visibility: text('visibility', { enum: ['all', 'guild', 'staff'] }).notNull().default('all'),
+	guildId: integer('guild_id').references(() => guilds.id, { onDelete: 'cascade' }),
+	/** Solo lo staff (o i capi, per le bacheche di gilda) apre nuove discussioni. */
+	staffOnlyThreads: boolean('staff_only_threads').notNull().default(false),
+	sortOrder: integer('sort_order').notNull().default(0),
+	createdAt: createdAt()
+});
+
+export const boardThreads = pgTable(
+	'board_threads',
+	{
+		id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+		boardId: integer('board_id')
+			.notNull()
+			.references(() => boards.id, { onDelete: 'cascade' }),
+		title: text('title').notNull(),
+		authorUserId: integer('author_user_id').references(() => users.id, { onDelete: 'set null' }),
+		authorCharacterId: integer('author_character_id').references(() => characters.id, { onDelete: 'set null' }),
+		isPinned: boolean('is_pinned').notNull().default(false),
+		isLocked: boolean('is_locked').notNull().default(false),
+		createdAt: createdAt(),
+		lastPostAt: timestamp('last_post_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(t) => [index('board_threads_board_idx').on(t.boardId, t.lastPostAt)]
+);
+
+export const boardPosts = pgTable(
+	'board_posts',
+	{
+		id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+		threadId: integer('thread_id')
+			.notNull()
+			.references(() => boardThreads.id, { onDelete: 'cascade' }),
+		authorUserId: integer('author_user_id').references(() => users.id, { onDelete: 'set null' }),
+		/** Valorizzato nelle bacheche ON GAME: il personaggio che scrive. */
+		authorCharacterId: integer('author_character_id').references(() => characters.id, { onDelete: 'set null' }),
+		body: text('body').notNull(),
+		createdAt: createdAt(),
+		editedAt: timestamp('edited_at', { withTimezone: true }),
+		hiddenAt: timestamp('hidden_at', { withTimezone: true }),
+		hiddenByUserId: integer('hidden_by_user_id').references(() => users.id, { onDelete: 'set null' })
+	},
+	(t) => [index('board_posts_thread_idx').on(t.threadId, t.id)]
+);
+
+/** Ultima lettura di ogni discussione per account: serve a evidenziare le novità. */
+export const boardReads = pgTable(
+	'board_reads',
+	{
+		userId: integer('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		threadId: integer('thread_id')
+			.notNull()
+			.references(() => boardThreads.id, { onDelete: 'cascade' }),
+		readAt: timestamp('read_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(t) => [primaryKey({ columns: [t.userId, t.threadId] })]
+);
+
 export type User = typeof users.$inferSelect;
 export type Character = typeof characters.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
@@ -361,3 +540,6 @@ export type ChatMessage = typeof chatMessages.$inferSelect;
 export type Stat = typeof stats.$inferSelect;
 export type Skill = typeof skills.$inferSelect;
 export type Quest = typeof quests.$inferSelect;
+export type Guild = typeof guilds.$inferSelect;
+export type GuildRank = typeof guildRanks.$inferSelect;
+export type Board = typeof boards.$inferSelect;

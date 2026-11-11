@@ -20,6 +20,9 @@ Il proprietario del progetto non programma: tutto il codice lo scrive Claude. Sp
 - Regole numeriche in `src/lib/rules.ts` (pure, testate) + impostazioni sotto la chiave `rules` nella tabella settings (`getRules`/`updateRules`). Caratteristiche e abilità sono righe del DB, mai colonne fisse.
 - PX: registro `xp_awards` (anche negativi) + `characters.xp_spent`. Nessuno assegna PX ai propri personaggi; `claimXpAward` impedisce la doppia assegnazione di una quest.
 - Gli oggetti sono rimandati alla fase dell'economia (mercato, inventario).
+- Social: permessi di bacheche e gerarchia di gilda sono funzioni pure in `src/lib/social.ts` (`boardAccess`, `canActOnMember`, `canAssignRank`), usate sia dal server sia dall'interfaccia. Una bacheca/discussione/missiva non accessibile risponde 404, non 403.
+- Missive tra personaggi (non account), con `onGame` sulla conversazione. Bacheche ON GAME firmate dal personaggio attivo, OFF GAME dall'account.
+- Gilde create dallo staff (`guilds.manage`) con gradi predefiniti e bacheca di gilda; il livello del grado decide la gerarchia.
 
 ## Verifiche prima di consegnare
 `npm run check`, `npm test`, `npm run build`, e una prova reale dei flussi nel browser.
@@ -28,7 +31,7 @@ Il proprietario del progetto non programma: tutto il codice lo scrive Claude. Sp
 1. ✅ Fondamenta: account, personaggi, sessioni, ruoli/permessi, gestione.
 2. ✅ Mondo e chat in tempo reale (mappe, luoghi, SSE, tipi di intervento, dadi, presenti, moderazione).
 3. ✅ Scheda e regole (sistema ibrido, caratteristiche e abilità dinamiche, quest, prove, PX). Oggetti spostati alla fase 6.
-4. Social (messaggi privati, bacheche, gilde).
+4. ✅ Social (missive ON/OFF, bacheche con sezioni e visibilità, gilde con gradi e candidature).
 5. Strumenti master (esiti, giocate, moderazione).
 6. Economia ed extra (oggetti e inventario, banca, mercato, stanze private, meteo).
 7. Importatore da GDRCD, documentazione, temi.

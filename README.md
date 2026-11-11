@@ -2,7 +2,7 @@
 
 Motore per giochi di ruolo testuali online, ricostruito da zero in chiave moderna prendendo come riferimento [GDRCD](https://github.com/GDRCD/GDRCD).
 
-**Stato:** fasi 1, 2 e 3 completate. Ci sono account e personaggi, accesso sicuro, ruoli e permessi, pannello di gestione, mappe con luoghi, chat in tempo reale, scheda del personaggio, regole di gioco, quest e punti esperienza.
+**Stato:** fasi 1-4 completate. Ci sono account e personaggi, accesso sicuro, ruoli e permessi, pannello di gestione, mappe con luoghi, chat in tempo reale, scheda del personaggio, regole di gioco, quest, punti esperienza, missive, bacheche e gilde.
 
 ---
 
@@ -103,6 +103,12 @@ Invio manda il messaggio, Maiusc+Invio va a capo. Accanto alla chat c'è l'elenc
 - **Moderazione**: messaggi nascosti in diretta, tracciati nel registro attività.
 - **Sicurezza**: le immagini caricate sono controllate nel contenuto, i permessi di Master e PNG sono verificati sul server, limite anti-spam sui messaggi.
 
+## Missive, bacheche e gilde
+
+- **Missive** (menu in alto): messaggi privati tra personaggi, marcati **ON game** (tra personaggi) o **OFF game** (tra giocatori). Il numero di quelle non lette compare accanto a "Missive" e nel titolo della scheda del browser.
+- **Bacheche**: le **ON GAME** si scrivono come personaggio, le **OFF GAME** come giocatore. Al primo avvio ci sono "Annunci dello staff", "Piazza dei giocatori", "Cronache del mondo" e "Sala dello staff". Si gestiscono da **Gestione → Bacheche**.
+- **Gilde**: lo staff le crea da **Gestione → Gilde** (nascono con i gradi Capo, Ufficiale, Membro, Recluta e con una bacheca riservata). I giocatori entrano dalla pagina della gilda; i capi accettano le candidature e gestiscono chi sta sotto di loro.
+
 ## Cosa c'è nella fase 3
 
 - **Scheda del personaggio** pubblica, con presta-volto e sezioni descrittive; modifica da parte del proprietario o dello staff.
@@ -111,6 +117,12 @@ Invio manda il messaggio, Maiusc+Invio va a capo. Accanto alla chat c'è l'elenc
 - **Quest** avviate e chiuse dal Master, con avviso in diretta, prove calcolate dal server, dadi liberi solo in quest.
 - **Punti esperienza**: assegnati a fine quest o singolarmente dallo staff, con motivo e storico; nessuno può assegnarli a sé stesso e i PX di una quest si assegnano una volta sola.
 - **Strumenti dello staff** sulla scheda: correzione dei valori e azzeramento della distribuzione.
+
+## Cosa c'è nella fase 4
+
+- **Missive** a conversazione, con ON/OFF game, avviso delle non lette aggiornato ogni 30 secondi, archivio.
+- **Bacheche** con sezioni ON/OFF, visibilità tutti/gilda/staff, discussioni riservate allo staff (o ai capi per le bacheche di gilda), novità evidenziate, modifica dei propri messaggi, moderazione (nascondi, chiudi, metti in evidenza, elimina).
+- **Gilde** con simbolo, statuto, gradi configurabili, ingresso libero/su candidatura/su invito, gerarchia rispettata (si agisce solo su chi sta sotto), bacheca di gilda automatica, gilde visibili nella scheda, limite di gilde per personaggio.
 
 ---
 
@@ -136,8 +148,12 @@ src/
       uploads.ts          immagini caricate
       sheet.ts            scheda, distribuzione, avanzamento, PX
       quests.ts           quest e partecipanti
+      messages.ts         missive
+      boards.ts           bacheche
+      guilds.ts           gilde
     chat.ts               regole della chat condivise (comandi, dadi, dialoghi)
     rules.ts              regole numeriche (punti, costi, prove)
+    social.ts             regole di bacheche e gilde (chi legge, chi scrive, gerarchia)
     components/           MapCanvas, ChatRoom, ChatLine
   routes/                 pagine (accesso, registrazione, account, gioco, gestione/…)
 drizzle/                  migrazioni SQL, applicate automaticamente all'avvio

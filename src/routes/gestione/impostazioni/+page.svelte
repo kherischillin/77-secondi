@@ -37,6 +37,11 @@
 		/>
 		{#if errors.maxCharactersPerUser}<p class="field-error">Scegli un numero tra 1 e 20.</p>{/if}
 	</div>
+	<div>
+		<label for="maxGuildsPerCharacter">Gilde massime per personaggio</label>
+		<input id="maxGuildsPerCharacter" name="maxGuildsPerCharacter" type="number" min="1" max="10" required value={data.current.maxGuildsPerCharacter} />
+		{#if errors.maxGuildsPerCharacter}<p class="field-error">Scegli un numero tra 1 e 10.</p>{/if}
+	</div>
 	<label class="checkbox">
 		<input type="checkbox" name="registrationsOpen" checked={data.current.registrationsOpen} />
 		<span>Iscrizioni aperte<span class="hint">Se disattivato, nessuno può creare nuovi account.</span></span>

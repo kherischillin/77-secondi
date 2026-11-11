@@ -18,6 +18,7 @@ import { getRules } from '#lib/server/settings.ts';
 import { skillRaiseCost, statRaiseCost, type Allocation } from '#lib/rules.ts';
 import { audit } from '#lib/server/audit.ts';
 import { fullName } from '#lib/format.ts';
+import { membershipsOf } from '#lib/server/guilds.ts';
 
 async function sheetOr404(id: string) {
 	const sheet = await loadSheet(Number(id));
@@ -27,7 +28,11 @@ async function sheetOr404(id: string) {
 
 export const load: PageServerLoad = async (event) => {
 	const { user } = requireUser(event);
-	const [sheet, rules] = await Promise.all([sheetOr404(event.params.id), getRules()]);
+	const [sheet, rules, guilds] = await Promise.all([
+		sheetOr404(event.params.id),
+		getRules(),
+		membershipsOf(Number(event.params.id))
+	]);
 
 	const isOwner = sheet.character.userId === user.id;
 	const isStaff = user.capabilities.has('characters.manage') && !isOwner;
@@ -42,6 +47,7 @@ export const load: PageServerLoad = async (event) => {
 			background: rules.backgroundPublic || seesPrivate ? character.background : null,
 			backgroundHidden: !rules.backgroundPublic && !seesPrivate && !!character.background
 		},
+		guilds: guilds.map((g) => ({ id: g.guildId, name: g.guildName, rank: g.rankName, symbolUrl: g.symbolUrl })),
 		stats: sheet.stats.map((s) => ({ ...s, raiseCost: statRaiseCost(s.value, rules) })),
 		skills: sheet.skills.map((s) => ({ ...s, raiseCost: skillRaiseCost(s.rank, rules) })),
 		xp: seesPrivate ? sheet.xp : null,

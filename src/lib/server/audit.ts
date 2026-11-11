@@ -62,5 +62,19 @@ export const AUDIT_LABELS: Record<string, string> = {
 	'stat.delete': 'Cancellazione caratteristica',
 	'skill.create': 'Creazione abilità',
 	'skill.update': 'Modifica abilità',
-	'skill.delete': 'Cancellazione abilità'
+	'skill.delete': 'Cancellazione abilità',
+	'guild.create': 'Creazione gilda',
+	'guild.update': 'Modifica gilda',
+	'guild.join': 'Ingresso in gilda',
+	'guild.apply': 'Candidatura a una gilda',
+	'guild.accept': 'Candidatura accettata',
+	'guild.reject': 'Candidatura rifiutata',
+	'guild.add': 'Membro aggiunto alla gilda',
+	'guild.rank': 'Cambio di grado in gilda',
+	'guild.expel': 'Espulsione dalla gilda',
+	'guild.leave': 'Uscita dalla gilda',
+	'board.create': 'Creazione bacheca',
+	'board.update': 'Modifica bacheca',
+	'board.delete': 'Cancellazione bacheca',
+	'board.moderate': 'Moderazione bacheca'
 };

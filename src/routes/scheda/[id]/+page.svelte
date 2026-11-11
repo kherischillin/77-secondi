@@ -42,6 +42,18 @@
 			<h1>{fullName(c)}</h1>
 			{#if c.bio}<p class="bio">{c.bio}</p>{/if}
 			<p class="muted small">In gioco dal {formatDate(c.createdAt)}</p>
+			{#if data.guilds.length}
+				<ul class="guilds">
+					{#each data.guilds as g (g.id)}
+						<li>
+							<a href="/gilde/{g.id}">
+								{#if g.symbolUrl}<img src={g.symbolUrl} alt="" />{/if}
+								<span><strong>{g.name}</strong> <span class="muted">· {g.rank}</span></span>
+							</a>
+						</li>
+					{/each}
+				</ul>
+			{/if}
 			{#if data.viewer.canEdit}
 				<a class="button secondary" href="/scheda/{c.id}/modifica">Modifica descrizione</a>
 			{/if}
@@ -277,6 +289,34 @@
 		font-size: 4rem;
 		color: var(--accent);
 		background: var(--bg-raised);
+	}
+	.guilds {
+		list-style: none;
+		padding: 0;
+		margin: 0 0 1rem;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+	.guilds a {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.25rem 0.75rem 0.25rem 0.25rem;
+		border: 1px solid var(--border);
+		border-radius: 999px;
+		text-decoration: none;
+		color: var(--text);
+		font-size: 0.9rem;
+	}
+	.guilds a:hover {
+		border-color: var(--accent);
+	}
+	.guilds img {
+		width: 26px;
+		height: 26px;
+		border-radius: 50%;
+		object-fit: cover;
 	}
 	.credit {
 		margin-top: 0.4rem;

@@ -15,7 +15,10 @@ export const CAPABILITY_GROUPS = [
 			'roles.manage': 'Creare e modificare i ruoli',
 			'settings.manage': 'Modificare le impostazioni del sito',
 			'rules.manage': 'Modificare le regole di gioco (caratteristiche, abilità, costi)',
-			'audit.view': 'Consultare il registro delle attività'
+			'audit.view': 'Consultare il registro delle attività',
+			'boards.manage': 'Creare e modificare le bacheche',
+			'boards.moderate': 'Moderare le bacheche (nascondere, bloccare, fissare) e leggere quelle dello staff',
+			'guilds.manage': 'Creare le gilde e gestirle tutte'
 		}
 	},
 	{

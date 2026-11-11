@@ -11,7 +11,8 @@ export const settingsSchema = z.object({
 	siteName: z.string().trim().min(1).max(80),
 	siteTagline: z.string().trim().max(200),
 	registrationsOpen: z.boolean(),
-	maxCharactersPerUser: z.number().int().min(1).max(20)
+	maxCharactersPerUser: z.number().int().min(1).max(20),
+	maxGuildsPerCharacter: z.number().int().min(1).max(10)
 });
 
 export type SiteSettings = z.infer<typeof settingsSchema>;
@@ -20,7 +21,8 @@ export const DEFAULT_SETTINGS: SiteSettings = {
 	siteName: 'GDR Online',
 	siteTagline: 'Un gioco di ruolo testuale',
 	registrationsOpen: true,
-	maxCharactersPerUser: 3
+	maxCharactersPerUser: 3,
+	maxGuildsPerCharacter: 2
 };
 
 let cache: SiteSettings | null = null;

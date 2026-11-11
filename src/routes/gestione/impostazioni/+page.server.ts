@@ -18,7 +18,8 @@ export const actions: Actions = {
 			siteName: String(form.get('siteName') ?? ''),
 			siteTagline: String(form.get('siteTagline') ?? ''),
 			registrationsOpen: form.get('registrationsOpen') === 'on',
-			maxCharactersPerUser: Number(form.get('maxCharactersPerUser'))
+			maxCharactersPerUser: Number(form.get('maxCharactersPerUser')),
+			maxGuildsPerCharacter: Number(form.get('maxGuildsPerCharacter'))
 		});
 		if (!parsed.success) {
 			return fail(400, { errors: fieldErrors(parsed.error) });

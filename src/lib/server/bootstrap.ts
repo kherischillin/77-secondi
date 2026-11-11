@@ -3,6 +3,7 @@ import { count, eq } from 'drizzle-orm';
 import path from 'node:path';
 import { db, schema } from './db';
 import { ALL_CAPABILITIES, type Capability } from '../permissions';
+import { seedBoards } from './boards.ts';
 
 /** Nome del ruolo con tutti i poteri. È di sistema: non si può cancellare né ridurre. */
 export const ADMIN_ROLE_NAME = 'Amministratore';
@@ -22,8 +23,8 @@ const DEFAULT_ROLES: {
 	},
 	{
 		name: 'Moderatore',
-		description: 'Gestisce gli account e consulta il registro.',
-		capabilities: ['admin.access', 'users.view', 'users.manage', 'audit.view', 'chat.moderate']
+		description: 'Gestisce gli account, modera chat e bacheche, consulta il registro.',
+		capabilities: ['admin.access', 'users.view', 'users.manage', 'audit.view', 'chat.moderate', 'boards.moderate']
 	},
 	{
 		name: 'Master',
@@ -53,6 +54,7 @@ export async function bootstrapDatabase(): Promise<void> {
 	}
 
 	await seedExampleRules();
+	await seedBoards();
 
 	// L'Amministratore deve sempre avere tutte le capacità, anche quelle aggiunte in versioni future.
 	await db
