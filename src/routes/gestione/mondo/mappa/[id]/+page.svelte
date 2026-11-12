@@ -3,7 +3,7 @@
 	import type { PageProps } from './$types';
 	import MapCanvas from '#lib/components/MapCanvas.svelte';
 	import AreaPicker from '#lib/components/AreaPicker.svelte';
-	import type { Area } from '#lib/districts.ts';
+	import type { Area, Point } from '#lib/districts.ts';
 	import { CLIMATES, CLIMATE_LABELS } from '#lib/weather.ts';
 	import { formatDateTime } from '#lib/format.ts';
 
@@ -24,9 +24,11 @@
 	// Distretto: mappa madre scelta e area disegnata sulla sua immagine.
 	let parentId = $state('');
 	let area = $state<Area | null>(null);
+	let points = $state<Point[] | null>(null);
 	$effect.pre(() => {
 		parentId = data.map.parentMapId ? String(data.map.parentMapId) : '';
 		area = data.map.area;
+		points = data.map.shape?.points ?? null;
 	});
 	const parent = $derived(data.parentOptions.find((m) => String(m.id) === parentId) ?? null);
 
@@ -58,8 +60,8 @@
 
 		{#if parent}
 			<h2>Area del distretto in {parent.name}</h2>
-			<p class="muted small">Tieni premuto e trascina sull'immagine per disegnare la zona occupata da {data.map.name}. Le altre zone tratteggiate sono gli altri distretti.</p>
-			<AreaPicker imageUrl={parent.imageUrl} alt="Mappa {parent.name}" bind:area others={parent.siblings} />
+			<p class="muted small">Disegna la zona occupata da {data.map.name}: un rettangolo trascinando, oppure una forma libera cliccando i vertici lungo il confine. Le zone tratteggiate sono gli altri distretti.</p>
+			<AreaPicker imageUrl={parent.imageUrl} alt="Mappa {parent.name}" bind:area bind:points others={parent.siblings} />
 		{/if}
 
 		<h2>Luoghi</h2>
@@ -147,15 +149,45 @@
 				{#if data.parentOptions.length === 0}<p class="hint">Serve prima un'altra mappa con un'immagine.</p>{/if}
 			</div>
 			{#if parent}
-				<p class="hint">{area ? 'Area disegnata: puoi ridisegnarla a sinistra, poi salva.' : `Ora disegna l'area sulla mappa di ${parent.name}, qui a sinistra.`}</p>
+				<p class="hint">{area ? 'Zona disegnata: puoi ridisegnarla a sinistra, poi salva.' : `Ora disegna la zona sulla mappa di ${parent.name}, qui a sinistra.`}</p>
 				{#if errors.area}<p class="field-error">{errors.area}</p>{/if}
 				<input type="hidden" name="areaX" value={area?.x ?? ''} />
 				<input type="hidden" name="areaY" value={area?.y ?? ''} />
 				<input type="hidden" name="areaW" value={area?.w ?? ''} />
 				<input type="hidden" name="areaH" value={area?.h ?? ''} />
+				<input type="hidden" name="shape" value={points?.length ? JSON.stringify({ points }) : ''} />
 			{/if}
 			<div><button type="submit" disabled={!!parent && !area}>Salva distretto</button></div>
 		</form>
+
+		{#if data.nightCity}
+			<h2>Distretti di Night City</h2>
+			<form method="post" action="?/preparaNightCity" class="stack card" use:enhance={() => async ({ update }) => update({ reset: false })}>
+				<p class="muted small">
+					Crea in un colpo i {data.nightCity.districts} distretti con la loro forma sulla mappa e i {data.nightCity.locations} luoghi della
+					legenda (ogni luogo è una chat, già posizionata). Se un distretto esiste già con lo stesso nome viene aggiornato; i luoghi già
+					presenti non vengono duplicati, quindi si può rilanciare senza problemi.
+				</p>
+				{#if !data.nightCity.imageOk}
+					<p class="hint">Prima carica qui sopra, come immagine della mappa, il file <strong>night-city.webp</strong>.</p>
+				{/if}
+				{#if errors.nightCity}<p class="field-error">{errors.nightCity}</p>{/if}
+				<div><button type="submit" disabled={!data.nightCity.imageOk}>Crea distretti e luoghi</button></div>
+			</form>
+		{/if}
+
+		{#if data.map.imageUrl}
+			<h2>Importa distretti</h2>
+			<form method="post" action="?/importaDistretti" class="stack card" use:enhance={() => async ({ update }) => update({ reset: false })}>
+				<p class="muted small">
+					Per creare molti distretti insieme su questa mappa: incolla un elenco in formato JSON, con nome e forma di ogni distretto
+					(vertici in percentuale dell'immagine). I distretti con lo stesso nome di una mappa esistente la aggiornano.
+				</p>
+				<textarea name="json" rows="6" spellcheck="false" placeholder={'[{ "name": "Kabuki", "points": [[46,29.5],[50.5,29.5],[49.5,36],[46,36]] }]'}></textarea>
+				{#if errors.json}<p class="field-error">{errors.json}</p>{/if}
+				<div><button type="submit">Importa</button></div>
+			</form>
+		{/if}
 
 		<h2>Meteo</h2>
 		<form method="post" action="?/meteo" class="stack card" use:enhance={() => async ({ update }) => update({ reset: false })}>

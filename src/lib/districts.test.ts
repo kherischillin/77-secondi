@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { areaFromPoints, normalizeArea, wouldCycle, zoomTransform } from './districts.ts';
+import { areaFromPoints, boundingArea, labelPoint, normalizeArea, normalizeShape, parseDistrictImport, rectPoints, wouldCycle, zoomTransform } from './districts.ts';
 
 describe('distretti', () => {
 	it("tiene l'area dentro l'immagine", () => {
@@ -22,5 +22,36 @@ describe('distretti', () => {
 		expect(wouldCycle(1, 3, parents)).toBe(true);
 		expect(wouldCycle(1, 1, parents)).toBe(true);
 		expect(wouldCycle(3, 1, parents)).toBe(false);
+	});
+});
+
+describe('forme libere', () => {
+	it('accetta un poligono e ne calcola il rettangolo', () => {
+		const s = normalizeShape({ points: [[10, 10], [30, 12], [25, 40], [8, 30]] });
+		expect(s).not.toBeNull();
+		expect(boundingArea(s!.points)).toEqual({ x: 8, y: 10, w: 22, h: 30 });
+	});
+	it('rifiuta forme con meno di 3 punti o coordinate non numeriche', () => {
+		expect(normalizeShape({ points: [[1, 1], [2, 2]] })).toBeNull();
+		expect(normalizeShape({ points: [[1, 1], [2, 'x'], [3, 3]] })).toBeNull();
+	});
+	it("l'etichetta va nel baricentro, se non indicata", () => {
+		expect(labelPoint({ points: [[0, 0], [10, 0], [10, 10], [0, 10]] })).toEqual([5, 5]);
+		expect(labelPoint({ points: [[0, 0], [10, 0], [10, 10]], label: [2, 3] })).toEqual([2, 3]);
+	});
+	it('importa un elenco JSON segnalando gli elementi sbagliati', () => {
+		const r = parseDistrictImport(
+			JSON.stringify([
+				{ name: 'Kabuki', points: [[46, 29.5], [50.5, 29.5], [49.5, 36], [46, 36]] },
+				{ name: 'X', points: [[1, 1], [2, 2], [3, 1]] },
+				{ name: 'Senza forma' }
+			])
+		);
+		expect(r.districts.map((d) => d.name)).toEqual(['Kabuki']);
+		expect(r.errors).toHaveLength(2);
+		expect(parseDistrictImport('non json').errors[0]).toMatch(/JSON/);
+	});
+	it('un rettangolo diventa un poligono di 4 vertici', () => {
+		expect(rectPoints({ x: 1, y: 2, w: 3, h: 4 })).toEqual([[1, 2], [4, 2], [4, 6], [1, 6]]);
 	});
 });

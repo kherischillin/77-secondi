@@ -57,6 +57,7 @@ export const AUDIT_LABELS: Record<string, string> = {
 	'sheet.staff_set': 'Correzione valori della scheda (staff)',
 	'sheet.reset': 'Azzeramento distribuzione (staff)',
 	'map.district': 'Distretto impostato',
+	'world.seed': 'Distretti e luoghi creati automaticamente',
 	'sheet.redo': 'Distribuzione iniziale rifatta dal giocatore',
 	'rules.update': 'Modifica regole di gioco',
 	'stat.create': 'Creazione caratteristica',

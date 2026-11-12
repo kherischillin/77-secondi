@@ -9,7 +9,7 @@
 	 * - `onpick`: cliccando sull'immagine si sceglie una posizione (pannello di gestione).
 	 */
 	import { goto } from '$app/navigation';
-	import { zoomTransform, type Area } from '#lib/districts.ts';
+	import { labelPoint, rectPoints, zoomTransform, type Area, type Point } from '#lib/districts.ts';
 
 	type Marker = {
 		id: number;
@@ -21,7 +21,8 @@
 		highlight?: boolean;
 		count?: number;
 	};
-	type District = { id: number; name: string; area: Area; href: string; count?: number };
+	/** Distretto: rettangolo (`area`) ed eventuale forma libera (`points`), che diventa l'area cliccabile. */
+	type District = { id: number; name: string; area: Area; points?: Point[] | null; label?: Point; href: string; count?: number };
 
 	let {
 		imageUrl,
@@ -40,6 +41,19 @@
 	} = $props();
 
 	const placed = $derived(markers.filter((m) => m.x !== null && m.y !== null));
+	// Con molti luoghi i nomi si sovrapporrebbero: compaiono passandoci sopra (restano quelli con persone dentro).
+	const compact = $derived(placed.length > 8);
+
+	// Forme dei distretti (poligoni in coordinate 0-100) e posizione delle etichette.
+	const shapes = $derived(
+		districts.map((d) => {
+			const points = d.points && d.points.length >= 3 ? d.points : rectPoints(d.area);
+			const [lx, ly] = labelPoint({ points, label: d.label });
+			// Con una forma libera la mappa ha già i nomi disegnati: l'etichetta compare passandoci sopra.
+			return { ...d, svg: points.map((p) => p.join(',')).join(' '), lx, ly, hoverOnly: !!d.points?.length };
+		})
+	);
+	let hovered = $state<number | null>(null);
 
 	let box = $state<HTMLElement>();
 	let natural = $state<{ w: number; h: number } | null>(null);
@@ -86,7 +100,7 @@
 	}
 </script>
 
-<div class="map" class:picking={!!onpick} class:zooming={zooming !== null} bind:this={box} style:aspect-ratio={ratio ?? (crop ? '16 / 10' : undefined)}>
+<div class="map" class:compact class:picking={!!onpick} class:zooming={zooming !== null} bind:this={box} style:aspect-ratio={ratio ?? (crop ? '16 / 10' : undefined)}>
 	<div
 		class="stage"
 		class:cropped={!!crop}
@@ -105,20 +119,30 @@
 				natural = { w: img.naturalWidth, h: img.naturalHeight };
 			}}
 		/>
-		{#each districts as d (d.id)}
-			<a
-				class="district"
-				class:active={zooming === d.id}
-				href={d.href}
-				style="left: {d.area.x}%; top: {d.area.y}%; width: {d.area.w}%; height: {d.area.h}%"
-				onclick={(e) => openDistrict(e, d)}
-				aria-label="Distretto {d.name}"
-			>
-				<span class="district-label">
-					{d.name}{#if d.count}<span class="count">{d.count}</span>{/if}
-				</span>
-			</a>
-		{/each}
+		{#if shapes.length}
+			<svg class="district-layer" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Distretti">
+				{#each shapes as d (d.id)}
+					<a
+						href={d.href}
+						aria-label="Distretto {d.name}"
+						onclick={(e) => openDistrict(e, d)}
+						onmouseenter={() => (hovered = d.id)}
+						onmouseleave={() => (hovered = hovered === d.id ? null : hovered)}
+						onfocus={() => (hovered = d.id)}
+						onblur={() => (hovered = hovered === d.id ? null : hovered)}
+					>
+						<polygon class="district" class:active={zooming === d.id || hovered === d.id} points={d.svg} vector-effect="non-scaling-stroke" />
+					</a>
+				{/each}
+			</svg>
+			{#each shapes as d (d.id)}
+				{#if !d.hoverOnly || hovered === d.id || zooming === d.id || d.count}
+					<span class="district-label" class:muted-label={d.hoverOnly && hovered !== d.id && zooming !== d.id} style="left: {d.lx}%; top: {d.ly}%">
+						{#if !d.hoverOnly || hovered === d.id || zooming === d.id}{d.name}{/if}{#if d.count}<span class="count">{d.count}</span>{/if}
+					</span>
+				{/if}
+			{/each}
+		{/if}
 	</div>
 
 	{#if onpick}
@@ -128,7 +152,7 @@
 	{#if zooming === null}
 		{#each placed as m (m.id)}
 			{#if m.href}
-				<a class="marker" class:link={m.kind === 'map_link'} class:highlight={m.highlight} style="left: {m.x}%; top: {m.y}%" href={m.href}>
+				<a class="marker" class:link={m.kind === 'map_link'} class:highlight={m.highlight} class:busy={!!m.count} style="left: {m.x}%; top: {m.y}%" href={m.href} title={m.name}>
 					<span class="dot" aria-hidden="true"></span>
 					<span class="label">
 						{m.name}{#if m.count}<span class="count">{m.count}</span>{/if}
@@ -184,27 +208,43 @@
 	.surface:hover {
 		background: none;
 	}
-	/* Aree dei distretti: si vedono passandoci sopra. */
-	.district {
+	/* Distretti: poligoni sopra l'immagine, evidenziati passandoci sopra. */
+	.district-layer {
 		position: absolute;
-		display: grid;
-		place-items: center;
-		border: 1px dashed color-mix(in srgb, var(--accent) 55%, transparent);
-		background: color-mix(in srgb, var(--accent) 6%, transparent);
-		text-decoration: none;
-		line-height: 1.2;
-		transition:
-			background 0.2s ease,
-			border-color 0.2s ease;
+		inset: 0;
+		width: 100%;
+		height: 100%;
 		z-index: 1;
+		overflow: visible;
 	}
-	.district:hover,
-	.district:focus-visible,
+	.district {
+		fill: color-mix(in srgb, var(--accent) 4%, transparent);
+		stroke: color-mix(in srgb, var(--accent) 45%, transparent);
+		stroke-width: 1;
+		stroke-dasharray: 4 3;
+		pointer-events: all;
+		cursor: pointer;
+		transition:
+			fill 0.2s ease,
+			stroke 0.2s ease;
+	}
 	.district.active {
-		background: color-mix(in srgb, var(--accent) 18%, transparent);
-		border: 2px solid var(--accent);
+		fill: color-mix(in srgb, var(--accent) 22%, transparent);
+		stroke: var(--accent);
+		stroke-width: 2.5;
+		stroke-dasharray: none;
+	}
+	/* Il riquadro di focus del browser verrebbe ingrandito dallo zoom: si evidenzia la forma (vedi .active). */
+	.district-layer a,
+	.district-layer a:focus,
+	.district-layer a:focus-visible {
+		outline: none;
 	}
 	.district-label {
+		position: absolute;
+		transform: translate(-50%, -50%);
+		z-index: 2;
+		pointer-events: none;
 		background: var(--header-bg);
 		color: var(--text);
 		font-size: 0.85rem;
@@ -213,19 +253,21 @@
 		text-transform: uppercase;
 		padding: 3px 10px;
 		border-radius: 999px;
-		border: 1px solid var(--border);
+		border: 1px solid var(--accent);
 		white-space: nowrap;
 		display: inline-flex;
 		gap: 6px;
 		align-items: center;
+		line-height: 1.2;
 	}
-	.district:hover .district-label {
-		background: var(--accent);
-		color: var(--accent-text);
+	/* Solo il numero dei presenti, senza nome (il nome è già disegnato sulla mappa). */
+	.district-label.muted-label {
+		padding: 0;
+		border: 0;
+		background: none;
 	}
 	.zooming .district-label {
-		opacity: 0;
-		transition: opacity 0.2s ease;
+		display: none;
 	}
 	.marker {
 		position: absolute;
@@ -240,7 +282,7 @@
 		z-index: 2;
 	}
 	.picking .marker,
-	.picking .district {
+	.picking .district-layer {
 		pointer-events: none;
 	}
 	.dot {
@@ -270,6 +312,28 @@
 		gap: 6px;
 		align-items: center;
 	}
+	/* Molti luoghi: il nome compare passandoci sopra (o se c'è qualcuno dentro). */
+	.compact .marker .label {
+		position: absolute;
+		top: calc(100% + 2px);
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.15s ease;
+	}
+	.compact .marker:hover .label,
+	.compact .marker:focus-visible .label,
+	.compact .marker.busy .label,
+	.compact .marker.highlight .label {
+		opacity: 1;
+	}
+	.compact .marker:hover,
+	.compact .marker:focus-visible {
+		z-index: 4;
+	}
+	.compact .dot {
+		width: 12px;
+		height: 12px;
+	}
 	a.marker:hover .label,
 	a.marker:focus-visible .label {
 		background: var(--accent);
@@ -283,8 +347,7 @@
 		font-weight: 700;
 		font-size: 0.75rem;
 	}
-	a.marker:hover .count,
-	.district:hover .count {
+	a.marker:hover .count {
 		background: var(--accent-text);
 		color: var(--accent);
 	}

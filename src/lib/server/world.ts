@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { db, schema } from './db/index.ts';
 import { mediaUrl } from './uploads.ts';
 import { CLIMATES } from '../weather.ts';
-import type { Area } from '../districts.ts';
+import { normalizeShape, type Area, type Shape } from '../districts.ts';
 
 export type MapView = {
 	id: number;
@@ -17,6 +17,8 @@ export type MapView = {
 	/** Distretto: mappa madre e area occupata sulla sua immagine. */
 	parentMapId: number | null;
 	area: Area | null;
+	/** Forma libera del distretto (se c'è). */
+	shape: Shape | null;
 };
 
 export type LocationView = {
@@ -46,7 +48,8 @@ export function toMapView(m: typeof schema.maps.$inferSelect): MapView {
 		weatherOverride: m.weatherOverride,
 		weatherOverrideUntil: m.weatherOverrideUntil?.toISOString() ?? null,
 		parentMapId: m.parentMapId,
-		area: areaOf(m)
+		area: areaOf(m),
+		shape: normalizeShape(m.shape)
 	};
 }
 
@@ -78,7 +81,7 @@ export async function listDistricts(mapId: number) {
 		.from(schema.maps)
 		.where(eq(schema.maps.parentMapId, mapId))
 		.orderBy(asc(schema.maps.sortOrder), asc(schema.maps.name));
-	return rows.map((m) => ({ id: m.id, name: m.name, description: m.description, area: areaOf(m) }));
+	return rows.map((m) => ({ id: m.id, name: m.name, description: m.description, area: areaOf(m), shape: normalizeShape(m.shape) }));
 }
 
 export function toLocationView(l: typeof schema.locations.$inferSelect): LocationView {

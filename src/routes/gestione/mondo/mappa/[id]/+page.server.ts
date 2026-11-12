@@ -20,8 +20,10 @@ import { deleteImage, saveImage, UploadError } from '#lib/server/uploads.ts';
 import { fieldErrors } from '#lib/validation.ts';
 import { audit } from '#lib/server/audit.ts';
 import { weatherFor } from '#lib/weather.ts';
-import { normalizeArea, wouldCycle } from '#lib/districts.ts';
+import { boundingArea, normalizeArea, normalizeShape, parseDistrictImport, wouldCycle } from '#lib/districts.ts';
 import { mediaUrl } from '#lib/server/uploads.ts';
+import { matchesNightCityImage, seedNightCity } from '#lib/server/seed/apply.ts';
+import { NIGHT_CITY_DISTRICTS } from '#lib/server/seed/night-city.ts';
 
 type Errors = Record<string, string>;
 
@@ -44,7 +46,9 @@ export const load: PageServerLoad = async (event) => {
 	return {
 		map: { ...toMapView(map), sortOrder: map.sortOrder },
 		display,
-		districts: districts.flatMap((d) => (d.area ? [{ id: d.id, name: d.name, area: d.area, href: `/gestione/mondo/mappa/${d.id}` }] : [])),
+		districts: districts.flatMap((d) =>
+			d.area ? [{ id: d.id, name: d.name, area: d.area, points: d.shape?.points, label: d.shape?.label, href: `/gestione/mondo/mappa/${d.id}` }] : []
+		),
 		// Mappe che possono contenere questa come distretto: con un'immagine e senza creare giri.
 		parentOptions: maps
 			.filter((m) => m.id !== map.id && m.image && !wouldCycle(map.id, m.id, parentOf))
@@ -52,9 +56,20 @@ export const load: PageServerLoad = async (event) => {
 				id: m.id,
 				name: m.name,
 				imageUrl: mediaUrl(m.image)!,
-				siblings: maps.filter((s) => s.parentMapId === m.id && s.id !== map.id && areaOf(s)).map((s) => ({ name: s.name, area: areaOf(s)! }))
+				siblings: maps
+					.filter((s) => s.parentMapId === m.id && s.id !== map.id && areaOf(s))
+					.map((s) => ({ name: s.name, area: areaOf(s)!, points: normalizeShape(s.shape)?.points ?? null }))
 			})),
 		weather: weatherFor(map, new Date()),
+		// Preparazione automatica di 77 Secondi: solo sulla mappa "Night City".
+		nightCity:
+			map.name.trim().toLowerCase() === 'night city'
+				? {
+						districts: NIGHT_CITY_DISTRICTS.length,
+						locations: NIGHT_CITY_DISTRICTS.reduce((n, d) => n + d.locations.length, 0),
+						imageOk: await matchesNightCityImage(map.image)
+					}
+				: null,
 		locations: locations.map(toLocationView),
 		otherMaps: maps.filter((m) => m.id !== map.id).map((m) => ({ id: m.id, name: m.name }))
 	};
@@ -100,7 +115,7 @@ export const actions: Actions = {
 		const form = await event.request.formData();
 		const rawParent = String(form.get('parentMapId') ?? '');
 		if (rawParent === '') {
-			await db.update(schema.maps).set({ parentMapId: null, areaX: null, areaY: null, areaW: null, areaH: null }).where(eq(schema.maps.id, map.id));
+			await db.update(schema.maps).set({ parentMapId: null, areaX: null, areaY: null, areaW: null, areaH: null, shape: null }).where(eq(schema.maps.id, map.id));
 			await audit({ actorUserId: user.id, action: 'map.district', targetType: 'map', targetId: map.id, details: { mappa: map.name, distretto: 'nessuno' }, ip: clientIp(event) });
 			return { action: 'distretto', success: 'Questa mappa non è più un distretto.' };
 		}
@@ -109,14 +124,82 @@ export const actions: Actions = {
 		if (!parent || !parent.image || wouldCycle(map.id, parent.id, new Map(maps.map((m) => [m.id, m.parentMapId])))) {
 			return fail(400, { action: 'distretto', errors: { parentMapId: 'Scegli una mappa con un\'immagine (e non un distretto di questa).' } as Errors });
 		}
-		const area = normalizeArea({ x: form.get('areaX'), y: form.get('areaY'), w: form.get('areaW'), h: form.get('areaH') });
-		if (!area) return fail(400, { action: 'distretto', errors: { area: 'Disegna l\'area del distretto trascinando sull\'immagine.' } as Errors });
+		// Forma libera (se disegnata) oppure rettangolo.
+		let shape = null;
+		const rawShape = String(form.get('shape') ?? '');
+		if (rawShape) {
+			try {
+				shape = normalizeShape(JSON.parse(rawShape));
+			} catch {
+				shape = null;
+			}
+			if (!shape) return fail(400, { action: 'distretto', errors: { area: 'La forma non è valida: ridisegnala.' } as Errors });
+		}
+		const area = shape ? boundingArea(shape.points) : normalizeArea({ x: form.get('areaX'), y: form.get('areaY'), w: form.get('areaW'), h: form.get('areaH') });
+		if (!area) return fail(400, { action: 'distretto', errors: { area: 'Disegna la zona del distretto sull\'immagine.' } as Errors });
 		await db
 			.update(schema.maps)
-			.set({ parentMapId: parent.id, areaX: area.x, areaY: area.y, areaW: area.w, areaH: area.h })
+			.set({ parentMapId: parent.id, areaX: area.x, areaY: area.y, areaW: area.w, areaH: area.h, shape })
 			.where(eq(schema.maps.id, map.id));
 		await audit({ actorUserId: user.id, action: 'map.district', targetType: 'map', targetId: map.id, details: { mappa: map.name, dentro: parent.name, area }, ip: clientIp(event) });
 		return { action: 'distretto', success: `Distretto di ${parent.name} salvato.` };
+	},
+
+	/** Molti distretti insieme: elenco JSON con nome e forma. Stesso nome = aggiorna la mappa esistente. */
+	importaDistretti: async (event) => {
+		const { user } = requireCapability(event, 'world.manage');
+		const map = await loadMapOr404(event.params.id);
+		if (!map.image) return fail(400, { action: 'importaDistretti', errors: { json: 'Prima carica l\'immagine di questa mappa.' } as Errors });
+		const { districts, errors } = parseDistrictImport(String((await event.request.formData()).get('json') ?? ''));
+		if (!districts.length) return fail(400, { action: 'importaDistretti', errors: { json: errors.join(' ') || 'Nessun distretto da importare.' } as Errors });
+
+		const maps = await listMaps();
+		const parentOf = new Map(maps.map((m) => [m.id, m.parentMapId]));
+		let created = 0;
+		let updated = 0;
+		const skipped: string[] = [...errors];
+		await db.transaction(async (tx) => {
+			for (const d of districts) {
+				const area = boundingArea(d.shape.points);
+				const values = { parentMapId: map.id, areaX: area.x, areaY: area.y, areaW: area.w, areaH: area.h, shape: d.shape };
+				const existing = maps.find((m) => m.name.toLowerCase() === d.name.toLowerCase());
+				if (existing) {
+					if (existing.id === map.id || wouldCycle(existing.id, map.id, parentOf)) {
+						skipped.push(`${d.name}: non può essere un distretto di questa mappa.`);
+						continue;
+					}
+					await tx
+						.update(schema.maps)
+						.set({ ...values, ...(d.description && !existing.description ? { description: d.description } : {}) })
+						.where(eq(schema.maps.id, existing.id));
+					updated++;
+				} else {
+					await tx.insert(schema.maps).values({ name: d.name, description: d.description, climate: map.climate, ...values });
+					created++;
+				}
+			}
+		});
+		await audit({ actorUserId: user.id, action: 'map.district', targetType: 'map', targetId: map.id, details: { mappa: map.name, importati: created, aggiornati: updated }, ip: clientIp(event) });
+		return {
+			action: 'importaDistretti',
+			success: `Distretti importati: ${created} nuovi, ${updated} aggiornati.${skipped.length ? ' Saltati: ' + skipped.join(' ') : ''}`
+		};
+	},
+
+	/** 77 Secondi: crea i distretti di Night City con le loro forme e i luoghi della legenda. */
+	preparaNightCity: async (event) => {
+		const { user } = requireCapability(event, 'world.manage');
+		const map = await loadMapOr404(event.params.id);
+		if (map.name.trim().toLowerCase() !== 'night city') error(404, 'Non disponibile per questa mappa.');
+		if (!(await matchesNightCityImage(map.image))) {
+			return fail(400, { action: 'preparaNightCity', errors: { nightCity: 'Prima carica come immagine di questa mappa il file night-city.webp (le forme dei distretti sono calcolate su quello).' } as Errors });
+		}
+		const r = await seedNightCity(map.id);
+		await audit({ actorUserId: user.id, action: 'world.seed', targetType: 'map', targetId: map.id, details: { mappa: map.name, ...r }, ip: clientIp(event) });
+		return {
+			action: 'preparaNightCity',
+			success: `Night City pronta: ${r.created} distretti nuovi, ${r.updated} aggiornati, ${r.locations} luoghi aggiunti.${r.skipped.length ? ' Saltati: ' + r.skipped.join(', ') + '.' : ''}`
+		};
 	},
 
 	/** Meteo deciso dallo staff per qualche ora (0 ore = torna automatico). */

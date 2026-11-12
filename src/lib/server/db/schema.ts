@@ -206,6 +206,8 @@ export const maps = pgTable('maps', {
 	areaY: real('area_y'),
 	areaW: real('area_w'),
 	areaH: real('area_h'),
+	/** Forma libera del distretto (poligono, in percentuale): è l'area cliccabile; l'area sopra ne è il rettangolo. */
+	shape: jsonb('shape').$type<{ points: [number, number][]; label?: [number, number] }>(),
 	createdAt: createdAt()
 });
 

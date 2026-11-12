@@ -10,7 +10,7 @@
 	}
 
 	const districtAreas = $derived(
-		data.districts.flatMap((d) => (d.area ? [{ id: d.id, name: d.name, area: d.area, href: `/gioco/mappa/${d.id}`, count: d.present }] : []))
+		data.districts.flatMap((d) => (d.area ? [{ id: d.id, name: d.name, area: d.area, points: d.shape?.points, label: d.shape?.label, href: `/gioco/mappa/${d.id}`, count: d.present }] : []))
 	);
 
 	const markers = $derived(
