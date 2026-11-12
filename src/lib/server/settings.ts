@@ -28,7 +28,11 @@ export const settingsSchema = z.object({
 	/** Missive: quante conversazioni può tenere in archivio ogni personaggio. */
 	missiveArchiveLimit: z.number().int().min(0).max(1000),
 	/** Missive lette e non archiviate: dopo quanti giorni dalla lettura si cancellano (0 = mai). */
-	missiveAutoDeleteDays: z.number().int().min(0).max(365)
+	missiveAutoDeleteDays: z.number().int().min(0).max(365),
+	/** Ore di chat mostrate a chi entra in un luogo (moderatori e amministratori possono risalire oltre). */
+	chatVisibleHours: z.number().int().min(1).max(72),
+	/** Dopo quanti giorni i messaggi della chat si cancellano dal database (0 = mai). */
+	chatRetentionDays: z.number().int().min(0).max(3650)
 });
 
 export type SiteSettings = z.infer<typeof settingsSchema>;
@@ -45,7 +49,9 @@ export const DEFAULT_SETTINGS: SiteSettings = {
 	portraitMaxWidth: 350,
 	portraitMaxHeight: 500,
 	missiveArchiveLimit: 50,
-	missiveAutoDeleteDays: 7
+	missiveAutoDeleteDays: 7,
+	chatVisibleHours: 3,
+	chatRetentionDays: 30
 };
 
 let cache: SiteSettings | null = null;

@@ -7,6 +7,8 @@ import { loadHistory } from '#lib/server/chat-service.ts';
 export const GET: RequestHandler = async (event) => {
 	const ctx = await resolvePlayableLocation(event);
 	if ('error' in ctx) return new Response(null, { status: ctx.error });
+	// Chat fresca: i messaggi più vecchi li possono caricare solo moderatori e amministratori.
+	if (!ctx.canModerate) return new Response(null, { status: 403 });
 
 	const before = Number(event.url.searchParams.get('prima'));
 	const history = await loadHistory(

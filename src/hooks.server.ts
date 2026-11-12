@@ -3,6 +3,7 @@ import type { Handle, ServerInit } from '@sveltejs/kit/hooks';
 import { bootstrapDatabase } from '#lib/server/bootstrap.ts';
 import { getSettings } from '#lib/server/settings.ts';
 import { messagesMaintenance } from '#lib/server/messages.ts';
+import { purgeOldChat } from '#lib/server/chat-service.ts';
 import {
 	SESSION_COOKIE,
 	deleteExpiredSessions,
@@ -14,10 +15,12 @@ import {
 /** All'avvio: migrazioni del database, ruoli iniziali e pulizia periodica delle sessioni. */
 export const init: ServerInit = async () => {
 	await bootstrapDatabase();
-	// Ogni ora: sessioni scadute, missive lette da cancellare e messaggi eliminati da tutti.
+	// Ogni ora: sessioni scadute, missive lette da cancellare, messaggi eliminati da tutti, chat vecchia.
 	const hourly = async () => {
+		const settings = await getSettings();
 		await deleteExpiredSessions();
-		await messagesMaintenance((await getSettings()).missiveAutoDeleteDays);
+		await messagesMaintenance(settings.missiveAutoDeleteDays);
+		await purgeOldChat(settings.chatRetentionDays);
 	};
 	hourly().catch((e) => console.error(e));
 	setInterval(() => hourly().catch((e) => console.error(e)), 60 * 60 * 1000).unref();

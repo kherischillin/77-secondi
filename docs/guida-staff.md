@@ -62,6 +62,10 @@ Regole anti-abuso, sempre attive: nessuno può dare permessi che non ha, né agi
 
 - **Esiti**: i giocatori chiedono il racconto di ciò che il personaggio fa fuori dalla chat. Il primo Master che risponde se ne occupa; può aggiungere una prova con difficoltà. Un Master non risponde agli esiti dei propri personaggi.
 - **Giocate**: i giocatori registrano un tratto di chat (senza sussurri) e lo inviano ai Master, che lo rivedono, lasciano una nota e assegnano PX.
+  - La registrazione parte dal **primo messaggio del personaggio** nella sua scena (la sua serie di messaggi più recente, senza pause oltre le 2 ore) e si può anticipare al massimo di **3 ore**, per includere l'apertura scritta da altri. Finisce un'ora dopo l'ultimo messaggio del personaggio. Durante o dopo una quest si può registrare anche tutta la quest.
+- **Chat**: chi entra in un luogo vede solo i messaggi delle **ultime 3 ore**. Moderatori e amministratori vedono il pulsante «Carica messaggi precedenti» e possono risalire oltre.
+  - I messaggi più vecchi di **30 giorni** si cancellano dal database (controllo ogni ora), tranne quelli delle quest ancora in corso. Le giocate registrate sono copie a parte e restano.
+  - Ore visibili e giorni si cambiano in **Gestione → Impostazioni**, sezione *Chat* (0 giorni = mai).
 
 ## Social
 

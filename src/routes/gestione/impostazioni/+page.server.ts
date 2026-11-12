@@ -31,7 +31,9 @@ export const actions: Actions = {
 			portraitMaxWidth: Number(form.get('portraitMaxWidth')),
 			portraitMaxHeight: Number(form.get('portraitMaxHeight')),
 			missiveArchiveLimit: Number(form.get('missiveArchiveLimit')),
-			missiveAutoDeleteDays: Number(form.get('missiveAutoDeleteDays'))
+			missiveAutoDeleteDays: Number(form.get('missiveAutoDeleteDays')),
+			chatVisibleHours: Number(form.get('chatVisibleHours')),
+			chatRetentionDays: Number(form.get('chatRetentionDays'))
 		});
 		if (!parsed.success) {
 			return fail(400, { errors: fieldErrors(parsed.error) });

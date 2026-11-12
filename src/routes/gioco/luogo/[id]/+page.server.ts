@@ -5,7 +5,8 @@ import type { Actions, PageServerLoad, RequestEvent } from './$types';
 import { requireCharacter, clientIp } from '#lib/server/guards.ts';
 import { getLocation, getMap, toLocationView } from '#lib/server/world.ts';
 import { enterLocation, listPresentAt } from '#lib/server/presence.ts';
-import { ChatError, loadHistory, postCheck, postMessage, postSystem, setHidden } from '#lib/server/chat-service.ts';
+import { ChatError, characterPostTimes, loadHistory, postCheck, postMessage, postSystem, setHidden } from '#lib/server/chat-service.ts';
+import { currentScene, LEAD_OPTIONS, leadLabel, recordWindow } from '#lib/scene.ts';
 import { parseChatInput, type ChosenKind } from '#lib/chat.ts';
 import { audit } from '#lib/server/audit.ts';
 import { getRules } from '#lib/server/settings.ts';
@@ -79,8 +80,9 @@ export const load: PageServerLoad = async (event) => {
 
 	await enterLocation(character.id, location.mapId, location.id);
 
-	const [history, present, quest, rules, stats, skills, me, lastQuest, items] = await Promise.all([
-		loadHistory(location.id, { characterId: character.id, canModerate, since: access.since }),
+	const recentSince = new Date(Date.now() - event.locals.settings.chatVisibleHours * 60 * 60 * 1000);
+	const [history, present, quest, rules, stats, skills, me, lastQuest, items, myPosts] = await Promise.all([
+		loadHistory(location.id, { characterId: character.id, canModerate, since: access.since, recentSince }),
 		listPresentAt(location.id),
 		getActiveQuest(location.id),
 		getRules(),
@@ -88,8 +90,10 @@ export const load: PageServerLoad = async (event) => {
 		listSkills(),
 		getCharacter(character.id),
 		recentQuest(location.id),
-		inventory(character.id)
+		inventory(character.id),
+		characterPostTimes(location.id, character.id, access.since)
 	]);
+	const scene = currentScene(myPosts);
 
 	return {
 		locked: false as const,
@@ -105,6 +109,10 @@ export const load: PageServerLoad = async (event) => {
 		questDie: rules.questDie,
 		diceAllowed: !!quest || rules.diceOutsideQuest,
 		statsAllocated: me?.statsAllocated ?? false,
+		chatVisibleHours: event.locals.settings.chatVisibleHours,
+		recordScene: scene
+			? { first: scene.first.toISOString(), options: LEAD_OPTIONS.map((m) => ({ value: m, label: leadLabel(m) })) }
+			: null,
 		recordableQuest: lastQuest ? { id: lastQuest.id, title: lastQuest.title, active: !lastQuest.endedAt } : null,
 		checkOptions: {
 			stats: stats.map((s) => ({ id: s.id, name: s.name })),
@@ -243,16 +251,20 @@ export const actions: Actions = {
 		const parsed = giocataSchema.safeParse({ title: String(form.get('title') ?? ''), isPublic: form.get('isPublic') === 'on' });
 		if (!parsed.success) return fail(400, { recordError: parsed.error.issues[0].message });
 
-		const span = String(form.get('span') ?? '120');
+		const span = String(form.get('span') ?? '0');
 		let range: { from: Date; to: Date } | { questId: number };
 		if (span.startsWith('quest:')) {
 			const quest = await recentQuest(location.id);
 			if (!quest || quest.id !== Number(span.slice(6))) return fail(400, { recordError: 'Quest non trovata.' });
 			range = { questId: quest.id };
 		} else {
-			const minutes = Number(span);
-			if (![30, 60, 120, 180, 360, 720].includes(minutes)) return fail(400, { recordError: 'Intervallo non valido.' });
-			range = { from: new Date(Date.now() - minutes * 60_000), to: new Date() };
+			// La giocata parte dal primo messaggio del personaggio nella sua scena, anticipabile al massimo di 3 ore.
+			const since = location.isPrivate ? (await roomAccess(location, character.id, true)).since : null;
+			const scene = currentScene(await characterPostTimes(location.id, character.id, since));
+			if (!scene) return fail(400, { recordError: 'Il tuo personaggio non ha ancora scritto in questo luogo: non c’è niente da registrare.' });
+			const window = recordWindow(scene, Number(span));
+			if (!window) return fail(400, { recordError: 'Si può partire al massimo 3 ore prima del tuo primo messaggio.' });
+			range = window;
 		}
 
 		let giocata;

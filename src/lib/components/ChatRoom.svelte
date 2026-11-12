@@ -170,7 +170,7 @@
 			{#each messages as m (m.id)}
 				<ChatLine message={m} {me} canModerate={can.moderate} reportable />
 			{:else}
-				<p class="empty muted">Nessuno ha ancora scritto qui. Sii il primo a dare vita a questo luogo.</p>
+				<p class="empty muted">Nessun messaggio recente. Sii il primo a dare vita a questo luogo.</p>
 			{/each}
 		</div>
 

@@ -2,6 +2,7 @@
 	import type { PageProps } from './$types';
 	import { enhance } from '$app/forms';
 	import ChatRoom from '#lib/components/ChatRoom.svelte';
+	import { formatDateTime } from '#lib/format.ts';
 
 	let { data, form }: PageProps = $props();
 	let showStart = $state(false);
@@ -210,6 +211,12 @@
 		<form method="post" action="?/registra" class="card stack record-form" use:enhance={() => async ({ update }) => update({ reset: false })}>
 			<p class="muted small">
 				Salva una copia permanente di questo tratto di chat (senza sussurri né messaggi nascosti), con l'elenco dei partecipanti.
+				{#if data.recordScene}
+					La registrazione parte dal primo messaggio della tua scena ({formatDateTime(data.recordScene.first)}); puoi anticiparla
+					al massimo di 3 ore per includere l'apertura scritta da altri. Finisce un'ora dopo il tuo ultimo messaggio.
+				{:else}
+					Il tuo personaggio non ha ancora scritto qui{data.recordableQuest ? ': puoi registrare solo la quest' : ''}.
+				{/if}
 			</p>
 			<div class="row">
 				<label class="grow">Titolo <input name="title" type="text" maxlength="120" required placeholder="Es. L'incontro alla locanda" /></label>
@@ -219,18 +226,17 @@
 						{#if data.recordableQuest}
 							<option value="quest:{data.recordableQuest.id}">Tutta la quest «{data.recordableQuest.title}»{data.recordableQuest.active ? ' (in corso)' : ''}</option>
 						{/if}
-						<option value="30">Ultimi 30 minuti</option>
-						<option value="60">Ultima ora</option>
-						<option value="120" selected={!data.recordableQuest}>Ultime 2 ore</option>
-						<option value="180">Ultime 3 ore</option>
-						<option value="360">Ultime 6 ore</option>
-						<option value="720">Ultime 12 ore</option>
+						{#if data.recordScene}
+							{#each data.recordScene.options as o (o.value)}
+								<option value={o.value} selected={!data.recordableQuest && o.value === 0}>{o.label}</option>
+							{/each}
+						{/if}
 					</select>
 				</label>
 			</div>
 			<label class="checkbox"><input type="checkbox" name="isPublic" /><span>Pubblica<span class="hint">Leggibile da tutti gli iscritti e mostrata nelle schede dei partecipanti. Altrimenti solo partecipanti e Master.</span></span></label>
 			{#if recordError}<p class="field-error">{recordError}</p>{/if}
-			<div><button type="submit">Registra</button></div>
+			<div><button type="submit" disabled={!data.recordScene && !data.recordableQuest}>Registra</button></div>
 		</form>
 	{/if}
 </div>

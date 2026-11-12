@@ -18,7 +18,15 @@ export type Viewer = {
 	canModerate: boolean;
 	/** Stanze private: si leggono solo i messaggi della prenotazione in corso. */
 	since?: Date | null;
+	/**
+	 * Chat "fresca": chi non modera vede solo i messaggi da questo momento in poi (di base le ultime 3 ore)
+	 * e non può caricare i precedenti.
+	 */
+	recentSince?: Date | null;
 };
+
+/** Massimo di messaggi mostrati in una volta nella finestra recente. */
+const RECENT_LIMIT = 1000;
 
 const sender = alias(schema.characters, 'sender');
 const recipient = alias(schema.characters, 'recipient');
@@ -76,6 +84,20 @@ function visibleTo(viewer: Viewer): SQL {
 /** Ultimi messaggi del luogo (o quelli prima di un certo id, per "carica precedenti"). */
 export async function loadHistory(locationId: number, viewer: Viewer, beforeId?: number) {
 	const src = await avatarResolver();
+	// Chat fresca: tutti i messaggi recenti in una volta, senza "carica precedenti".
+	if (viewer.recentSince && !viewer.canModerate) {
+		const rows = await baseQuery()
+			.where(
+				and(
+					eq(schema.chatMessages.locationId, locationId),
+					visibleTo(viewer),
+					gte(schema.chatMessages.createdAt, viewer.recentSince)
+				)
+			)
+			.orderBy(desc(schema.chatMessages.id))
+			.limit(RECENT_LIMIT);
+		return { messages: rows.reverse().map((r) => toView(r, src)), hasMore: false };
+	}
 	const rows = await baseQuery()
 		.where(
 			and(
@@ -88,6 +110,41 @@ export async function loadHistory(locationId: number, viewer: Viewer, beforeId?:
 		.limit(HISTORY_PAGE + 1);
 	const hasMore = rows.length > HISTORY_PAGE;
 	return { messages: rows.slice(0, HISTORY_PAGE).reverse().map((r) => toView(r, src)), hasMore };
+}
+
+/** Orari dei messaggi recenti di un personaggio in un luogo: servono a trovare la sua scena (vedi src/lib/scene.ts). */
+export async function characterPostTimes(locationId: number, characterId: number, since?: Date | null): Promise<Date[]> {
+	const rows = await db
+		.select({ at: schema.chatMessages.createdAt })
+		.from(schema.chatMessages)
+		.where(
+			and(
+				eq(schema.chatMessages.locationId, locationId),
+				eq(schema.chatMessages.characterId, characterId),
+				sql`${schema.chatMessages.kind} <> 'system'`,
+				since ? gte(schema.chatMessages.createdAt, since) : undefined
+			)
+		)
+		.orderBy(desc(schema.chatMessages.id))
+		.limit(2000);
+	return rows.map((r) => r.at);
+}
+
+/**
+ * Cancella dal database i messaggi della chat più vecchi di `days` giorni (0 = mai),
+ * tranne quelli delle quest ancora in corso. Le giocate registrate sono copie a parte.
+ */
+export async function purgeOldChat(days: number): Promise<number> {
+	if (!(days > 0)) return 0;
+	const rows = await db.execute<{ id: number }>(sql`
+		delete from ${schema.chatMessages} m
+		where m.created_at < now() - make_interval(days => ${days})
+		and not exists (
+			select 1 from ${schema.quests} q where q.id = m.quest_id and q.ended_at is null
+		)
+		returning m.id
+	`);
+	return rows.length;
 }
 
 /** Messaggi arrivati dopo un certo id: per recuperare quelli persi durante una disconnessione. */

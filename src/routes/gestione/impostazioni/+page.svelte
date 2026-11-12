@@ -88,6 +88,26 @@
 			Quelle non lette e quelle in archivio non si cancellano mai da sole. Il controllo avviene ogni ora.
 		</p>
 	</fieldset>
+	<fieldset class="portrait-settings">
+		<legend>Chat</legend>
+		<div class="sizes">
+			<div>
+				<label for="chatVisibleHours">Ore di chat visibili a chi entra</label>
+				<input id="chatVisibleHours" name="chatVisibleHours" type="number" min="1" max="72" required value={data.current.chatVisibleHours} />
+				{#if errors.chatVisibleHours}<p class="field-error">Scegli un numero tra 1 e 72.</p>{/if}
+			</div>
+			<div>
+				<label for="chatRetentionDays">Cancella i messaggi dopo (giorni)</label>
+				<input id="chatRetentionDays" name="chatRetentionDays" type="number" min="0" max="3650" required value={data.current.chatRetentionDays} />
+				{#if errors.chatRetentionDays}<p class="field-error">Scegli un numero tra 0 e 3650.</p>{/if}
+			</div>
+		</div>
+		<p class="hint">
+			Chi entra in un luogo vede solo i messaggi di queste ultime ore; moderatori e amministratori possono caricare anche quelli precedenti.
+			I messaggi più vecchi dei giorni scelti si cancellano dal database (0 = mai), tranne quelli delle quest ancora in corso.
+			Le giocate registrate sono copie a parte e non si perdono. Il controllo avviene ogni ora.
+		</p>
+	</fieldset>
 	<fieldset class="themes">
 		<legend>Tema grafico del sito <span class="hint">ogni giocatore può sceglierne un altro dal proprio account</span></legend>
 		{#each THEME_IDS as id (id)}
