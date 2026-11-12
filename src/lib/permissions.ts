@@ -21,7 +21,9 @@ export const CAPABILITY_GROUPS = [
 			'guilds.manage': 'Creare le gilde e gestirle tutte',
 			'reports.handle': 'Gestire le segnalazioni dei giocatori',
 			'economy.manage': 'Gestire l’economia (valuta, stipendi, correzioni del denaro)',
-			'items.manage': 'Gestire il catalogo degli oggetti e il mercato'
+			'items.manage': 'Gestire il catalogo degli oggetti e il mercato',
+			'pages.manage': 'Scrivere le pagine informative (guida, regolamento, ambientazione)',
+			'import.run': 'Importare i dati da un vecchio gioco GDRCD'
 		}
 	},
 	{

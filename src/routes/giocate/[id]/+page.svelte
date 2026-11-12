@@ -126,8 +126,8 @@
 		margin: 1rem 0;
 	}
 	.review-note {
-		border-left: 3px solid #c0504d;
-		background: rgba(192, 80, 77, 0.08);
+		border-left: 3px solid var(--c-master);
+		background: color-mix(in srgb, var(--c-master) 8%, transparent);
 		padding: 0.6rem 0.9rem;
 		border-radius: 4px;
 		margin-bottom: 1rem;

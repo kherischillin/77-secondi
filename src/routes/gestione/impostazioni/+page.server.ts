@@ -19,7 +19,9 @@ export const actions: Actions = {
 			siteTagline: String(form.get('siteTagline') ?? ''),
 			registrationsOpen: form.get('registrationsOpen') === 'on',
 			maxCharactersPerUser: Number(form.get('maxCharactersPerUser')),
-			maxGuildsPerCharacter: Number(form.get('maxGuildsPerCharacter'))
+			maxGuildsPerCharacter: Number(form.get('maxGuildsPerCharacter')),
+			theme: String(form.get('theme') ?? 'taverna'),
+			customCss: String(form.get('customCss') ?? '').replace(/\r\n/g, '\n')
 		});
 		if (!parsed.success) {
 			return fail(400, { errors: fieldErrors(parsed.error) });
@@ -28,7 +30,7 @@ export const actions: Actions = {
 		await audit({
 			actorUserId: user.id,
 			action: 'settings.update',
-			details: parsed.data,
+			details: { ...parsed.data, customCss: parsed.data.customCss ? `${parsed.data.customCss.length} caratteri` : '' },
 			ip: clientIp(event)
 		});
 		return { success: true };

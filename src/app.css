@@ -1,6 +1,6 @@
 /*
- * Tema base. Tutti i colori sono variabili: un tema alternativo
- * si crea ridefinendo solo questo blocco :root.
+ * Tema base ("Taverna"). Tutti i colori sono variabili: gli altri temi
+ * (in fondo al file) ridefiniscono solo queste variabili.
  */
 :root {
 	--bg: #14110f;
@@ -17,6 +17,27 @@
 	--success: #8fbf7a;
 	--success-bg: #1d2b18;
 	--focus: #f0c674;
+
+	/* Colori dei tipi di intervento in chat e dei valori */
+	--c-master: #c0504d;
+	--c-master-text: #e58c88;
+	--c-npc: #6f9b6a;
+	--c-npc-text: #a8cf9f;
+	--c-whisper: #5d7fa8;
+	--c-whisper-text: #c7d6ea;
+	--c-whisper-strong: #9cbbe0;
+	--c-system: #8a7bb0;
+	--c-system-text: #c6b8ea;
+	--c-item: #6fa58a;
+	--c-tag: #b9a8d9;
+	--c-speech: #f3e2bf;
+	--c-positive: #9fd3b8;
+	--c-negative: #e39a8f;
+	--c-error-text: #f6c3b9;
+	--c-success-text: #cfe8c3;
+	--header-bg: rgba(15, 13, 11, 0.85);
+	--glow: #2a2018;
+	--shadow: rgba(0, 0, 0, 0.5);
 
 	--font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 	--font-title: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
@@ -40,7 +61,7 @@ body {
 	margin: 0;
 	min-height: 100vh;
 	background:
-		radial-gradient(ellipse at top, #2a2018 0%, transparent 60%),
+		radial-gradient(ellipse at top, var(--glow) 0%, transparent 60%),
 		var(--bg);
 	color: var(--text);
 	font-family: var(--font-body);
@@ -209,7 +230,7 @@ button.secondary {
 }
 .button.secondary:hover,
 button.secondary:hover {
-	background: rgba(212, 162, 76, 0.12);
+	background: color-mix(in srgb, var(--accent) 12%, transparent);
 	color: var(--accent-strong);
 }
 button.danger {
@@ -240,12 +261,12 @@ button.link {
 .alert.error {
 	background: var(--danger-bg);
 	border-color: var(--danger);
-	color: #f6c3b9;
+	color: var(--c-error-text);
 }
 .alert.success {
 	background: var(--success-bg);
 	border-color: var(--success);
-	color: #cfe8c3;
+	color: var(--c-success-text);
 }
 
 /* Tabelle */
@@ -288,4 +309,108 @@ th {
 .badge.danger {
 	border-color: var(--danger);
 	color: var(--danger);
+}
+
+/* ===========================================================================
+ * Temi alternativi. Il tema attivo è l'attributo data-theme di <html>
+ * (scelto dallo staff per tutto il sito o da ogni giocatore nel proprio account).
+ * Per crearne uno nuovo: copia un blocco, cambia i colori e aggiungilo a src/lib/themes.ts.
+ * ======================================================================== */
+
+/* Pergamena: chiaro, carta antica e inchiostro. */
+:root[data-theme='pergamena'] {
+	--bg: #efe5cf;
+	--bg-raised: #f8f1e1;
+	--bg-sunken: #e4d7ba;
+	--border: #cdb98f;
+	--text: #2b2118;
+	--text-muted: #6b5a45;
+	--accent: #8a4b12;
+	--accent-strong: #6d3a0c;
+	--accent-text: #fff8ea;
+	--danger: #a33a2c;
+	--danger-bg: #f3d9d2;
+	--success: #4f7a3c;
+	--success-bg: #dde9cf;
+	--focus: #b5651d;
+	--c-master: #a33a2c;
+	--c-master-text: #8c2b20;
+	--c-npc: #4f7a3c;
+	--c-npc-text: #3d6430;
+	--c-whisper: #3f5f86;
+	--c-whisper-text: #2f4a6b;
+	--c-whisper-strong: #2f4a6b;
+	--c-system: #6a5596;
+	--c-system-text: #57427f;
+	--c-item: #3f7a5c;
+	--c-tag: #6a4c93;
+	--c-speech: #7a3d0c;
+	--c-positive: #2f6b4b;
+	--c-negative: #a33a2c;
+	--c-error-text: #6f2017;
+	--c-success-text: #2d4a22;
+	--header-bg: rgba(239, 229, 207, 0.9);
+	--glow: #fbf3df;
+	--shadow: rgba(60, 40, 10, 0.25);
+	color-scheme: light;
+}
+
+/* Neon: notte metropolitana, insegne magenta e ciano (adatto a un'ambientazione cyberpunk). */
+:root[data-theme='neon'] {
+	--bg: #0a0b12;
+	--bg-raised: #12141f;
+	--bg-sunken: #07080d;
+	--border: #262a40;
+	--text: #e6e8f2;
+	--text-muted: #8e93ad;
+	--accent: #ff3d8b;
+	--accent-strong: #ff6ea8;
+	--accent-text: #13020a;
+	--danger: #ff5c5c;
+	--danger-bg: #2c0f14;
+	--success: #36e0a0;
+	--success-bg: #0d2620;
+	--focus: #2ee6ff;
+	--c-master: #ff4d6d;
+	--c-master-text: #ff8fa3;
+	--c-npc: #36e0a0;
+	--c-npc-text: #8af2c9;
+	--c-whisper: #2ee6ff;
+	--c-whisper-text: #b5f4ff;
+	--c-whisper-strong: #6defff;
+	--c-system: #9b6bff;
+	--c-system-text: #c9b0ff;
+	--c-item: #f5d90a;
+	--c-tag: #2ee6ff;
+	--c-speech: #ffd6e7;
+	--c-positive: #36e0a0;
+	--c-negative: #ff6e7f;
+	--c-error-text: #ffc2c2;
+	--c-success-text: #b6f5dc;
+	--header-bg: rgba(10, 11, 18, 0.88);
+	--glow: #251036;
+	--shadow: rgba(0, 0, 0, 0.6);
+	--font-title: 'Bahnschrift', 'DIN Alternate', 'Arial Narrow', system-ui, sans-serif;
+	color-scheme: dark;
+}
+
+/* Notte: blu freddo, sobrio e riposante per le sessioni lunghe. */
+:root[data-theme='notte'] {
+	--bg: #0f141b;
+	--bg-raised: #161d27;
+	--bg-sunken: #0b0f14;
+	--border: #2a3646;
+	--text: #e2e8f0;
+	--text-muted: #93a1b5;
+	--accent: #7fb2ff;
+	--accent-strong: #a6c9ff;
+	--accent-text: #08121f;
+	--danger: #f07d74;
+	--danger-bg: #2e1817;
+	--success: #82c99a;
+	--success-bg: #15261c;
+	--focus: #a6c9ff;
+	--glow: #1a2638;
+	--header-bg: rgba(15, 20, 27, 0.88);
+	color-scheme: dark;
 }

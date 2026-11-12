@@ -151,7 +151,7 @@
 	.bonus {
 		margin-top: 0.35rem !important;
 		font-size: 0.85rem;
-		color: #9fd3b8;
+		color: var(--c-positive);
 	}
 	.actions {
 		display: flex;

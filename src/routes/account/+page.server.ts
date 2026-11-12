@@ -10,7 +10,12 @@ import {
 	touchCharacter
 } from '#lib/server/characters.ts';
 import { setActiveCharacter } from '#lib/server/auth/session.ts';
-import { characterSchema, fieldErrors } from '#lib/validation.ts';
+import { characterSchema, emailSchema, fieldErrors } from '#lib/validation.ts';
+import { changeEmail, isPlaceholderEmail } from '#lib/server/users.ts';
+import { verifyPassword } from '#lib/server/auth/password.ts';
+import { isTheme } from '#lib/themes.ts';
+import { db, schema } from '#lib/server/db/index.ts';
+import { eq } from 'drizzle-orm';
 import { getEconomy } from '#lib/server/settings.ts';
 import { audit } from '#lib/server/audit.ts';
 
@@ -20,7 +25,7 @@ export const load: PageServerLoad = async (event) => {
 	const { user } = requireUser(event);
 	const characters = await listUserCharacters(user.id);
 	return {
-		account: { username: user.username, email: user.email, roles: user.roles },
+		account: { username: user.username, email: isPlaceholderEmail(user.email) ? null : user.email, roles: user.roles, theme: user.theme },
 		characters: characters.map((c) => ({
 			...c,
 			createdAt: c.createdAt.toISOString(),
@@ -38,6 +43,29 @@ function readId(form: FormData): number | null {
 }
 
 export const actions: Actions = {
+	tema: async (event) => {
+		const { user } = requireUser(event);
+		const raw = String((await event.request.formData()).get('theme') ?? '');
+		const theme = raw === '' ? null : isTheme(raw) ? raw : undefined;
+		if (theme === undefined) return fail(400, { action: 'tema', error: 'Tema non valido.' });
+		await db.update(schema.users).set({ theme }).where(eq(schema.users.id, user.id));
+		return { action: 'tema', success: 'Tema aggiornato.' };
+	},
+
+	email: async (event) => {
+		const { user } = requireUser(event);
+		const form = await event.request.formData();
+		const email = emailSchema.safeParse(form.get('email') ?? '');
+		if (!email.success) return fail(400, { action: 'email', error: email.error.issues[0].message });
+		const [row] = await db.select({ hash: schema.users.passwordHash }).from(schema.users).where(eq(schema.users.id, user.id));
+		if (!row || !(await verifyPassword(row.hash, String(form.get('password') ?? '')))) {
+			return fail(400, { action: 'email', error: 'Password non corretta.' });
+		}
+		if (!(await changeEmail(user.id, email.data))) return fail(400, { action: 'email', error: 'Questa email è già usata da un altro account.' });
+		await audit({ actorUserId: user.id, action: 'account.email', ip: clientIp(event) });
+		return { action: 'email', success: 'Email aggiornata.' };
+	},
+
 	crea: async (event) => {
 		const { user } = requireUser(event);
 		const form = await event.request.formData();

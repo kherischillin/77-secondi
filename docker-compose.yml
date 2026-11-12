@@ -29,7 +29,7 @@ services:
       PORT: 3000
       UPLOAD_DIR: /app/uploads
       # Dimensione massima di un invio (le immagini possono arrivare a 5 MB).
-      BODY_SIZE_LIMIT: 6M
+      BODY_SIZE_LIMIT: 64M
     volumes:
       - immagini:/app/uploads
     ports:

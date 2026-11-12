@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { loginSchema } from '#lib/validation.ts';
 import { findUserForLogin, isBanned } from '#lib/server/users.ts';
-import { getDummyHash, verifyPassword } from '#lib/server/auth/password.ts';
+import { getDummyHash, hashPassword, needsRehash, verifyPassword } from '#lib/server/auth/password.ts';
 import { createSession, generateSessionToken, setSessionCookie } from '#lib/server/auth/session.ts';
 import { loginIpLimiter, loginLimiter } from '#lib/server/rate-limit.ts';
 import { audit } from '#lib/server/audit.ts';
@@ -60,6 +60,11 @@ export const actions: Actions = {
 		}
 
 		loginLimiter.reset(key);
+
+		// Account importato da GDRCD: la vecchia password diventa subito un hash moderno.
+		if (needsRehash(user.passwordHash)) {
+			await db.update(schema.users).set({ passwordHash: await hashPassword(parsed.data.password) }).where(eq(schema.users.id, user.id));
+		}
 
 		if (isBanned(user)) {
 			return fail(403, {

@@ -25,20 +25,28 @@
 
 <section class="grid features">
 	<div class="card">
-		<h3>Un account, più personaggi</h3>
-		<p class="muted">Ogni giocatore ha un solo account e può dare vita a più personaggi, ognuno con la sua storia.</p>
-	</div>
-	<div class="card">
 		<h3>Chat di luogo in tempo reale</h3>
-		<p class="muted">Azioni, parlato, sussurri e interventi del Master arrivano a tutti all'istante. In arrivo nella prossima fase.</p>
+		<p class="muted">Azioni con i dialoghi evidenziati, sussurri, interventi del Master e dei PNG: arrivano a tutti all'istante, con la turnazione sempre sotto gli occhi.</p>
 	</div>
 	<div class="card">
-		<h3>Un mondo da esplorare</h3>
-		<p class="muted">Mappe, luoghi e stanze private dove intrecciare le vostre giocate.</p>
+		<h3>Descrittivo, numerico in quest</h3>
+		<p class="muted">Nel gioco libero si racconta; nelle quest guidate dal Master contano caratteristiche, abilità e oggetti. Si cresce con i punti esperienza.</p>
+	</div>
+	<div class="card">
+		<h3>Un mondo da vivere</h3>
+		<p class="muted">Mappe con meteo e luna, stanze private, gilde con gradi e stipendi, mercato e banca, bacheche e missive ON e OFF game.</p>
 	</div>
 </section>
 
+{#if !data.user}
+	<p class="first-steps muted">Prima di iscriverti leggi la <a href="/pagine/guida">guida</a> e il <a href="/pagine/regolamento">regolamento</a>.</p>
+{/if}
+
 <style>
+	.first-steps {
+		text-align: center;
+		margin-top: 2rem;
+	}
 	.hero {
 		text-align: center;
 		padding: 3rem 0 2.5rem;

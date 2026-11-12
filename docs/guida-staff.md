@@ -1,0 +1,101 @@
+# Guida per lo staff
+
+Tutto quello che serve per configurare e gestire il gioco. Le voci tra **grassetti** si trovano nel menu **Gestione** in alto (compare solo a chi ha i permessi).
+
+## Primi passi
+
+1. **Registrati per primo**: il primo account diventa Amministratore.
+2. **Gestione → Impostazioni**: nome del gioco, sottotitolo, tema grafico, numero di personaggi per account, iscrizioni aperte o chiuse.
+3. **Gestione → Pagine**: completa il **Regolamento** (ci sono già le scelte da dichiarare: turnazione, pensieri, background, metagame) e scrivi l'**Ambientazione**. La **Guida al gioco** è già pronta.
+4. **Gestione → Mappe e luoghi**: crea la prima mappa, scegli il clima, aggiungi i luoghi (vedi sotto).
+5. **Gestione → Regole di gioco**: controlla caratteristiche, abilità, punti iniziali e costi in PX (ci sono già 6 caratteristiche e 10 abilità di esempio).
+6. **Gestione → Economia** e **Oggetti e mercato**: nome della valuta, denaro iniziale, oggetti in vendita.
+7. **Gestione → Ruoli** e **Account**: dai il ruolo Master e Moderatore alle persone di fiducia.
+
+Se arrivi da un vecchio GDRCD, prima di tutto questo leggi [Importare da GDRCD](importare-da-gdrcd.md).
+
+## Ruoli e permessi
+
+Ogni ruolo è un insieme di permessi scelti da un elenco; un account può avere più ruoli. Ruoli predefiniti:
+
+| Ruolo | A cosa serve |
+|---|---|
+| Amministratore | Tutto. Non si può cancellare e ha sempre tutti i permessi, anche quelli futuri. |
+| Moderatore | Account, moderazione di chat e bacheche, segnalazioni, registro attività. |
+| Master | Interventi da Master e PNG, quest, PX, esiti, revisione delle giocate, consegna di oggetti. |
+| Giocatore | Ruolo base di ogni iscritto. |
+
+Regole anti-abuso, sempre attive: nessuno può dare permessi che non ha, né agire su chi ha più poteri; resta sempre almeno un Amministratore; **nessuno può dare PX, denaro od oggetti ai propri personaggi**.
+
+## Mondo
+
+- **Mappe**: immagine (PNG, JPG, WEBP, GIF fino a 5 MB), descrizione, **clima** per il meteo automatico. La mappa "di partenza" è quella in cui arriva chi entra in gioco.
+- **Luoghi**: nella pagina del luogo clicca sull'immagine della mappa nel punto in cui deve comparire. Un luogo può essere una chat oppure un **collegamento** a un'altra mappa (es. "Porta Nord"). Togli "Visibile ai giocatori" per prepararlo con calma.
+- **Stanze private**: su un luogo spunta "Stanza privata", scegli costo orario (0 = gratis) e ore massime. Chi prenota invita gli altri per nome; gli altri non entrano né leggono, e chi prenota dopo non legge le giocate precedenti. I moderatori possono sempre entrare.
+- **Meteo**: cambia da solo ogni 3 ore secondo clima, stagione e ora del giorno, uguale per tutti, con la fase lunare. Nella pagina della mappa puoi imporre un **meteo speciale** per qualche ora (es. "Tempesta di sabbia").
+
+## Regole di gioco (sistema ibrido)
+
+- Nel **gioco libero** si scrive e basta: i dadi sono disattivati (si possono riattivare in Regole di gioco).
+- Durante una **quest** valgono i numeri: un Master entra in un luogo e clicca **Avvia una quest**; compare il pannello **Prova**. La prova somma dado, caratteristica, rango dell'abilità e bonus degli oggetti indossati.
+- **Fine quest**: il Master clicca **Termina quest** e assegna i PX ai partecipanti (lui e i suoi personaggi sono esclusi; i PX di una quest si assegnano una volta sola).
+- **Caratteristiche e abilità** si creano e modificano in Regole di gioco, con valori minimi e massimi; ogni abilità può essere legata a una caratteristica.
+- Dalla **scheda** di un personaggio lo staff può correggere i valori, azzerare la distribuzione iniziale, assegnare PX, consegnare o togliere oggetti.
+
+## Strumenti dei Master (link "Master" in alto)
+
+- **Esiti**: i giocatori chiedono il racconto di ciò che il personaggio fa fuori dalla chat. Il primo Master che risponde se ne occupa; può aggiungere una prova con difficoltà. Un Master non risponde agli esiti dei propri personaggi.
+- **Giocate**: i giocatori registrano un tratto di chat (senza sussurri) e lo inviano ai Master, che lo rivedono, lasciano una nota e assegnano PX.
+
+## Social
+
+- **Bacheche**: sezioni ON GAME (si scrive come personaggio) e OFF GAME (come giocatore); visibili a tutti, ai membri di una gilda o solo allo staff; si può riservare l'apertura di discussioni allo staff. Moderazione: nascondi, chiudi, metti in evidenza, elimina.
+- **Gilde**: le crea lo staff (nascono con 4 gradi e una bacheca riservata). Ingresso libero, su candidatura o su invito. Il **livello** del grado decide la gerarchia: i capi agiscono solo su chi sta sotto.
+- **Missive**: messaggi privati tra personaggi, ON o OFF game. Lo staff non le legge, salvo i singoli messaggi segnalati.
+
+## Economia
+
+- **Economia**: nome della valuta, denaro iniziale, percentuale di rivendita al mercato, ogni quante ore si ritira lo stipendio; **stipendi** dei gradi di gilda; **correzioni** del denaro di un personaggio (premi, multe) con motivo; consultazione dei movimenti di un personaggio.
+- **Oggetti e mercato**: catalogo con immagine, categoria, dove si indossa, prezzo, pezzi disponibili (vuoto = illimitati), consumabile o no, bonus/malus nelle quest. Un oggetto che qualcuno possiede non si elimina: si **archivia**.
+- Tutti i passaggi di denaro e oggetti sono protetti dal "doppio clic" e restano nei movimenti e nel registro attività.
+
+## Pagine e temi
+
+- **Pagine**: testo con formattazione semplice (`# Titolo`, `**grassetto**`, `*corsivo*`, `- elenco`, `[link](/pagine/guida)`), con anteprima. Si sceglie se mostrarle in fondo al sito e se sono leggibili senza account. L'HTML scritto a mano non viene eseguito.
+- **Temi**: Taverna (scuro e caldo), Pergamena (chiaro), Neon (cyberpunk), Notte (blu). Il tema del sito si sceglie in Impostazioni; ogni giocatore può sceglierne un altro dal proprio account. Chi conosce il CSS può aggiungere regole nel campo **CSS personalizzato**.
+
+## Moderazione
+
+- In chat: "Nascondi" su ogni messaggio, effetto immediato per tutti.
+- **Segnalazioni** (numero accanto a "Gestione"): ogni segnalazione ha una copia del testo com'era. Prendila in carico, poi chiudila scrivendo com'è stata gestita.
+- **Account**: sospensione con data di fine e motivo.
+- **Registro attività**: accessi, iscrizioni, modifiche dello staff, movimenti importanti, con data e indirizzo IP.
+
+## Copie di sicurezza
+
+Falle prima di ogni aggiornamento importante e prima di un'importazione. Dalla cartella del progetto (GitHub Desktop → Repository → Open in Command Prompt), con il gioco acceso:
+
+```
+docker compose exec db pg_dump -U gdr -d gdr -Fc -f /tmp/copia.dump
+docker compose cp db:/tmp/copia.dump copia-gdr.dump
+docker compose cp app:/app/uploads copia-immagini
+```
+
+Nella cartella del progetto compaiono il file `copia-gdr.dump` (il database) e la cartella `copia-immagini`. Conservali altrove (chiavetta, cloud).
+
+Per **ripristinare** una copia (sostituisce tutti i dati attuali):
+
+```
+docker compose cp copia-gdr.dump db:/tmp/copia.dump
+docker compose exec db pg_restore -U gdr -d gdr --clean --if-exists /tmp/copia.dump
+docker compose cp copia-immagini/. app:/app/uploads
+docker compose restart app
+```
+
+## Mettere il gioco online
+
+Per aprirlo al pubblico serve un server (VPS) con Docker e un nome di dominio.
+
+1. Sul server: copia il progetto e, in `docker-compose.yml`, cambia `ORIGIN` con l'indirizzo pubblico (es. `https://miogdr.it`) e le password del database (`POSTGRES_PASSWORD` e la stessa password dentro `DATABASE_URL`).
+2. Metti davanti al gioco un server web con **HTTPS** (per esempio Caddy, che ottiene il certificato da solo) che inoltri le richieste alla porta 3000.
+3. Avvia con `docker compose up -d --build` e programma una copia di sicurezza automatica ogni giorno.

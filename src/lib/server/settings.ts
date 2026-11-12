@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { db, schema } from './db';
 import { DEFAULT_RULES, rulesSchema, type Rules } from '../rules.ts';
 import { DEFAULT_ECONOMY, economySchema, type Economy } from '../economy.ts';
+import { THEME_IDS, type ThemeId } from '../themes.ts';
 
 /**
  * Impostazioni del sito, con valori predefiniti e validazione.
@@ -13,7 +14,11 @@ export const settingsSchema = z.object({
 	siteTagline: z.string().trim().max(200),
 	registrationsOpen: z.boolean(),
 	maxCharactersPerUser: z.number().int().min(1).max(20),
-	maxGuildsPerCharacter: z.number().int().min(1).max(10)
+	maxGuildsPerCharacter: z.number().int().min(1).max(10),
+	/** Tema grafico predefinito del sito. */
+	theme: z.enum(THEME_IDS as [ThemeId, ...ThemeId[]]),
+	/** CSS aggiuntivo scritto dallo staff (servito da /tema.css). */
+	customCss: z.string().max(50_000)
 });
 
 export type SiteSettings = z.infer<typeof settingsSchema>;
@@ -23,7 +28,9 @@ export const DEFAULT_SETTINGS: SiteSettings = {
 	siteTagline: 'Un gioco di ruolo testuale',
 	registrationsOpen: true,
 	maxCharactersPerUser: 3,
-	maxGuildsPerCharacter: 2
+	maxGuildsPerCharacter: 2,
+	theme: 'taverna',
+	customCss: ''
 };
 
 let cache: SiteSettings | null = null;

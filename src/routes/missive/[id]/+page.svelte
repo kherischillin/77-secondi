@@ -69,10 +69,10 @@
 		margin: 0.4rem 0 0.2rem;
 	}
 	.off-note {
-		border-left: 3px solid #5d7fa8;
+		border-left: 3px solid var(--c-whisper);
 		padding: 0.4rem 0.75rem;
-		color: #c7d6ea;
-		background: rgba(93, 127, 168, 0.1);
+		color: var(--c-whisper-text);
+		background: color-mix(in srgb, var(--c-whisper) 10%, transparent);
 		border-radius: 4px;
 	}
 	.messages {
@@ -90,8 +90,8 @@
 	}
 	.msg.mine {
 		justify-self: end;
-		border-color: rgba(212, 162, 76, 0.4);
-		background: rgba(212, 162, 76, 0.06);
+		border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+		background: color-mix(in srgb, var(--accent) 6%, transparent);
 	}
 	.rep {
 		margin-left: auto;

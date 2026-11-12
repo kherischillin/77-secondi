@@ -163,10 +163,10 @@
 		font-variant-numeric: tabular-nums;
 		white-space: nowrap;
 		font-weight: 600;
-		color: #9fd3b8;
+		color: var(--c-positive);
 	}
 	.num.neg {
-		color: #e39a8f;
+		color: var(--c-negative);
 	}
 	th.num {
 		color: var(--text-muted);

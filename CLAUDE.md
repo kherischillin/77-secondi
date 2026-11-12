@@ -24,6 +24,10 @@ Il proprietario del progetto non programma: tutto il codice lo scrive Claude. Sp
 - Strumenti master: logica pura in `src/lib/master.ts` (`judgeCheck`, `giocataMessages`, `renderGiocataHtml`). Esiti (`esiti.manage`), giocate come copia JSON dei messaggi senza sussurri/nascosti (`giocate.review`, PX atomici in `reviewGiocata`), segnalazioni con copia del contenuto verificando che il segnalante lo veda (`reports.handle`). Spazio `/master`, contatori nell'intestazione da `+layout.server.ts`.
 - Economia: logica pura in `src/lib/economy.ts` (valuta, rivendita, stipendi, posizioni e bonus degli oggetti) e `src/lib/weather.ts` (meteo deterministico per mappa + fasi lunari), impostazioni sotto la chiave `economy`. Il denaro si muove solo con `move()` di `src/lib/server/money.ts` (UPDATE condizionato + riga in `money_log`, vincolo CHECK ≥ 0); oggetti in `src/lib/server/items.ts` (impilati se non si indossano). I bonus degli oggetti indossati entrano in `checkValues` (solo prove in quest/esiti).
 - Stanze private: `roomAccess()` in `src/lib/server/rooms.ts` decide accesso e `since` (si leggono solo i messaggi della prenotazione in corso); controllata in load, azioni, eventi e storico. `disconnect()` del realtime butta fuori chi perde l'accesso.
+- Temi: colori solo come variabili CSS in `src/app.css` (blocchi `[data-theme=...]`), elenco in `src/lib/themes.ts`; mai colori fissi nei componenti. Tema del sito in settings, tema personale in `users.theme`, applicato da hooks (`%gdr.theme%` in app.html).
+- Pagine (Guida, Regolamento, Ambientazione…) nella tabella `pages`, rese con `renderMarkup` (src/lib/markup.ts, testato): mai HTML degli utenti.
+- Importatore GDRCD in `src/lib/server/import/`: `parseDump` legge i dump MySQL, `runImport` fa tutto in una transazione (anteprima = stessa importazione annullata). Password phpass/MD5 verificate da `legacy-password.ts` e riscritte in Argon2 al primo accesso; email segnaposto `@importato.invalid`. Si entra anche con il nome del personaggio.
+- Documentazione per persone in `docs/` (staff, importazione, sviluppo): aggiornarla quando cambiano le funzioni.
 - Gilde create dallo staff (`guilds.manage`) con gradi predefiniti e bacheca di gilda; il livello del grado decide la gerarchia.
 
 ## Verifiche prima di consegnare
@@ -36,4 +40,6 @@ Il proprietario del progetto non programma: tutto il codice lo scrive Claude. Sp
 4. ✅ Social (missive ON/OFF, bacheche con sezioni e visibilità, gilde con gradi e candidature).
 5. ✅ Strumenti master (esiti con prove, giocate registrate e revisionate, segnalazioni allo staff).
 6. ✅ Economia ed extra (oggetti e inventario, banca, mercato, stipendi, stanze private, meteo).
-7. Importatore da GDRCD, documentazione, temi.
+7. ✅ Importatore da GDRCD, documentazione (docs/), pagine modificabili, temi.
+
+Prossimo: miglioramenti allo scheletro su richiesta del proprietario.

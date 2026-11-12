@@ -16,6 +16,8 @@
 			{ href: '/gestione/oggetti', label: 'Oggetti e mercato', cap: 'items.manage' },
 			{ href: '/gestione/economia', label: 'Economia', cap: 'economy.manage' },
 			{ href: '/gestione/segnalazioni', label: 'Segnalazioni', cap: 'reports.handle' },
+			{ href: '/gestione/pagine', label: 'Pagine', cap: 'pages.manage' },
+			{ href: '/gestione/importa', label: 'Importa da GDRCD', cap: 'import.run' },
 			{ href: '/gestione/impostazioni', label: 'Impostazioni', cap: 'settings.manage' },
 			{ href: '/gestione/registro', label: 'Registro attività', cap: 'audit.view' }
 		].filter((l) => data.adminCapabilities.includes(l.cap))

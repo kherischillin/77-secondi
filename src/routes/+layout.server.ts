@@ -3,6 +3,8 @@ import { unreadCount } from '#lib/server/messages.ts';
 import { masterPendingCount, playerUnreadCount } from '#lib/server/esiti.ts';
 import { pendingReviewCount } from '#lib/server/giocate.ts';
 import { openReportsCount } from '#lib/server/reports.ts';
+import { footerPages } from '#lib/server/pages.ts';
+import { isTheme } from '#lib/themes.ts';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
 	const user = locals.user;
@@ -22,6 +24,9 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 		reportsOpen,
 		siteName: locals.settings.siteName,
 		siteTagline: locals.settings.siteTagline,
+		customCss: locals.settings.customCss.length > 0,
+		theme: isTheme(user?.theme) ? user.theme : locals.settings.theme,
+		footerPages: await footerPages(!!user),
 		user: user
 			? {
 					username: user.username,

@@ -2,12 +2,15 @@
 	import { enhance } from '$app/forms';
 	import type { PageProps } from './$types';
 	import { formatDate, formatDateTime, fullName } from '#lib/format.ts';
+	import { THEMES, THEME_IDS } from '#lib/themes.ts';
 
 	let { data, form }: PageProps = $props();
 
 	let deleting = $state<number | null>(null);
 	const canCreate = $derived(data.characters.length < data.maxCharacters);
 	const createErrors = $derived(form?.action === 'crea' ? (form.errors ?? {}) : {});
+	const notice = (action: string) => (form && 'action' in form && form.action === action ? form : null);
+	let showEmail = $state(false);
 	const createValues = $derived(
 		form?.action === 'crea' && 'values' in form ? form.values : undefined
 	);
@@ -29,7 +32,8 @@
 <section class="card account">
 	<div>
 		<strong>{data.account.username}</strong>
-		<span class="muted">· {data.account.email}</span>
+		<span class="muted">· {data.account.email ?? 'nessuna email'}</span>
+		<button type="button" class="link small" onclick={() => (showEmail = !showEmail)}>{data.account.email ? 'Cambia email' : 'Aggiungi email'}</button>
 	</div>
 	<div>
 		{#each data.account.roles as role (role)}
@@ -37,6 +41,29 @@
 		{/each}
 	</div>
 </section>
+
+{#if !data.account.email}
+	<div class="alert error">
+		Il tuo account è stato importato dal vecchio gioco e non ha ancora un'email: aggiungila qui sotto, serve per ritrovare l'account.
+	</div>
+{/if}
+{#if notice('email')}
+	{@const n = notice('email')!}
+	<div class="alert {'success' in n ? 'success' : 'error'}">{'success' in n ? n.success : n.error}</div>
+{/if}
+{#if showEmail || !data.account.email}
+	<form method="post" action="?/email" class="card stack email-form" use:enhance>
+		<div>
+			<label for="newEmail">Nuova email</label>
+			<input id="newEmail" name="email" type="email" maxlength="254" required autocomplete="email" />
+		</div>
+		<div>
+			<label for="confirmPassword">Password attuale <span class="hint">per conferma</span></label>
+			<input id="confirmPassword" name="password" type="password" required autocomplete="current-password" />
+		</div>
+		<div><button type="submit">Salva email</button></div>
+	</form>
+{/if}
 
 <h2>I miei personaggi <span class="muted count">{data.characters.length}/{data.maxCharacters}</span></h2>
 
@@ -118,7 +145,59 @@
 	</form>
 {/if}
 
+<h2 class="spaced">Aspetto del sito</h2>
+{#if notice('tema') && 'success' in notice('tema')!}<div class="alert success">Tema aggiornato.</div>{/if}
+<form method="post" action="?/tema" class="card themes" use:enhance={() => async ({ update }) => update({ reset: false, invalidateAll: true })}>
+	<label class="theme">
+		<input type="radio" name="theme" value="" checked={!data.account.theme} />
+		<span><strong>Quello del sito</strong> <span class="hint">scelto dallo staff</span></span>
+	</label>
+	{#each THEME_IDS as id (id)}
+		<label class="theme">
+			<input type="radio" name="theme" value={id} checked={data.account.theme === id} />
+			<span class="swatch" aria-hidden="true">{#each THEMES[id].swatch as c (c)}<span style="background: {c}"></span>{/each}</span>
+			<span><strong>{THEMES[id].label}</strong> <span class="hint">{THEMES[id].description}</span></span>
+		</label>
+	{/each}
+	<div><button type="submit">Usa questo tema</button></div>
+</form>
+
 <style>
+	.email-form {
+		max-width: 480px;
+		margin-bottom: 1.5rem;
+	}
+	.small {
+		font-size: 0.85rem;
+		margin-left: 0.5rem;
+	}
+	.themes {
+		display: grid;
+		gap: 0.6rem;
+		max-width: 560px;
+	}
+	.theme {
+		display: flex;
+		gap: 0.75rem;
+		align-items: center;
+		font-weight: 400;
+		margin: 0;
+		cursor: pointer;
+	}
+	.theme input {
+		width: auto;
+	}
+	.swatch {
+		display: inline-flex;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		overflow: hidden;
+		flex: 0 0 auto;
+	}
+	.swatch span {
+		width: 18px;
+		height: 22px;
+	}
 	.account {
 		display: flex;
 		justify-content: space-between;

@@ -1,4 +1,4 @@
-import { eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, ne, sql } from 'drizzle-orm';
 import { db, schema } from './db';
 import { hashPassword } from './auth/password';
 
@@ -66,7 +66,33 @@ export async function findUserForLogin(usernameOrEmail: string) {
 			sql`lower(${schema.users.username}) = lower(${usernameOrEmail}) or lower(${schema.users.email}) = lower(${usernameOrEmail})`
 		)
 		.limit(1);
-	return user ?? null;
+	if (user) return user;
+	// Come in GDRCD si può entrare anche con il nome del personaggio (i nomi sono unici).
+	const [byCharacter] = await db
+		.select({ user: schema.users })
+		.from(schema.characters)
+		.innerJoin(schema.users, eq(schema.characters.userId, schema.users.id))
+		.where(and(sql`lower(${schema.characters.name}) = lower(${usernameOrEmail})`, isNull(schema.characters.deletedAt)))
+		.limit(1);
+	return byCharacter?.user ?? null;
+}
+
+/** Email segnaposto degli account importati da GDRCD (che salvava le email cifrate). */
+export const PLACEHOLDER_EMAIL_DOMAIN = 'importato.invalid';
+export function isPlaceholderEmail(email: string) {
+	return email.toLowerCase().endsWith(`@${PLACEHOLDER_EMAIL_DOMAIN}`);
+}
+
+/** Cambia l'email (unica, senza distinguere maiuscole). Restituisce false se è già usata. */
+export async function changeEmail(userId: number, email: string) {
+	const [taken] = await db
+		.select({ id: schema.users.id })
+		.from(schema.users)
+		.where(and(sql`lower(${schema.users.email}) = lower(${email})`, ne(schema.users.id, userId)))
+		.limit(1);
+	if (taken) return false;
+	await db.update(schema.users).set({ email }).where(eq(schema.users.id, userId));
+	return true;
 }
 
 /** Quanti utenti hanno il ruolo di sistema (Amministratore) (serve per non restare mai senza). */

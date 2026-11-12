@@ -137,8 +137,8 @@
 		padding: 0.8rem 1rem;
 	}
 	.msg.master {
-		border-left: 3px solid #c0504d;
-		background: rgba(192, 80, 77, 0.07);
+		border-left: 3px solid var(--c-master);
+		background: color-mix(in srgb, var(--c-master) 7%, transparent);
 	}
 	.msg header {
 		display: flex;
@@ -152,9 +152,9 @@
 	.off {
 		margin: 0.5rem 0 0;
 		padding: 0.4rem 0.6rem;
-		background: rgba(93, 127, 168, 0.12);
+		background: color-mix(in srgb, var(--c-whisper) 12%, transparent);
 		border-radius: 4px;
-		color: #c7d6ea;
+		color: var(--c-whisper-text);
 		white-space: pre-wrap;
 		font-size: 0.92rem;
 	}
@@ -172,7 +172,7 @@
 		padding: 0.5rem 0.75rem;
 		border: 1px solid var(--accent);
 		border-radius: 6px;
-		background: rgba(212, 162, 76, 0.07);
+		background: color-mix(in srgb, var(--accent) 7%, transparent);
 	}
 	.check.success {
 		border-color: var(--success);

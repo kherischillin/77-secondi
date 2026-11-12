@@ -40,6 +40,11 @@
 		if (to?.url.pathname.startsWith('/missive/')) refreshUnread();
 	});
 
+	// Cambiando tema (account o impostazioni) la pagina si aggiorna senza ricaricare.
+	$effect(() => {
+		document.documentElement.dataset.theme = data.theme;
+	});
+
 	// Il numero compare anche nel titolo della scheda del browser, come in GDRCD.
 	$effect(() => {
 		const count = unread;
@@ -54,6 +59,7 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+	{#if data.customCss}<link rel="stylesheet" href="/tema.css" />{/if}
 	<title>{data.siteName}</title>
 </svelte:head>
 
@@ -100,13 +106,18 @@
 </main>
 
 <footer class="container site-footer muted">
-	{data.siteName} · {data.siteTagline}
+	<span>{data.siteName} · {data.siteTagline}</span>
+	{#if data.footerPages.length}
+		<nav aria-label="Pagine informative">
+			{#each data.footerPages as p (p.slug)}<a href="/pagine/{p.slug}">{p.title}</a>{/each}
+		</nav>
+	{/if}
 </footer>
 
 <style>
 	.site-header {
 		border-bottom: 1px solid var(--border);
-		background: rgba(15, 13, 11, 0.85);
+		background: var(--header-bg);
 		backdrop-filter: blur(6px);
 		position: sticky;
 		top: 0;
@@ -166,5 +177,20 @@
 		padding-block: 1.5rem;
 		border-top: 1px solid var(--border);
 		font-size: 0.85rem;
+		display: flex;
+		justify-content: space-between;
+		gap: 0.5rem 1.5rem;
+		flex-wrap: wrap;
+	}
+	.site-footer nav {
+		display: flex;
+		gap: 1rem;
+		flex-wrap: wrap;
+	}
+	.site-footer a {
+		color: var(--text-muted);
+	}
+	.site-footer a:hover {
+		color: var(--accent);
 	}
 </style>

@@ -80,7 +80,7 @@
 	.bonus {
 		display: block;
 		font-size: 0.8rem;
-		color: #9fd3b8;
+		color: var(--c-positive);
 	}
 	.num {
 		text-align: right;

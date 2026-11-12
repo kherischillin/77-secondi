@@ -113,7 +113,7 @@
 		font-size: 0.8rem;
 	}
 	.tag {
-		color: #b9a8d9;
+		color: var(--c-tag);
 		font-weight: 600;
 		letter-spacing: 0.03em;
 	}
@@ -132,20 +132,20 @@
 	}
 	q {
 		quotes: none;
-		color: #f3e2bf;
+		color: var(--c-speech);
 		font-style: italic;
 	}
 	.mine {
-		background: rgba(212, 162, 76, 0.05);
+		background: color-mix(in srgb, var(--accent) 5%, transparent);
 	}
 
 	/* Master: la stringa del GM è vincolante, deve risaltare. */
 	.master {
-		border-left-color: #c0504d;
-		background: rgba(192, 80, 77, 0.1);
+		border-left-color: var(--c-master);
+		background: color-mix(in srgb, var(--c-master) 10%, transparent);
 	}
 	.master-label {
-		color: #e58c88;
+		color: var(--c-master-text);
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
 	}
@@ -155,29 +155,29 @@
 	}
 
 	.npc {
-		border-left-color: #6f9b6a;
+		border-left-color: var(--c-npc);
 	}
 	.npc .who {
-		color: #a8cf9f;
+		color: var(--c-npc-text);
 	}
 	.png {
 		font-size: 0.7rem;
-		border: 1px solid #6f9b6a;
-		color: #a8cf9f;
+		border: 1px solid var(--c-npc);
+		color: var(--c-npc-text);
 		border-radius: 999px;
 		padding: 0 0.4rem;
 	}
 
 	.whisper {
-		border-left-color: #5d7fa8;
-		background: rgba(93, 127, 168, 0.1);
+		border-left-color: var(--c-whisper);
+		background: color-mix(in srgb, var(--c-whisper) 10%, transparent);
 	}
 	.whisper .body {
 		font-style: italic;
-		color: #c7d6ea;
+		color: var(--c-whisper-text);
 	}
 	.whisper .who {
-		color: #9cbbe0;
+		color: var(--c-whisper-strong);
 	}
 
 	.roll {
@@ -198,15 +198,15 @@
 
 	.check {
 		border-left-color: var(--accent);
-		background: rgba(212, 162, 76, 0.07);
+		background: color-mix(in srgb, var(--accent) 7%, transparent);
 	}
 	.item {
-		border-left-color: #6fa58a;
-		background: rgba(111, 165, 138, 0.08);
+		border-left-color: var(--c-item);
+		background: color-mix(in srgb, var(--c-item) 8%, transparent);
 	}
 	.item-name {
 		font-weight: 700;
-		color: #9fd3b8;
+		color: var(--c-positive);
 	}
 	.item-desc {
 		margin: 0.2rem 0 0;
@@ -215,8 +215,8 @@
 		font-style: italic;
 	}
 	.system {
-		border-left-color: #8a7bb0;
-		background: rgba(138, 123, 176, 0.12);
+		border-left-color: var(--c-system);
+		background: color-mix(in srgb, var(--c-system) 12%, transparent);
 		text-align: center;
 	}
 	.system header {
@@ -229,7 +229,7 @@
 	.system-label {
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		color: #c6b8ea;
+		color: var(--c-system-text);
 		font-weight: 700;
 	}
 

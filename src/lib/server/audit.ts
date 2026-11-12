@@ -102,5 +102,11 @@ export const AUDIT_LABELS: Record<string, string> = {
 	'economy.update': 'Modifica impostazioni economiche',
 	'economy.salary': 'Modifica stipendio di un grado',
 	'room.book': 'Prenotazione stanza privata',
-	'map.weather': 'Meteo impostato dallo staff'
+	'map.weather': 'Meteo impostato dallo staff',
+	'page.create': 'Creazione pagina',
+	'page.update': 'Modifica pagina',
+	'page.delete': 'Cancellazione pagina',
+	'account.theme': 'Cambio del tema grafico',
+	'account.email': 'Cambio dell’email',
+	'import.gdrcd': 'Importazione da GDRCD'
 };

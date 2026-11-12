@@ -370,8 +370,8 @@
 		align-items: center;
 		gap: 1rem;
 		flex-wrap: wrap;
-		border: 1px solid #8a7bb0;
-		background: rgba(138, 123, 176, 0.14);
+		border: 1px solid var(--c-system);
+		background: color-mix(in srgb, var(--c-system) 14%, transparent);
 		border-radius: var(--radius);
 		padding: 0.75rem 1rem;
 		margin-bottom: 1.25rem;
@@ -381,7 +381,7 @@
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 		font-size: 0.75rem;
-		color: #c6b8ea;
+		color: var(--c-system-text);
 		font-weight: 700;
 	}
 	.quest-banner p {

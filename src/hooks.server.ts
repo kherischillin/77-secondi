@@ -1,3 +1,4 @@
+import { isTheme } from '#lib/themes.ts';
 import type { Handle, ServerInit } from '@sveltejs/kit/hooks';
 import { bootstrapDatabase } from '#lib/server/bootstrap.ts';
 import { getSettings } from '#lib/server/settings.ts';
@@ -39,7 +40,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
-	const response = await resolve(event);
+	// Tema grafico: quello scelto dal giocatore, altrimenti quello del sito.
+	const theme = isTheme(event.locals.user?.theme) ? event.locals.user.theme : event.locals.settings.theme;
+	const response = await resolve(event, {
+		transformPageChunk: ({ html }) => html.replace('%gdr.theme%', theme)
+	});
 	response.headers.set('X-Content-Type-Options', 'nosniff');
 	response.headers.set('X-Frame-Options', 'DENY');
 	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');

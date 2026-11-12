@@ -38,7 +38,9 @@ export const users = pgTable(
 		lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
 		/** Se valorizzato e nel futuro, l'account è sospeso fino a quella data. */
 		bannedUntil: timestamp('banned_until', { withTimezone: true }),
-		banReason: text('ban_reason')
+		banReason: text('ban_reason'),
+		/** Tema grafico scelto dal giocatore (null = quello del sito). */
+		theme: text('theme')
 	},
 	(t) => [
 		uniqueIndex('users_username_lower_idx').on(sql`lower(${t.username})`),
@@ -762,4 +764,28 @@ export const roomBookings = pgTable(
 		createdAt: createdAt()
 	},
 	(t) => [index('room_bookings_location_idx').on(t.locationId, t.endsAt)]
+);
+
+// ---------------------------------------------------------------------------
+// Pagine informative (Guida, Regolamento, Ambientazione...) modificabili dallo staff
+// ---------------------------------------------------------------------------
+
+export const pages = pgTable(
+	'pages',
+	{
+		id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+		/** Indirizzo della pagina: /pagine/<slug>. */
+		slug: text('slug').notNull(),
+		title: text('title').notNull(),
+		/** Testo con formattazione semplice (titoli #, **grassetto**, *corsivo*, elenchi, link). */
+		body: text('body').notNull().default(''),
+		/** Mostrata nei link in fondo a ogni pagina. */
+		inFooter: boolean('in_footer').notNull().default(true),
+		/** Leggibile anche da chi non ha un account (es. regolamento prima di iscriversi). */
+		isPublic: boolean('is_public').notNull().default(true),
+		sortOrder: integer('sort_order').notNull().default(0),
+		updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+		updatedByUserId: integer('updated_by_user_id').references(() => users.id, { onDelete: 'set null' })
+	},
+	(t) => [uniqueIndex('pages_slug_idx').on(t.slug)]
 );

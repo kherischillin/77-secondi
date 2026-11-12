@@ -343,7 +343,7 @@
 		margin: 0.2rem 0 0;
 	}
 	.bonus {
-		color: #9fd3b8;
+		color: var(--c-positive);
 	}
 	.staff-inv {
 		list-style: none;
