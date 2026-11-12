@@ -25,7 +25,7 @@
 					{m.name}
 					{#if m.isStart}<span class="badge accent">partenza</span>{/if}
 				</h3>
-				<p class="muted small">{m.locations} luogh{m.locations === 1 ? 'o' : 'i'}</p>
+				<p class="muted small">{m.locations} {m.locations === 1 ? 'luogo' : 'luoghi'}</p>
 			</a>
 		{/each}
 	</div>

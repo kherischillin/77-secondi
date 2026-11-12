@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { requireCharacter } from '#lib/server/guards.ts';
-import { getMap, listLocations, toLocationView, toMapView } from '#lib/server/world.ts';
+import { getMap, listDistricts, listLocations, mapDisplay, toLocationView, toMapView } from '#lib/server/world.ts';
 import { enterMap, getPresence, listOnline } from '#lib/server/presence.ts';
 import { broadcastPresence } from '#lib/server/realtime.ts';
 import { bookedLocationIds } from '#lib/server/rooms.ts';
@@ -17,7 +17,7 @@ export const load: PageServerLoad = async (event) => {
 	await enterMap(character.id, map.id);
 	if (before?.locationId) void broadcastPresence(before.locationId);
 
-	const [locations, online] = await Promise.all([listLocations(map.id), listOnline()]);
+	const [locations, online, districts, display] = await Promise.all([listLocations(map.id), listOnline(), listDistricts(map.id), mapDisplay(map)]);
 	const people = new Map<number, { id: number; name: string; avatarUrl: string | null }[]>();
 	for (const c of online) {
 		if (!c.locationId || c.locationPrivate) continue;
@@ -27,7 +27,14 @@ export const load: PageServerLoad = async (event) => {
 	}
 	const booked = await bookedLocationIds(locations.filter((l) => l.isPrivate).map((l) => l.id));
 	return {
-		map: toMapView(map),
+		map: { ...toMapView(map), imageUrl: display.imageUrl },
+		crop: display.crop,
+		parent: display.parent,
+		// Distretti: aree cliccabili, con quanti personaggi ci sono dentro (fuori dalle stanze private).
+		districts: districts.map((d) => ({
+			...d,
+			present: online.filter((c) => c.mapId === d.id && !c.locationPrivate).length
+		})),
 		weather: weatherFor(map, new Date()),
 		locations: locations.map((l) => ({
 			...toLocationView(l),

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { db, schema } from './db/index.ts';
 import { mediaUrl } from './uploads.ts';
 import { CLIMATES } from '../weather.ts';
+import type { Area } from '../districts.ts';
 
 export type MapView = {
 	id: number;
@@ -13,6 +14,9 @@ export type MapView = {
 	climate: string | null;
 	weatherOverride: string | null;
 	weatherOverrideUntil: string | null;
+	/** Distretto: mappa madre e area occupata sulla sua immagine. */
+	parentMapId: number | null;
+	area: Area | null;
 };
 
 export type LocationView = {
@@ -40,8 +44,41 @@ export function toMapView(m: typeof schema.maps.$inferSelect): MapView {
 		isStart: m.isStart,
 		climate: m.climate,
 		weatherOverride: m.weatherOverride,
-		weatherOverrideUntil: m.weatherOverrideUntil?.toISOString() ?? null
+		weatherOverrideUntil: m.weatherOverrideUntil?.toISOString() ?? null,
+		parentMapId: m.parentMapId,
+		area: areaOf(m)
 	};
+}
+
+type MapRow = typeof schema.maps.$inferSelect;
+
+export function areaOf(m: MapRow): Area | null {
+	return m.areaX !== null && m.areaY !== null && m.areaW !== null && m.areaH !== null
+		? { x: m.areaX, y: m.areaY, w: m.areaW, h: m.areaH }
+		: null;
+}
+
+/**
+ * Immagine da mostrare per una mappa: la sua, oppure (per un distretto senza immagine)
+ * quella della mappa madre ritagliata sull'area del distretto.
+ */
+export async function mapDisplay(m: MapRow): Promise<{ imageUrl: string | null; crop: Area | null; parent: { id: number; name: string } | null }> {
+	const parent = m.parentMapId ? await getMap(m.parentMapId) : null;
+	const parentInfo = parent ? { id: parent.id, name: parent.name } : null;
+	if (m.image) return { imageUrl: mediaUrl(m.image), crop: null, parent: parentInfo };
+	const area = areaOf(m);
+	if (parent?.image && area) return { imageUrl: mediaUrl(parent.image), crop: area, parent: parentInfo };
+	return { imageUrl: null, crop: null, parent: parentInfo };
+}
+
+/** Distretti di una mappa (le sue mappe figlie con un'area), in ordine. */
+export async function listDistricts(mapId: number) {
+	const rows = await db
+		.select()
+		.from(schema.maps)
+		.where(eq(schema.maps.parentMapId, mapId))
+		.orderBy(asc(schema.maps.sortOrder), asc(schema.maps.name));
+	return rows.map((m) => ({ id: m.id, name: m.name, description: m.description, area: areaOf(m) }));
 }
 
 export function toLocationView(l: typeof schema.locations.$inferSelect): LocationView {

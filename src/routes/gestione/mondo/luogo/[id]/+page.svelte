@@ -53,6 +53,7 @@
 				imageUrl={data.map.imageUrl}
 				alt="Mappa {data.map.name}"
 				{markers}
+				crop={data.crop}
 				onpick={(px, py) => {
 					x = px;
 					y = py;

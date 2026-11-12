@@ -9,6 +9,10 @@
 		return l.kind === 'map_link' && l.linkedMapId ? `/gioco/mappa/${l.linkedMapId}` : `/gioco/luogo/${l.id}`;
 	}
 
+	const districtAreas = $derived(
+		data.districts.flatMap((d) => (d.area ? [{ id: d.id, name: d.name, area: d.area, href: `/gioco/mappa/${d.id}`, count: d.present }] : []))
+	);
+
 	const markers = $derived(
 		data.locations.map((l) => ({
 			id: l.id,
@@ -24,6 +28,9 @@
 
 <svelte:head><title>{data.map.name} · {data.siteName}</title></svelte:head>
 
+{#if data.parent}
+	<p class="crumbs"><a href="/gioco/mappa/{data.parent.id}">← {data.parent.name}</a></p>
+{/if}
 <div class="head">
 	<h1>{data.map.name}</h1>
 	{#if data.weather}
@@ -38,12 +45,25 @@
 
 <div class="layout">
 	{#if data.map.imageUrl}
-		<MapCanvas imageUrl={data.map.imageUrl} alt="Mappa: {data.map.name}" {markers} />
+		<MapCanvas imageUrl={data.map.imageUrl} alt="Mappa: {data.map.name}" {markers} crop={data.crop} districts={districtAreas} />
 	{/if}
 
 	<section class="card">
-		<h2>Luoghi</h2>
-		{#if data.locations.length === 0}
+		{#if data.districts.length}
+			<h2>Distretti</h2>
+			<ul class="places districts">
+				{#each data.districts as d (d.id)}
+					<li>
+						<a href="/gioco/mappa/{d.id}">
+							<span class="name">{d.name}</span>
+							{#if d.present > 0}<span class="badge accent">{d.present} present{d.present === 1 ? 'e' : 'i'}</span>{/if}
+						</a>
+					</li>
+				{/each}
+			</ul>
+		{/if}
+		{#if data.locations.length || !data.districts.length}<h2 class:spaced={data.districts.length > 0}>Luoghi</h2>{/if}
+		{#if data.locations.length === 0 && !data.districts.length}
 			<p class="muted">Su questa mappa non ci sono ancora luoghi.</p>
 		{:else}
 			<ul class="places">
@@ -145,5 +165,11 @@
 	}
 	.small {
 		font-size: 0.85rem;
+	}
+	.crumbs {
+		margin: 0 0 0.25rem;
+	}
+	h2.spaced {
+		margin-top: 1.5rem;
 	}
 </style>

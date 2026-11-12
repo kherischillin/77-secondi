@@ -2,6 +2,8 @@
 	import { enhance } from '$app/forms';
 	import type { PageProps } from './$types';
 	import MapCanvas from '#lib/components/MapCanvas.svelte';
+	import AreaPicker from '#lib/components/AreaPicker.svelte';
+	import type { Area } from '#lib/districts.ts';
 	import { CLIMATES, CLIMATE_LABELS } from '#lib/weather.ts';
 	import { formatDateTime } from '#lib/format.ts';
 
@@ -19,6 +21,15 @@
 			href: `/gestione/mondo/luogo/${l.id}`
 		}))
 	);
+	// Distretto: mappa madre scelta e area disegnata sulla sua immagine.
+	let parentId = $state('');
+	let area = $state<Area | null>(null);
+	$effect.pre(() => {
+		parentId = data.map.parentMapId ? String(data.map.parentMapId) : '';
+		area = data.map.area;
+	});
+	const parent = $derived(data.parentOptions.find((m) => String(m.id) === parentId) ?? null);
+
 	const unplaced = $derived(data.locations.filter((l) => l.x === null || l.y === null));
 </script>
 
@@ -34,11 +45,21 @@
 
 <section class="layout">
 	<div class="stack">
-		{#if data.map.imageUrl}
-			<MapCanvas imageUrl={data.map.imageUrl} alt="Mappa {data.map.name}" {markers} />
-			<p class="muted small">Clicca su un luogo per modificarlo e posizionarlo.</p>
+		{#if data.display.imageUrl}
+			<MapCanvas imageUrl={data.display.imageUrl} alt="Mappa {data.map.name}" {markers} crop={data.display.crop} districts={data.districts} />
+			<p class="muted small">
+				Clicca su un luogo per modificarlo e posizionarlo.
+				{#if data.display.crop}Questo distretto usa il pezzo di immagine di {data.display.parent?.name}.{/if}
+				{#if data.districts.length}Le aree tratteggiate sono i distretti: cliccale per aprirli.{/if}
+			</p>
 		{:else}
-			<div class="alert">Questa mappa non ha un'immagine: i luoghi verranno mostrati come elenco.</div>
+			<div class="alert">Questa mappa non ha un'immagine: i luoghi verranno mostrati come elenco. Puoi caricarne una, oppure farne un distretto di un'altra mappa (qui a destra).</div>
+		{/if}
+
+		{#if parent}
+			<h2>Area del distretto in {parent.name}</h2>
+			<p class="muted small">Tieni premuto e trascina sull'immagine per disegnare la zona occupata da {data.map.name}. Le altre zone tratteggiate sono gli altri distretti.</p>
+			<AreaPicker imageUrl={parent.imageUrl} alt="Mappa {parent.name}" bind:area others={parent.siblings} />
 		{/if}
 
 		<h2>Luoghi</h2>
@@ -107,6 +128,33 @@
 				</select>
 			</div>
 			<div><button type="submit">Salva mappa</button></div>
+		</form>
+
+		<h2>Distretto</h2>
+		<form method="post" action="?/distretto" class="stack card" use:enhance={() => async ({ update }) => update({ reset: false })}>
+			<p class="muted small">
+				Un distretto è una zona di un'altra mappa (es. Watson dentro Night City). Sulla mappa madre diventa un'area cliccabile:
+				al clic la mappa zooma e si apre il distretto, con le sue chat. Se il distretto non ha un'immagine propria, mostra il
+				pezzo ingrandito dell'immagine della mappa madre.
+			</p>
+			<div>
+				<label for="parentMapId">Fa parte della mappa</label>
+				<select id="parentMapId" name="parentMapId" bind:value={parentId}>
+					<option value="">— Nessuna (mappa autonoma) —</option>
+					{#each data.parentOptions as m (m.id)}<option value={String(m.id)}>{m.name}</option>{/each}
+				</select>
+				{#if errors.parentMapId}<p class="field-error">{errors.parentMapId}</p>{/if}
+				{#if data.parentOptions.length === 0}<p class="hint">Serve prima un'altra mappa con un'immagine.</p>{/if}
+			</div>
+			{#if parent}
+				<p class="hint">{area ? 'Area disegnata: puoi ridisegnarla a sinistra, poi salva.' : `Ora disegna l'area sulla mappa di ${parent.name}, qui a sinistra.`}</p>
+				{#if errors.area}<p class="field-error">{errors.area}</p>{/if}
+				<input type="hidden" name="areaX" value={area?.x ?? ''} />
+				<input type="hidden" name="areaY" value={area?.y ?? ''} />
+				<input type="hidden" name="areaW" value={area?.w ?? ''} />
+				<input type="hidden" name="areaH" value={area?.h ?? ''} />
+			{/if}
+			<div><button type="submit" disabled={!!parent && !area}>Salva distretto</button></div>
 		</form>
 
 		<h2>Meteo</h2>

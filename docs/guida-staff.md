@@ -40,6 +40,7 @@ Regole anti-abuso, sempre attive: nessuno può dare permessi che non ha, né agi
 
 - **Mappe**: immagine (PNG, JPG, WEBP, GIF fino a 5 MB), descrizione, **clima** per il meteo automatico. La mappa "di partenza" è quella in cui arriva chi entra in gioco.
 - **Luoghi**: nella pagina del luogo clicca sull'immagine della mappa nel punto in cui deve comparire. Un luogo può essere una chat oppure un **collegamento** a un'altra mappa (es. "Porta Nord"). Togli "Visibile ai giocatori" per prepararlo con calma.
+- **Distretti**: una mappa può essere un distretto di un'altra (es. Watson dentro Night City). Apri la mappa del distretto, nel riquadro **Distretto** scegli la mappa madre e disegna l'area trascinando sull'immagine, poi salva. Sulla mappa madre l'area diventa cliccabile: la mappa zooma e si apre il distretto. Se il distretto non ha un'immagine propria mostra il pezzo ingrandito dell'immagine della madre, e i suoi luoghi si posizionano su quel pezzo. Il numero accanto al nome indica quanti personaggi ci sono dentro (le stanze private non contano).
 - **Stanze private**: su un luogo spunta "Stanza privata", scegli costo orario (0 = gratis) e ore massime. Chi prenota invita gli altri per nome; gli altri non entrano né leggono, e chi prenota dopo non legge le giocate precedenti. I moderatori possono sempre entrare.
 - **Meteo**: cambia da solo ogni 3 ore secondo clima, stagione e ora del giorno, uguale per tutti, con la fase lunare. Nella pagina della mappa puoi imporre un **meteo speciale** per qualche ora (es. "Tempesta di sabbia").
 

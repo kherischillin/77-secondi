@@ -15,6 +15,7 @@ export type PresentCharacter = {
 };
 
 export type OnlineCharacter = PresentCharacter & {
+	mapId: number | null;
 	mapName: string | null;
 	locationId: number | null;
 	locationName: string | null;
@@ -112,6 +113,7 @@ export async function listOnline(): Promise<OnlineCharacter[]> {
 			surname: schema.characters.surname,
 			avatar: schema.characters.avatar,
 			lastPostAt: schema.characterPresence.lastPostAt,
+			mapId: schema.maps.id,
 			mapName: schema.maps.name,
 			locationId: schema.locations.id,
 			locationName: schema.locations.name,

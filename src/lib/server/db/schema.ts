@@ -196,6 +196,16 @@ export const maps = pgTable('maps', {
 	/** Meteo deciso a mano dallo staff (es. "Tempesta di sabbia"), valido fino a weatherOverrideUntil. */
 	weatherOverride: text('weather_override'),
 	weatherOverrideUntil: timestamp('weather_override_until', { withTimezone: true }),
+	/**
+	 * Distretto: mappa "figlia" di un'altra (es. Watson dentro Night City).
+	 * L'area è il rettangolo occupato sull'immagine della mappa madre, in percentuale.
+	 * Senza un'immagine propria, il distretto mostra quel pezzo dell'immagine della madre, ingrandito.
+	 */
+	parentMapId: integer('parent_map_id').references((): AnyPgColumn => maps.id, { onDelete: 'set null' }),
+	areaX: real('area_x'),
+	areaY: real('area_y'),
+	areaW: real('area_w'),
+	areaH: real('area_h'),
 	createdAt: createdAt()
 });
 

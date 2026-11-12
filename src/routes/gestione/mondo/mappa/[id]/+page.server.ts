@@ -5,8 +5,11 @@ import { requireCapability, clientIp } from '#lib/server/guards.ts';
 import { db, schema } from '#lib/server/db/index.ts';
 import {
 	getMap,
+	listDistricts,
 	listLocations,
 	listMaps,
+	mapDisplay,
+	areaOf,
 	readMapForm,
 	setStartMap,
 	weatherOverrideSchema,
@@ -17,6 +20,8 @@ import { deleteImage, saveImage, UploadError } from '#lib/server/uploads.ts';
 import { fieldErrors } from '#lib/validation.ts';
 import { audit } from '#lib/server/audit.ts';
 import { weatherFor } from '#lib/weather.ts';
+import { normalizeArea, wouldCycle } from '#lib/districts.ts';
+import { mediaUrl } from '#lib/server/uploads.ts';
 
 type Errors = Record<string, string>;
 
@@ -29,12 +34,26 @@ async function loadMapOr404(id: string) {
 export const load: PageServerLoad = async (event) => {
 	requireCapability(event, 'world.manage');
 	const map = await loadMapOr404(event.params.id);
-	const [locations, maps] = await Promise.all([
+	const [locations, maps, districts, display] = await Promise.all([
 		listLocations(map.id, { includeInactive: true }),
-		listMaps()
+		listMaps(),
+		listDistricts(map.id),
+		mapDisplay(map)
 	]);
+	const parentOf = new Map(maps.map((m) => [m.id, m.parentMapId]));
 	return {
 		map: { ...toMapView(map), sortOrder: map.sortOrder },
+		display,
+		districts: districts.flatMap((d) => (d.area ? [{ id: d.id, name: d.name, area: d.area, href: `/gestione/mondo/mappa/${d.id}` }] : [])),
+		// Mappe che possono contenere questa come distretto: con un'immagine e senza creare giri.
+		parentOptions: maps
+			.filter((m) => m.id !== map.id && m.image && !wouldCycle(map.id, m.id, parentOf))
+			.map((m) => ({
+				id: m.id,
+				name: m.name,
+				imageUrl: mediaUrl(m.image)!,
+				siblings: maps.filter((s) => s.parentMapId === m.id && s.id !== map.id && areaOf(s)).map((s) => ({ name: s.name, area: areaOf(s)! }))
+			})),
 		weather: weatherFor(map, new Date()),
 		locations: locations.map(toLocationView),
 		otherMaps: maps.filter((m) => m.id !== map.id).map((m) => ({ id: m.id, name: m.name }))
@@ -72,6 +91,32 @@ export const actions: Actions = {
 			ip: clientIp(event)
 		});
 		return { action: 'salva', success: 'Mappa salvata.' };
+	},
+
+	/** Distretto: di quale mappa fa parte e quale area occupa sulla sua immagine. */
+	distretto: async (event) => {
+		const { user } = requireCapability(event, 'world.manage');
+		const map = await loadMapOr404(event.params.id);
+		const form = await event.request.formData();
+		const rawParent = String(form.get('parentMapId') ?? '');
+		if (rawParent === '') {
+			await db.update(schema.maps).set({ parentMapId: null, areaX: null, areaY: null, areaW: null, areaH: null }).where(eq(schema.maps.id, map.id));
+			await audit({ actorUserId: user.id, action: 'map.district', targetType: 'map', targetId: map.id, details: { mappa: map.name, distretto: 'nessuno' }, ip: clientIp(event) });
+			return { action: 'distretto', success: 'Questa mappa non è più un distretto.' };
+		}
+		const parent = await getMap(Number(rawParent));
+		const maps = await listMaps();
+		if (!parent || !parent.image || wouldCycle(map.id, parent.id, new Map(maps.map((m) => [m.id, m.parentMapId])))) {
+			return fail(400, { action: 'distretto', errors: { parentMapId: 'Scegli una mappa con un\'immagine (e non un distretto di questa).' } as Errors });
+		}
+		const area = normalizeArea({ x: form.get('areaX'), y: form.get('areaY'), w: form.get('areaW'), h: form.get('areaH') });
+		if (!area) return fail(400, { action: 'distretto', errors: { area: 'Disegna l\'area del distretto trascinando sull\'immagine.' } as Errors });
+		await db
+			.update(schema.maps)
+			.set({ parentMapId: parent.id, areaX: area.x, areaY: area.y, areaW: area.w, areaH: area.h })
+			.where(eq(schema.maps.id, map.id));
+		await audit({ actorUserId: user.id, action: 'map.district', targetType: 'map', targetId: map.id, details: { mappa: map.name, dentro: parent.name, area }, ip: clientIp(event) });
+		return { action: 'distretto', success: `Distretto di ${parent.name} salvato.` };
 	},
 
 	/** Meteo deciso dallo staff per qualche ora (0 ore = torna automatico). */

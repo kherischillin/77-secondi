@@ -10,7 +10,8 @@ import {
 	listMaps,
 	readLocationForm,
 	toLocationView,
-	toMapView
+	toMapView,
+	mapDisplay
 } from '#lib/server/world.ts';
 import { deleteImage, saveImage, UploadError } from '#lib/server/uploads.ts';
 import { fieldErrors } from '#lib/validation.ts';
@@ -30,13 +31,16 @@ async function loadOr404(id: string) {
 export const load: PageServerLoad = async (event) => {
 	requireCapability(event, 'world.manage');
 	const { location, map } = await loadOr404(event.params.id);
-	const [siblings, maps] = await Promise.all([
+	const [siblings, maps, display] = await Promise.all([
 		listLocations(map.id, { includeInactive: true }),
-		listMaps()
+		listMaps(),
+		mapDisplay(map)
 	]);
 	return {
 		location: { ...toLocationView(location), sortOrder: location.sortOrder },
-		map: toMapView(map),
+		// Nei distretti senza immagine propria si posiziona sul pezzo ingrandito della mappa madre.
+		map: { ...toMapView(map), imageUrl: display.imageUrl },
+		crop: display.crop,
 		siblings: siblings
 			.filter((l) => l.id !== location.id)
 			.map((l) => ({ id: l.id, name: l.name, x: l.x, y: l.y, kind: l.kind })),
