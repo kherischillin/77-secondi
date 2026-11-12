@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, sql } from 'drizzle-orm';
 import { db, schema } from './db/index.ts';
+import { avatarResolver } from './avatars.ts';
 import { membershipsOf } from './guilds.ts';
 import { RateLimiter } from './rate-limit.ts';
 import { boardAccess, type BoardViewer } from '../social.ts';
@@ -82,6 +83,8 @@ export async function listThreads(boardId: number, userId: number, page: number)
 			lastPostAt: schema.boardThreads.lastPostAt,
 			characterName: schema.characters.name,
 			characterSurname: schema.characters.surname,
+			characterAvatar: schema.characters.avatar,
+			authorCharacterId: schema.boardThreads.authorCharacterId,
 			username: schema.users.username,
 			posts: sql<number>`(select count(*)::int from ${schema.boardPosts} p where p.thread_id = ${schema.boardThreads.id} and p.hidden_at is null)`,
 			readAt: schema.boardReads.readAt
@@ -94,6 +97,7 @@ export async function listThreads(boardId: number, userId: number, page: number)
 		.orderBy(desc(schema.boardThreads.isPinned), desc(schema.boardThreads.lastPostAt))
 		.limit(THREADS_PER_PAGE + 1)
 		.offset((page - 1) * THREADS_PER_PAGE);
+	const src = await avatarResolver();
 	return {
 		hasNext: rows.length > THREADS_PER_PAGE,
 		threads: rows.slice(0, THREADS_PER_PAGE).map((r) => ({
@@ -102,6 +106,8 @@ export async function listThreads(boardId: number, userId: number, page: number)
 			isPinned: r.isPinned,
 			isLocked: r.isLocked,
 			author: authorLabel(r),
+			authorCharacterId: r.authorCharacterId,
+			authorAvatar: src(r.characterAvatar),
 			posts: r.posts,
 			lastPostAt: r.lastPostAt.toISOString(),
 			unread: !r.readAt || r.readAt < r.lastPostAt
@@ -131,6 +137,7 @@ export async function listPosts(threadId: number, page: number, includeHidden: b
 			characterId: schema.boardPosts.authorCharacterId,
 			characterName: schema.characters.name,
 			characterSurname: schema.characters.surname,
+			characterAvatar: schema.characters.avatar,
 			username: schema.users.username
 		})
 		.from(schema.boardPosts)
@@ -140,6 +147,7 @@ export async function listPosts(threadId: number, page: number, includeHidden: b
 		.orderBy(asc(schema.boardPosts.id))
 		.limit(POSTS_PER_PAGE)
 		.offset((page - 1) * POSTS_PER_PAGE);
+	const src = await avatarResolver();
 	return {
 		pages: Math.max(1, Math.ceil(total / POSTS_PER_PAGE)),
 		posts: rows.map((r) => ({
@@ -150,7 +158,8 @@ export async function listPosts(threadId: number, page: number, includeHidden: b
 			hidden: r.hiddenAt !== null,
 			authorUserId: r.authorUserId,
 			characterId: r.characterId,
-			author: authorLabel(r)
+			author: authorLabel(r),
+			authorAvatar: src(r.characterAvatar)
 		}))
 	};
 }

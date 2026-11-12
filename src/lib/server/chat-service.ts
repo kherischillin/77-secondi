@@ -8,6 +8,7 @@ import { listPresentAt, markPosted } from './presence.ts';
 import { broadcastPresence, publishMessage, publishVisibility } from './realtime.ts';
 import { RateLimiter } from './rate-limit.ts';
 import { fullName } from '../format.ts';
+import { avatarResolver } from './avatars.ts';
 
 export const HISTORY_PAGE = 50;
 
@@ -28,6 +29,7 @@ function baseQuery() {
 			message: schema.chatMessages,
 			senderName: sender.name,
 			senderSurname: sender.surname,
+			senderAvatar: sender.avatar,
 			recipientName: recipient.name,
 			recipientSurname: recipient.surname
 		})
@@ -38,13 +40,16 @@ function baseQuery() {
 
 type Row = Awaited<ReturnType<ReturnType<typeof baseQuery>['execute']>>[number];
 
-function toView(r: Row): ChatMessageView {
+type AvatarSrc = Awaited<ReturnType<typeof avatarResolver>>;
+
+function toView(r: Row, avatarSrc: AvatarSrc): ChatMessageView {
 	const m = r.message;
 	return {
 		id: m.id,
 		kind: m.kind,
 		characterId: m.characterId,
 		characterName: r.senderName ? fullName({ name: r.senderName, surname: r.senderSurname }) : null,
+		characterAvatar: avatarSrc(r.senderAvatar),
 		recipientCharacterId: m.recipientCharacterId,
 		recipientName: r.recipientName ? fullName({ name: r.recipientName, surname: r.recipientSurname }) : null,
 		npcName: m.npcName,
@@ -70,6 +75,7 @@ function visibleTo(viewer: Viewer): SQL {
 
 /** Ultimi messaggi del luogo (o quelli prima di un certo id, per "carica precedenti"). */
 export async function loadHistory(locationId: number, viewer: Viewer, beforeId?: number) {
+	const src = await avatarResolver();
 	const rows = await baseQuery()
 		.where(
 			and(
@@ -81,11 +87,12 @@ export async function loadHistory(locationId: number, viewer: Viewer, beforeId?:
 		.orderBy(desc(schema.chatMessages.id))
 		.limit(HISTORY_PAGE + 1);
 	const hasMore = rows.length > HISTORY_PAGE;
-	return { messages: rows.slice(0, HISTORY_PAGE).reverse().map(toView), hasMore };
+	return { messages: rows.slice(0, HISTORY_PAGE).reverse().map((r) => toView(r, src)), hasMore };
 }
 
 /** Messaggi arrivati dopo un certo id: per recuperare quelli persi durante una disconnessione. */
 export async function loadSince(locationId: number, viewer: Viewer, afterId: number) {
+	const src = await avatarResolver();
 	const rows = await baseQuery()
 		.where(
 			and(
@@ -96,12 +103,13 @@ export async function loadSince(locationId: number, viewer: Viewer, afterId: num
 		)
 		.orderBy(schema.chatMessages.id)
 		.limit(200);
-	return rows.map(toView);
+	return rows.map((r) => toView(r, src));
 }
 
 async function loadOne(id: number) {
+	const src = await avatarResolver();
 	const [row] = await baseQuery().where(eq(schema.chatMessages.id, id));
-	return row ? toView(row) : null;
+	return row ? toView(row, src) : null;
 }
 
 export class ChatError extends Error {}
@@ -247,6 +255,7 @@ export async function setHidden(messageId: number, moderatorUserId: number, hidd
  * Usato per registrare le giocate: i filtri (sussurri, nascosti) si applicano dopo.
  */
 export async function loadRange(locationId: number, range: { from: Date; to: Date } | { questId: number }) {
+	const src = await avatarResolver();
 	const rows = await baseQuery()
 		.where(
 			and(
@@ -258,7 +267,7 @@ export async function loadRange(locationId: number, range: { from: Date; to: Dat
 		)
 		.orderBy(schema.chatMessages.id)
 		.limit(3000);
-	return rows.map(toView);
+	return rows.map((r) => toView(r, src));
 }
 
 /** Un singolo messaggio con il nome del luogo (per le segnalazioni). */

@@ -1,5 +1,6 @@
 import { and, asc, eq, gt, isNull } from 'drizzle-orm';
 import { db, schema } from './db/index.ts';
+import { avatarResolver } from './avatars.ts';
 
 /** Un personaggio è considerato presente se si è fatto vivo negli ultimi 2 minuti. */
 export const ONLINE_WINDOW_MS = 2 * 60 * 1000;
@@ -8,6 +9,8 @@ export type PresentCharacter = {
 	characterId: number;
 	name: string;
 	surname: string | null;
+	/** Avatar quadrato già pronto da mostrare (null = iniziale del nome). */
+	avatarUrl: string | null;
 	lastPostAt: string | null;
 };
 
@@ -83,6 +86,7 @@ export async function listPresentAt(locationId: number): Promise<PresentCharacte
 			characterId: schema.characters.id,
 			name: schema.characters.name,
 			surname: schema.characters.surname,
+			avatar: schema.characters.avatar,
 			lastPostAt: schema.characterPresence.lastPostAt
 		})
 		.from(schema.characterPresence)
@@ -95,7 +99,8 @@ export async function listPresentAt(locationId: number): Promise<PresentCharacte
 			)
 		)
 		.orderBy(asc(schema.characters.name));
-	return rows.map((r) => ({ ...r, lastPostAt: r.lastPostAt?.toISOString() ?? null }));
+	const src = await avatarResolver();
+	return rows.map(({ avatar, ...r }) => ({ ...r, avatarUrl: src(avatar), lastPostAt: r.lastPostAt?.toISOString() ?? null }));
 }
 
 /** Tutti i personaggi in gioco in questo momento, con il luogo in cui si trovano. */
@@ -105,6 +110,7 @@ export async function listOnline(): Promise<OnlineCharacter[]> {
 			characterId: schema.characters.id,
 			name: schema.characters.name,
 			surname: schema.characters.surname,
+			avatar: schema.characters.avatar,
 			lastPostAt: schema.characterPresence.lastPostAt,
 			mapName: schema.maps.name,
 			locationId: schema.locations.id,
@@ -117,7 +123,13 @@ export async function listOnline(): Promise<OnlineCharacter[]> {
 		.leftJoin(schema.locations, eq(schema.characterPresence.locationId, schema.locations.id))
 		.where(and(gt(schema.characterPresence.lastSeenAt, onlineSince()), isNull(schema.characters.deletedAt)))
 		.orderBy(asc(schema.characters.name));
-	return rows.map((r) => ({ ...r, locationPrivate: r.locationPrivate ?? false, lastPostAt: r.lastPostAt?.toISOString() ?? null }));
+	const src = await avatarResolver();
+	return rows.map(({ avatar, ...r }) => ({
+		...r,
+		avatarUrl: src(avatar),
+		locationPrivate: r.locationPrivate ?? false,
+		lastPostAt: r.lastPostAt?.toISOString() ?? null
+	}));
 }
 
 /** Quanti personaggi ci sono in ogni luogo (per i numeri sulla mappa). */

@@ -57,3 +57,17 @@ export function checkPortraitUrl(raw: string, hosts: readonly string[]): Portrai
 
 /** Vero se il valore salvato è un link (e non un vecchio file caricato sul sito). */
 export const isPortraitLink = (stored: string | null | undefined): stored is string => !!stored && stored.startsWith('https://');
+
+/**
+ * Indirizzo da mostrare per un'immagine del personaggio (presta-volto o avatar):
+ * un link solo se il sito è ancora tra quelli ammessi, oppure un vecchio file caricato sul sito.
+ */
+export function imageSrc(stored: string | null | undefined, hosts: readonly string[]): string | null {
+	if (!stored) return null;
+	if (!isPortraitLink(stored)) return `/media/${stored}`;
+	try {
+		return hostAllowed(new URL(stored).hostname, hosts) ? stored : null;
+	} catch {
+		return null;
+	}
+}

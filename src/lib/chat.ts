@@ -31,6 +31,8 @@ export type ChatMessageView = {
 	kind: MessageKind;
 	characterId: number | null;
 	characterName: string | null;
+	/** Avatar del personaggio (assente nelle vecchie giocate salvate). */
+	characterAvatar?: string | null;
 	recipientName: string | null;
 	recipientCharacterId: number | null;
 	npcName: string | null;

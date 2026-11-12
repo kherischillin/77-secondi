@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import { equippedBonus } from '../economy.ts';
-import { hostAllowed, isPortraitLink } from '../portrait.ts';
+import { imageSrc } from '../portrait.ts';
 import { db, schema } from './db/index.ts';
 import {
 	skillRaiseCost,
@@ -335,16 +335,5 @@ export async function characterNames(ids: number[]) {
 		.where(inArray(schema.characters.id, ids));
 }
 
-/**
- * Indirizzo dell'immagine del presta-volto da mostrare: un link (solo se il sito è
- * ancora tra quelli ammessi) oppure un vecchio file caricato sul sito.
- */
-export function portraitSrc(stored: string | null | undefined, hosts: readonly string[]): string | null {
-	if (!stored) return null;
-	if (!isPortraitLink(stored)) return `/media/${stored}`;
-	try {
-		return hostAllowed(new URL(stored).hostname, hosts) ? stored : null;
-	} catch {
-		return null;
-	}
-}
+/** Indirizzo dell'immagine del presta-volto (vedi `imageSrc`). */
+export const portraitSrc = imageSrc;

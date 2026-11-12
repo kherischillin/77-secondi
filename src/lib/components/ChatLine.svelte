@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { splitSpeech, type ChatMessageView } from '#lib/chat.ts';
 	import ReportButton from './ReportButton.svelte';
+	import Avatar from './Avatar.svelte';
 
 	let {
 		message,
@@ -18,12 +19,15 @@
 		})
 	);
 	const segments = $derived(splitSpeech(message.body));
+	// Avatar accanto al nome per gli interventi dei personaggi (non per Master, PNG e messaggi di quest).
+	const showAvatar = $derived(!!message.characterId && ['action', 'whisper', 'dice', 'check', 'item'].includes(message.kind));
 </script>
 
 <article class="line {message.kind}" class:hidden={message.hidden} class:mine={message.characterId === me}>
 	<header>
 		<time datetime={message.createdAt}>{time}</time>
 		{#if message.tag}<span class="tag">[{message.tag}]</span>{/if}
+		{#if showAvatar}<span class="av"><Avatar src={message.characterAvatar} name={message.characterName ?? '?'} size={26} /></span>{/if}
 
 		{#if message.kind === 'master'}
 			<span class="who master-label">Master</span>
@@ -103,9 +107,12 @@
 	header {
 		display: flex;
 		flex-wrap: wrap;
-		align-items: baseline;
+		align-items: center;
 		gap: 0.15rem 0.45rem;
 		font-size: 0.85rem;
+	}
+	.av {
+		display: inline-flex;
 	}
 	time {
 		color: var(--text-muted);

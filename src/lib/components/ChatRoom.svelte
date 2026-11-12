@@ -3,12 +3,13 @@
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
 	import ChatLine from './ChatLine.svelte';
+	import Avatar from './Avatar.svelte';
 	import { MAX_MESSAGE_LENGTH, timeAgo, type ChatMessageView, type ChosenKind } from '#lib/chat.ts';
 	import { fullName } from '#lib/format.ts';
 	import { page } from '$app/state';
 	import { playTone } from '#lib/sound.ts';
 
-	type Present = { characterId: number; name: string; surname: string | null; lastPostAt: string | null };
+	type Present = { characterId: number; name: string; surname: string | null; avatarUrl: string | null; lastPostAt: string | null };
 
 	let {
 		locationId,
@@ -308,11 +309,14 @@
 			<ul>
 				{#each present as p (p.characterId)}
 					<li>
-						<a class="name" class:me={p.characterId === me} href="/scheda/{p.characterId}" target="_blank">{fullName(p)}</a>
-						<span class="muted small">ultima azione: {timeAgo(p.lastPostAt, now)}</span>
-						{#if p.characterId !== me}
-							<button type="button" class="link small" onclick={() => whisperTo(p)}>sussurra</button>
-						{/if}
+						<Avatar src={p.avatarUrl} name={p.name} size={36} />
+						<div class="who-box">
+							<a class="name" class:me={p.characterId === me} href="/scheda/{p.characterId}" target="_blank">{fullName(p)}</a>
+							<span class="muted small">ultima azione: {timeAgo(p.lastPostAt, now)}</span>
+							{#if p.characterId !== me}
+								<button type="button" class="link small" onclick={() => whisperTo(p)}>sussurra</button>
+							{/if}
+						</div>
 					</li>
 				{/each}
 			</ul>
@@ -428,11 +432,17 @@
 	}
 	.present li {
 		display: flex;
+		align-items: flex-start;
+		gap: 0.6rem;
+		padding: 0.4rem 0;
+		border-bottom: 1px solid var(--border);
+	}
+	.who-box {
+		display: flex;
 		flex-wrap: wrap;
 		align-items: baseline;
 		gap: 0 0.5rem;
-		padding: 0.4rem 0;
-		border-bottom: 1px solid var(--border);
+		min-width: 0;
 	}
 	.name {
 		font-weight: 600;

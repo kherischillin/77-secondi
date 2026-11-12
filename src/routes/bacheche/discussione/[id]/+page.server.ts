@@ -1,4 +1,5 @@
 import { error, fail, redirect } from '@sveltejs/kit';
+import { fullName } from '#lib/format.ts';
 import type { Actions, PageServerLoad, RequestEvent } from './$types';
 import { requireUser, clientIp } from '#lib/server/guards.ts';
 import {
@@ -39,7 +40,7 @@ export const load: PageServerLoad = async (event) => {
 		pages,
 		access,
 		canModerate: viewer.canModerate,
-		postingAs: access.postsAs === 'character' ? (event.locals.character?.name ?? null) : user.username
+		postingAs: event.locals.character ? fullName(event.locals.character) : null
 	};
 };
 
@@ -56,7 +57,7 @@ export const actions: Actions = {
 		const parsed = postSchema.safeParse({ body: String((await event.request.formData()).get('body') ?? '') });
 		if (!parsed.success) return fail(400, { error: parsed.error.issues[0].message });
 		try {
-			await addPost(thread.id, { userId: user.id, characterId: access.postsAs === 'character' ? event.locals.character!.id : null }, parsed.data.body);
+			await addPost(thread.id, { userId: user.id, characterId: event.locals.character!.id }, parsed.data.body);
 		} catch (e) {
 			if (e instanceof BoardError) return fail(400, { error: e.message });
 			throw e;

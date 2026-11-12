@@ -2,7 +2,7 @@ import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { requireCharacter } from '#lib/server/guards.ts';
 import { getMap, listLocations, toLocationView, toMapView } from '#lib/server/world.ts';
-import { countByLocation, enterMap, getPresence } from '#lib/server/presence.ts';
+import { enterMap, getPresence, listOnline } from '#lib/server/presence.ts';
 import { broadcastPresence } from '#lib/server/realtime.ts';
 import { bookedLocationIds } from '#lib/server/rooms.ts';
 import { weatherFor } from '#lib/weather.ts';
@@ -17,7 +17,14 @@ export const load: PageServerLoad = async (event) => {
 	await enterMap(character.id, map.id);
 	if (before?.locationId) void broadcastPresence(before.locationId);
 
-	const [locations, counts] = await Promise.all([listLocations(map.id), countByLocation()]);
+	const [locations, online] = await Promise.all([listLocations(map.id), listOnline()]);
+	const people = new Map<number, { id: number; name: string; avatarUrl: string | null }[]>();
+	for (const c of online) {
+		if (!c.locationId || c.locationPrivate) continue;
+		const list = people.get(c.locationId) ?? [];
+		list.push({ id: c.characterId, name: c.name, avatarUrl: c.avatarUrl });
+		people.set(c.locationId, list);
+	}
 	const booked = await bookedLocationIds(locations.filter((l) => l.isPrivate).map((l) => l.id));
 	return {
 		map: toMapView(map),
@@ -25,7 +32,9 @@ export const load: PageServerLoad = async (event) => {
 		locations: locations.map((l) => ({
 			...toLocationView(l),
 			// Nelle stanze private non si mostra quante persone ci sono: solo se sono occupate.
-			present: l.isPrivate ? 0 : (counts.get(l.id) ?? 0),
+			present: l.isPrivate ? 0 : (people.get(l.id)?.length ?? 0),
+			// Chi c'è, con l'avatar (al massimo 8, poi "+N").
+			people: l.isPrivate ? [] : (people.get(l.id) ?? []).slice(0, 8),
 			booked: booked.has(l.id)
 		}))
 	};

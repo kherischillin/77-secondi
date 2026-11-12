@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	import MapCanvas from '#lib/components/MapCanvas.svelte';
+	import Avatar from '#lib/components/Avatar.svelte';
 
 	let { data }: PageProps = $props();
 
@@ -58,6 +59,12 @@
 								<span class="badge accent">{l.present} present{l.present === 1 ? 'e' : 'i'}</span>
 							{/if}
 						</a>
+						{#if l.people.length}
+							<div class="people">
+								{#each l.people as p (p.id)}<a href="/scheda/{p.id}" title={p.name}><Avatar src={p.avatarUrl} name={p.name} size={26} /></a>{/each}
+								{#if l.present > l.people.length}<span class="muted small">+{l.present - l.people.length}</span>{/if}
+							</div>
+						{/if}
 					</li>
 				{/each}
 			</ul>
@@ -111,15 +118,27 @@
 		margin: 0;
 		padding: 0;
 	}
-	.places a {
+	.places li {
+		border-bottom: 1px solid var(--border);
+	}
+	.places > li > a {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
 		gap: 0.5rem;
 		padding: 0.5rem 0.25rem;
-		border-bottom: 1px solid var(--border);
 		text-decoration: none;
 		color: var(--text);
+	}
+	.people {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0 0.25rem 0.55rem;
+	}
+	.people a {
+		display: inline-flex;
 	}
 	.places a:hover .name {
 		color: var(--accent);

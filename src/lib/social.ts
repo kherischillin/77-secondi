@@ -32,8 +32,8 @@ export type BoardAccess = {
 	canRead: boolean;
 	canStartThread: boolean;
 	canReply: boolean;
-	/** Chi firma i messaggi: il personaggio (ON GAME) o il giocatore (OFF GAME). */
-	postsAs: 'character' | 'player';
+	/** Chi firma i messaggi: sempre il personaggio attivo (scelta del proprietario), anche nelle bacheche OFF GAME. */
+	postsAs: 'character';
 	/** Perché non si può scrivere, se non si può. */
 	writeBlock: string | null;
 };
@@ -48,11 +48,11 @@ export function boardAccess(board: BoardRules, viewer: BoardViewer, threadLocked
 		viewer.canModerate ||
 		(board.visibility === 'guild' && (isMember || viewer.canManageGuilds));
 
-	const postsAs = board.section === 'on' ? 'character' : 'player';
+	const postsAs = 'character' as const;
 	let writeBlock: string | null = null;
 	if (!canRead) writeBlock = 'Non puoi accedere a questa bacheca.';
-	else if (postsAs === 'character' && !viewer.hasCharacter) {
-		writeBlock = 'Nelle bacheche ON GAME si scrive come personaggio: scegli prima con chi giocare.';
+	else if (!viewer.hasCharacter) {
+		writeBlock = 'Nelle bacheche si scrive come personaggio: scegli prima con chi giocare.';
 	} else if (board.visibility === 'guild' && !isMember && !viewer.canModerate) {
 		writeBlock = 'Solo i membri della gilda possono scrivere qui.';
 	}

@@ -14,9 +14,11 @@ describe('bacheche', () => {
 	const offAll = { section: 'off' as const, visibility: 'all' as const, guildId: null, staffOnlyThreads: false };
 	const onAll = { ...offAll, section: 'on' as const };
 
-	it('OFF GAME: si scrive come giocatore, anche senza personaggio', () => {
-		const a = boardAccess(offAll, { ...player, hasCharacter: false });
-		expect(a).toMatchObject({ canRead: true, canStartThread: true, canReply: true, postsAs: 'player' });
+	it('OFF GAME: si scrive anche qui come personaggio', () => {
+		expect(boardAccess(offAll, player)).toMatchObject({ canRead: true, canStartThread: true, canReply: true, postsAs: 'character' });
+		const noChar = boardAccess(offAll, { ...player, hasCharacter: false });
+		expect(noChar.canRead).toBe(true);
+		expect(noChar.canStartThread).toBe(false);
 	});
 
 	it('ON GAME: serve un personaggio attivo', () => {

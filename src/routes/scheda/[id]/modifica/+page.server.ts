@@ -55,7 +55,8 @@ export const load: PageServerLoad = async (event) => {
 			// Un link resta modificabile; un vecchio file caricato sul sito si vede solo in anteprima.
 			portraitLink: isPortraitLink(character.portrait) ? character.portrait : '',
 			legacyPortraitUrl: isPortraitLink(character.portrait) ? null : mediaUrl(character.portrait),
-			portraitCredit: character.portraitCredit
+			portraitCredit: character.portraitCredit,
+			avatarLink: character.avatar ?? ''
 		},
 		backgroundPublic: rules.backgroundPublic,
 		portrait: {
@@ -98,9 +99,18 @@ export const actions: Actions = {
 			portrait = null;
 		}
 
+		// Avatar quadrato: stesse regole del presta-volto (HTTPS, siti ammessi). Vuoto = iniziale del nome.
+		const avatarLink = String(form.get('avatarUrl') ?? '').trim();
+		let avatar: string | null = null;
+		if (avatarLink) {
+			const check = checkPortraitUrl(avatarLink, event.locals.settings.portraitHosts);
+			if (!check.ok) return fail(400, { errors: { avatarUrl: check.error } as Record<string, string> });
+			avatar = check.url;
+		}
+
 		await db
 			.update(schema.characters)
-			.set({ ...parsed.data, profile: profile.data, portrait })
+			.set({ ...parsed.data, profile: profile.data, portrait, avatar })
 			.where(eq(schema.characters.id, character.id));
 		// Il vecchio file caricato sul sito non serve più.
 		if (portrait !== character.portrait && character.portrait && !isPortraitLink(character.portrait)) await deleteImage(character.portrait);

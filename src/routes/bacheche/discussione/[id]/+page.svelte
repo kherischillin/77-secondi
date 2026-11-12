@@ -3,6 +3,7 @@
 	import type { PageProps } from './$types';
 	import { formatDateTime } from '#lib/format.ts';
 	import ReportButton from '#lib/components/ReportButton.svelte';
+	import Avatar from '#lib/components/Avatar.svelte';
 
 	let { data, form }: PageProps = $props();
 	let editing = $state<number | null>(null);
@@ -40,6 +41,12 @@
 <div class="posts">
 	{#each data.posts as p (p.id)}
 		<article class="post" class:hidden={p.hidden} class:character={!!p.characterId}>
+			{#if p.characterId}
+				<a class="post-avatar" href="/scheda/{p.characterId}" tabindex="-1"><Avatar src={p.authorAvatar} name={p.author} size={56} /></a>
+			{:else}
+				<span class="post-avatar"><Avatar src={null} name={p.author} size={56} /></span>
+			{/if}
+			<div class="post-main">
 			<header>
 				{#if p.characterId}
 					<a class="author" href="/scheda/{p.characterId}">{p.author}</a>
@@ -81,6 +88,7 @@
 			{:else}
 				<p class="body">{p.body}</p>
 			{/if}
+			</div>
 		</article>
 	{/each}
 </div>
@@ -95,7 +103,7 @@
 
 <div id="fondo"></div>
 {#if data.access.canReply}
-	<form method="post" action="?/rispondi" class="stack card reply" use:enhance={keep}>
+	<form method="post" action="?/rispondi" class="stack card reply" use:enhance>
 		<label for="body">Rispondi come <strong>{data.postingAs}</strong></label>
 		<textarea id="body" name="body" rows="6" maxlength="20000" required></textarea>
 		<div><button type="submit">Pubblica risposta</button></div>
@@ -144,6 +152,21 @@
 		border: 1px solid var(--border);
 		border-radius: var(--radius);
 		padding: 0.8rem 1rem;
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		gap: 0.9rem;
+		align-items: start;
+	}
+	.post-avatar {
+		display: inline-flex;
+	}
+	.post-main {
+		min-width: 0;
+	}
+	@media (max-width: 520px) {
+		.post {
+			gap: 0.6rem;
+		}
 	}
 	.post.character {
 		border-left: 3px solid var(--accent);

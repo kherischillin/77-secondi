@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	import { fullName } from '#lib/format.ts';
+	import Avatar from '#lib/components/Avatar.svelte';
 
 	let { data }: PageProps = $props();
 </script>
@@ -20,7 +21,7 @@
 				</h2>
 				<ul>
 					{#each g.people as p (p.characterId)}
-						<li><a href="/scheda/{p.characterId}">{fullName(p)}</a></li>
+						<li><a href="/scheda/{p.characterId}"><Avatar src={p.avatarUrl} name={p.name} size={30} /> {fullName(p)}</a></li>
 					{/each}
 				</ul>
 			</section>
@@ -40,7 +41,16 @@
 		text-decoration: none;
 	}
 	ul {
+		list-style: none;
 		margin: 0;
-		padding-left: 1.1rem;
+		padding: 0;
+		display: grid;
+		gap: 0.4rem;
+	}
+	li a {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.55rem;
+		text-decoration: none;
 	}
 </style>

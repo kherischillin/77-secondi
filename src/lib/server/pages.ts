@@ -32,7 +32,7 @@ const GUIDA = `Benvenuto! Questa è una land di **gioco di ruolo testuale** (pla
 
 # Primi passi
 1. Crea il tuo account e poi il tuo **personaggio** (puoi averne più di uno). A ogni accesso scegli con chi giocare; per cambiarlo usa **Esci → Cambia personaggio**.
-2. Completa la **scheda**: dati anagrafici, presta-volto (con un link a un'immagine), aspetto, carattere, storia e uno spazio OFF Game tutto tuo. L'aspetto è ciò che gli altri vedono in gioco. Puoi scrivere testo semplice o personalizzare le sezioni con HTML e CSS (niente JavaScript).
+2. Completa la **scheda**: dati anagrafici, presta-volto e avatar quadrato (con un link a un'immagine), aspetto, carattere, storia e uno spazio OFF Game tutto tuo. L'aspetto è ciò che gli altri vedono in gioco. Puoi scrivere testo semplice o personalizzare le sezioni con HTML e CSS (niente JavaScript).
 3. Distribuisci i punti iniziali di caratteristiche e abilità (servono solo nelle quest).
 4. Dalla **mappa** entra in un luogo e comincia a giocare. Il nome del tuo personaggio, in alto a sinistra, porta alla sua scheda: da lì raggiungi anche inventario, equipaggiamento, giocate ed esiti.
 
@@ -61,7 +61,7 @@ Le stringhe del Master sono vincolanti. Alla fine della quest il Master assegna 
 
 # Missive, bacheche e gilde
 - **Missive**: messaggi privati tra personaggi, segnati ON o OFF game.
-- **Bacheche**: le ON GAME si scrivono come personaggio, le OFF GAME come giocatore.
+- **Bacheche**: si scrive sempre come personaggio, con il suo avatar; le sezioni ON GAME riguardano il gioco, le OFF GAME l'organizzazione.
 - **Gilde**: gruppi organizzati con gradi, statuto e una bacheca riservata.
 
 # Denaro, oggetti e stanze private

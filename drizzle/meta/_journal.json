@@ -78,6 +78,13 @@
       "when": 1794503421099,
       "tag": "0010_notifiche",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794506937316,
+      "tag": "0011_avatar",
+      "breakpoints": true
     }
   ]
 }

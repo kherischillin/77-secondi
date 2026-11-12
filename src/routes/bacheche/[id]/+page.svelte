@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { PageProps } from './$types';
+	import Avatar from '#lib/components/Avatar.svelte';
 	import { formatDateTime } from '#lib/format.ts';
 
 	let { data, form }: PageProps = $props();
@@ -39,7 +40,7 @@
 
 {#if composing}
 	<form method="post" action="?/nuova" class="stack card compose" use:enhance={() => async ({ update }) => update({ reset: false })}>
-		<p class="muted small">Scrivi come <strong>{data.postingAs}</strong>{data.board.section === 'on' ? ' (personaggio)' : ' (giocatore)'}.</p>
+		<p class="muted small">Scrivi come <strong>{data.postingAs}</strong>.</p>
 		<div>
 			<label for="title">Titolo</label>
 			<input id="title" name="title" type="text" maxlength="120" required value={form && 'values' in form ? form.values?.title : ''} />
@@ -61,6 +62,8 @@
 		{#each data.threads as t (t.id)}
 			<li class:unread={t.unread}>
 				<a href="/bacheche/discussione/{t.id}">
+					<Avatar src={t.authorAvatar} name={t.author} size={34} />
+					<span class="thread-text">
 					<span class="title">
 						{#if t.isPinned}<span class="badge accent">in evidenza</span>{/if}
 						{#if t.isLocked}<span class="badge">chiusa</span>{/if}
@@ -68,6 +71,7 @@
 						{#if t.unread}<span class="new">novità</span>{/if}
 					</span>
 					<span class="muted small">di {t.author} · {t.posts} messagg{t.posts === 1 ? 'io' : 'i'} · ultimo {formatDateTime(t.lastPostAt)}</span>
+					</span>
 				</a>
 			</li>
 		{/each}
@@ -114,13 +118,20 @@
 	}
 	.threads a {
 		display: grid;
-		gap: 0.15rem;
+		grid-template-columns: auto minmax(0, 1fr);
+		align-items: center;
+		gap: 0.15rem 0.8rem;
 		padding: 0.7rem 1rem;
 		background: var(--bg-raised);
 		border: 1px solid var(--border);
 		border-radius: var(--radius);
 		text-decoration: none;
 		color: var(--text);
+	}
+	.thread-text {
+		display: grid;
+		gap: 0.15rem;
+		min-width: 0;
 	}
 	.threads a:hover {
 		border-color: var(--accent);

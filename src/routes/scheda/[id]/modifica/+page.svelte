@@ -6,6 +6,7 @@
 	import { prepareSheetText, SHEET_LIMITS, type SheetSection } from '#lib/sheet-html.ts';
 	import { PROFILE_FIELDS, PROFILE_MAX } from '#lib/profile.ts';
 	import { checkPortraitUrl } from '#lib/portrait.ts';
+	import Avatar from '#lib/components/Avatar.svelte';
 
 	let { data, form }: PageProps = $props();
 	const errors = $derived<Record<string, string>>(form?.errors ?? {});
@@ -27,6 +28,15 @@
 		portraitUrl = data.character.portraitLink;
 	});
 	let removeLegacy = $state(false);
+
+	// Avatar quadrato, con anteprima alle misure in cui comparirà.
+	let avatarUrl = $state('');
+	$effect.pre(() => {
+		avatarUrl = data.character.avatarLink;
+	});
+	const avatarCheck = $derived(avatarUrl.trim() ? checkPortraitUrl(avatarUrl, data.portrait.hosts) : null);
+	const avatarProblem = $derived(avatarCheck && !avatarCheck.ok ? avatarCheck.error : null);
+	const avatarSrc = $derived(avatarCheck?.ok ? avatarCheck.url : null);
 	let imgError = $state(false);
 	let natural = $state<{ w: number; h: number } | null>(null);
 	const linkCheck = $derived(portraitUrl.trim() ? checkPortraitUrl(portraitUrl, data.portrait.hosts) : null);
@@ -140,6 +150,28 @@
 						{#if errors[`profile_${f.key}`]}<p class="field-error">{errors[`profile_${f.key}`]}</p>{/if}
 					</div>
 				{/each}
+			</div>
+		</fieldset>
+
+		<fieldset class="avatar-field">
+			<legend>Avatar</legend>
+			<div class="avatar-previews" aria-label="Anteprima dell'avatar">
+				<Avatar src={avatarSrc} name={c.name} size={56} />
+				<Avatar src={avatarSrc} name={c.name} size={34} />
+				<Avatar src={avatarSrc} name={c.name} size={26} />
+			</div>
+			<div class="stack">
+				<div>
+					<label for="avatarUrl">Link all'immagine dell'avatar</label>
+					<input id="avatarUrl" name="avatarUrl" type="url" inputmode="url" maxlength="500" placeholder="https://i.imgur.com/..." bind:value={avatarUrl} />
+					{#if errors.avatarUrl}<p class="field-error">{errors.avatarUrl}</p>{/if}
+					{#if avatarProblem}<p class="field-error">{avatarProblem}</p>{/if}
+				</div>
+				<p class="hint">
+					Immagine <strong>quadrata</strong>, piccola, accanto al nome del personaggio in bacheca (56 px), nei presenti e in
+					chat (26–36 px) e sulla mappa. Va bene qualsiasi misura a partire da 100 × 100 px: se non è quadrata viene ritagliata al centro.
+					Lasciando vuoto si vede l'iniziale del nome. Stessi siti ammessi del presta-volto.
+				</p>
 			</div>
 		</fieldset>
 	</div>
@@ -271,5 +303,26 @@
 	}
 	.hint code {
 		font-size: 0.85em;
+	}
+	.avatar-field {
+		display: flex;
+		gap: 1rem;
+		align-items: flex-start;
+		grid-column: 1 / -1;
+	}
+	.avatar-field .stack {
+		flex: 1;
+		min-width: 0;
+	}
+	.avatar-previews {
+		display: flex;
+		align-items: flex-end;
+		gap: 0.6rem;
+		flex: 0 0 auto;
+	}
+	@media (max-width: 600px) {
+		.avatar-field {
+			flex-direction: column;
+		}
 	}
 </style>

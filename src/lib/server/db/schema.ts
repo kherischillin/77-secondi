@@ -73,6 +73,8 @@ export const characters = pgTable(
 		profile: jsonb('profile').$type<Record<string, string>>().notNull().default({}),
 		/** Immagine del presta-volto. */
 		portrait: text('portrait'),
+		/** Avatar quadrato (link HTTPS) per bacheche, chat e mappa. */
+		avatar: text('avatar'),
 		/** Nome del presta-volto (attore, illustrazione...). */
 		portraitCredit: text('portrait_credit'),
 		/** Il giocatore ha già distribuito i punti iniziali delle caratteristiche. */

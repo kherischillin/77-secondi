@@ -1,4 +1,5 @@
 import { error, fail, redirect } from '@sveltejs/kit';
+import { fullName } from '#lib/format.ts';
 import type { Actions, PageServerLoad, RequestEvent } from './$types';
 import { requireUser } from '#lib/server/guards.ts';
 import { BoardError, createThread, getBoard, listThreads, markBoardRead, viewerFor } from '#lib/server/boards.ts';
@@ -24,7 +25,7 @@ export const load: PageServerLoad = async (event) => {
 		page,
 		hasNext,
 		access,
-		postingAs: access.postsAs === 'character' ? (event.locals.character?.name ?? null) : user.username
+		postingAs: event.locals.character ? fullName(event.locals.character) : null
 	};
 };
 
@@ -46,7 +47,7 @@ export const actions: Actions = {
 		try {
 			thread = await createThread(
 				board.id,
-				{ userId: user.id, characterId: access.postsAs === 'character' ? event.locals.character!.id : null },
+				{ userId: user.id, characterId: event.locals.character!.id },
 				parsed.data.title,
 				parsed.data.body
 			);

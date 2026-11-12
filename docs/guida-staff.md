@@ -52,6 +52,7 @@ Regole anti-abuso, sempre attive: nessuno può dare permessi che non ha, né agi
 - Dalla **scheda** di un personaggio lo staff può correggere i valori, azzerare la distribuzione iniziale, assegnare PX, consegnare o togliere oggetti.
 - Il **presta-volto** si collega con un link `https://` e solo dai siti scelti in **Gestione → Impostazioni** (all'inizio: Imgur, ImgBB, Postimages, Catbox, Pinterest, X/Twitter, Wikimedia, Unsplash). Lì si sceglie anche la misura del riquadro (di base 350 × 500 px): l'immagine lo riempie senza deformarsi, tagliando i bordi se ha proporzioni diverse. Se togli un sito dall'elenco, le immagini già collegate da lì non vengono più mostrate.
 - Il giocatore deve usare **tutti** i punti iniziali prima di confermare la distribuzione. Finché il personaggio non ha ricevuto né speso PX può rifarla da solo; dopo serve lo staff con «Azzera la distribuzione».
+- Ogni personaggio può avere un **avatar** quadrato (link, stessi siti del presta-volto), mostrato accanto al nome in bacheca, in chat, nei presenti e sulla mappa; senza avatar compare l'iniziale del nome.
 - Le sezioni **Aspetto, Carattere, Background e OFF Game** della scheda accettano testo semplice oppure HTML e CSS. Funzionano anche i codici tipici dei GDR: linguette fatte con `<input type="radio">`/`checkbox` e `<label>`, tag inventati come `<j>` o `<k>` da colorare con il CSS, impaginazioni con `position: absolute`. Sono mostrate in riquadri isolati: lo stile di un giocatore vale solo nel suo riquadro e JavaScript non viene mai eseguito (script e attributi come `onclick` vengono tolti al salvataggio). Immagini e caratteri esterni si caricano solo da indirizzi `https://`, quindi i siti che li ospitano vedono l'indirizzo IP di chi apre la scheda.
 
 ## Strumenti dei Master (link "Master" in alto)
@@ -61,7 +62,7 @@ Regole anti-abuso, sempre attive: nessuno può dare permessi che non ha, né agi
 
 ## Social
 
-- **Bacheche**: sezioni ON GAME (si scrive come personaggio) e OFF GAME (come giocatore); visibili a tutti, ai membri di una gilda o solo allo staff; si può riservare l'apertura di discussioni allo staff. Moderazione: nascondi, chiudi, metti in evidenza, elimina.
+- **Bacheche**: sezioni ON GAME e OFF GAME, in entrambe si scrive come personaggio (con il suo avatar); visibili a tutti, ai membri di una gilda o solo allo staff; si può riservare l'apertura di discussioni allo staff. Moderazione: nascondi, chiudi, metti in evidenza, elimina.
 - **Gilde**: le crea lo staff (nascono con 4 gradi e una bacheca riservata). Ingresso libero, su candidatura o su invito. Il **livello** del grado decide la gerarchia: i capi agiscono solo su chi sta sotto.
 - **Missive**: messaggi privati tra personaggi, ON o OFF game. Lo staff non le legge, salvo i singoli messaggi segnalati.
 
