@@ -2,6 +2,7 @@ import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, ne, sql } from 'dri
 import { db, schema } from './db/index.ts';
 import { RateLimiter } from './rate-limit.ts';
 import { fullName } from '../format.ts';
+import { avatarResolver } from './avatars.ts';
 
 export class MessageError extends Error {}
 
@@ -30,15 +31,43 @@ export async function findCharacterByName(name: string) {
 	return rows[0] ?? null;
 }
 
-/** Elenco dei nomi per i suggerimenti nel campo "Destinatario". */
-export async function characterDirectory(excludeUserId: number) {
+/**
+ * Suggerimenti per il nome di un personaggio: chi inizia per quello che si è scritto
+ * (nome, cognome o nome completo), esclusi i personaggi del proprio account.
+ */
+export async function searchCharacters(q: string, excludeUserId: number, max = 8) {
+	const like = q.toLowerCase().replace(/[\\%_]/g, (c) => '\\' + c) + '%';
 	const rows = await db
-		.select({ name: schema.characters.name, surname: schema.characters.surname })
+		.select({ id: schema.characters.id, name: schema.characters.name, surname: schema.characters.surname, avatar: schema.characters.avatar })
 		.from(schema.characters)
-		.where(and(isNull(schema.characters.deletedAt), ne(schema.characters.userId, excludeUserId)))
+		.where(
+			and(
+				isNull(schema.characters.deletedAt),
+				ne(schema.characters.userId, excludeUserId),
+				sql`(lower(${schema.characters.name}) like ${like} or lower(coalesce(${schema.characters.surname}, '')) like ${like} or lower(${schema.characters.name} || ' ' || coalesce(${schema.characters.surname}, '')) like ${like})`
+			)
+		)
 		.orderBy(asc(schema.characters.name))
-		.limit(500);
-	return rows.map(fullName);
+		.limit(max);
+	const src = await avatarResolver();
+	return rows.map((r) => ({ id: r.id, name: fullName(r), avatarUrl: src(r.avatar) }));
+}
+
+/** Crea una conversazione già pronta tra due personaggi (senza limiti di frequenza: la usa il gioco, es. gli inviti). */
+export async function deliverThread(senderId: number, recipientId: number, input: { subject: string; body: string; onGame: boolean }) {
+	return db.transaction(async (tx) => {
+		const now = new Date();
+		const [thread] = await tx
+			.insert(schema.messageThreads)
+			.values({ subject: input.subject, onGame: input.onGame, lastMessageAt: now })
+			.returning();
+		await tx.insert(schema.messageParticipants).values([
+			{ threadId: thread.id, characterId: senderId, lastReadAt: now },
+			{ threadId: thread.id, characterId: recipientId }
+		]);
+		await tx.insert(schema.privateMessages).values({ threadId: thread.id, senderCharacterId: senderId, body: input.body, createdAt: now });
+		return thread;
+	});
 }
 
 export async function startThread(
@@ -50,20 +79,7 @@ export async function startThread(
 	if (!recipient) throw new MessageError(`Nessun personaggio si chiama «${recipientName}».`);
 	if (recipient.userId === sender.userId) throw new MessageError('Non puoi scrivere a un altro dei tuoi personaggi.');
 	limit(sender.id);
-
-	return db.transaction(async (tx) => {
-		const now = new Date();
-		const [thread] = await tx
-			.insert(schema.messageThreads)
-			.values({ subject: input.subject, onGame: input.onGame, lastMessageAt: now })
-			.returning();
-		await tx.insert(schema.messageParticipants).values([
-			{ threadId: thread.id, characterId: sender.id, lastReadAt: now },
-			{ threadId: thread.id, characterId: recipient.id }
-		]);
-		await tx.insert(schema.privateMessages).values({ threadId: thread.id, senderCharacterId: sender.id, body: input.body, createdAt: now });
-		return thread;
-	});
+	return deliverThread(sender.id, recipient.id, input);
 }
 
 async function participant(threadId: number, characterId: number) {

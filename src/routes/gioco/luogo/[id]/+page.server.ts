@@ -17,7 +17,7 @@ import { computeCheck } from '#lib/rules.ts';
 import { fullName } from '#lib/format.ts';
 import { createGiocata, GiocataError, recentQuest } from '#lib/server/giocate.ts';
 import { giocataSchema } from '#lib/master.ts';
-import { activeBooking, bookingView, bookRoom, extendBooking, invite, releaseBooking, roomAccess, RoomError, uninvite } from '#lib/server/rooms.ts';
+import { activeBooking, bookingView, bookRoom, extendBooking, invite, releaseBooking, roomAccess, RoomError, sendRoomInvite, uninvite, isRoomsOnlyMap } from '#lib/server/rooms.ts';
 import { disconnect } from '#lib/server/realtime.ts';
 import { balances } from '#lib/server/money.ts';
 import { getEconomy } from '#lib/server/settings.ts';
@@ -350,11 +350,14 @@ export const actions: Actions = {
 	},
 
 	invita: async (event) => {
-		const { booking, location } = await ownBooking(event);
+		const { booking, location, character } = await ownBooking(event);
+		const { user } = requireCharacter(event);
 		const name = String((await event.request.formData()).get('name') ?? '');
 		try {
 			const c = await invite(booking, name);
-			return { roomSuccess: `${c.name} può entrare nella stanza.`, location: location.id };
+			// L'invitato riceve una missiva con il collegamento per entrare.
+			const sent = await sendRoomInvite({ ...character, userId: user.id }, c, location, booking);
+			return { roomSuccess: `${c.name} può entrare nella stanza${sent ? ' e ha ricevuto una missiva con l’invito' : ''}.`, location: location.id };
 		} catch (e) {
 			if (e instanceof RoomError) return fail(400, { roomError: e.message });
 			throw e;
@@ -373,7 +376,7 @@ export const actions: Actions = {
 		const { booking, location } = await ownBooking(event);
 		await releaseBooking(booking);
 		disconnect(location.id);
-		redirect(303, `/gioco/mappa/${location.mapId}`);
+		redirect(303, (await isRoomsOnlyMap(location.mapId)) ? '/stanze-private' : `/gioco/mappa/${location.mapId}`);
 	},
 
 	nascondi: async (event) => moderate(event, true),

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import CharacterInput from '#lib/components/CharacterInput.svelte';
 	import type { PageProps } from './$types';
 	import { enhance } from '$app/forms';
 	import ChatRoom from '#lib/components/ChatRoom.svelte';
@@ -31,7 +32,7 @@
 
 <div class="head">
 	<div>
-		{#if data.map}<a class="back" href="/gioco/mappa/{data.map.id}">← {data.map.name}</a>{/if}
+		{#if data.room}<a class="back" href="/stanze-private">← Stanze private</a>{:else if data.map}<a class="back" href="/gioco/mappa/{data.map.id}">← {data.map.name}</a>{/if}
 		<h1>{data.location.name}{#if data.room}<span class="private-badge">stanza privata</span>{/if}</h1>
 	</div>
 	{#if data.weather}
@@ -98,7 +99,7 @@
 		<section class="card room-panel stack">
 			<form method="post" action="?/invita" class="row" use:enhance>
 				<label for="invite" class="visually-hidden">Nome del personaggio da invitare</label>
-				<input id="invite" name="name" type="text" maxlength="80" placeholder="Nome del personaggio da invitare" required />
+				<CharacterInput id="invite" name="name" label="Nome del personaggio da invitare" placeholder="Nome del personaggio da invitare" required />
 				<button type="submit">Invita</button>
 			</form>
 			{#if b.invited.length}

@@ -3,6 +3,7 @@
 	import type { PageProps } from './$types';
 	import { formatDateTime, fullName } from '#lib/format.ts';
 	import ReportButton from '#lib/components/ReportButton.svelte';
+	import { splitInternalLinks } from '#lib/internal-links.ts';
 
 	let { data, form }: PageProps = $props();
 	let body = $state('');
@@ -55,7 +56,9 @@
 				<span class="muted small">{formatDateTime(m.createdAt)}</span>
 				{#if m.senderId !== data.me}<span class="rep"><ReportButton targetType="private_message" targetId={m.id} /></span>{/if}
 			</header>
-			<p>{m.body}</p>
+			<p>
+				{#each splitInternalLinks(m.body) as seg, i (i)}{#if 'href' in seg}<a class="internal" href={seg.href}>{seg.label}</a>{:else}{seg.text}{/if}{/each}
+			</p>
 		</article>
 	{/each}
 </div>

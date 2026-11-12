@@ -6,6 +6,8 @@ import { pendingReviewCount } from '#lib/server/giocate.ts';
 import { openReportsCount } from '#lib/server/reports.ts';
 import { footerPages } from '#lib/server/pages.ts';
 import { getPresence } from '#lib/server/presence.ts';
+import { isRoomsOnlyMap } from '#lib/server/rooms.ts';
+import { getStartMap } from '#lib/server/world.ts';
 import { isTheme } from '#lib/themes.ts';
 import { readNotify } from '#lib/notify.ts';
 import { allowedWithoutCharacter } from '#lib/navigation.ts';
@@ -25,13 +27,16 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		caps?.has('reports.handle') ? openReportsCount() : 0,
 		locals.character ? getPresence(locals.character.id) : null
 	]);
+	// Dentro una stanza privata (o nella mappa che le raccoglie) la voce Mappa porta alla mappa principale.
+	let currentMapId = presence?.mapId ?? null;
+	if (currentMapId && (await isRoomsOnlyMap(currentMapId))) currentMapId = (await getStartMap())?.id ?? currentMapId;
 	return {
 		unreadMessages,
 		esitiUnread,
 		masterPending: isMaster ? masterEsiti + masterGiocate : null,
 		reportsOpen,
 		/** La voce "Mappa" porta alla mappa in cui si trova il personaggio. */
-		currentMapId: presence?.mapId ?? null,
+		currentMapId,
 		notify: readNotify(user?.notify),
 		siteName: locals.settings.siteName,
 		siteTagline: locals.settings.siteTagline,

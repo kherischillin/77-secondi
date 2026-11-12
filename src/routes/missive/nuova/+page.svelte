@@ -1,4 +1,5 @@
 <script lang="ts">
+	import CharacterInput from '#lib/components/CharacterInput.svelte';
 	import { enhance } from '$app/forms';
 	import type { PageProps } from './$types';
 
@@ -26,10 +27,7 @@
 	</fieldset>
 	<div>
 		<label for="to">Destinatario <span class="hint">nome del personaggio</span></label>
-		<input id="to" name="to" type="text" list="characters" required autocomplete="off" value={v?.to ?? data.to} />
-		<datalist id="characters">
-			{#each data.directory as name (name)}<option value={name}></option>{/each}
-		</datalist>
+		<CharacterInput id="to" name="to" label="Destinatario" required value={v?.to ?? data.to} placeholder="Scrivi le prime lettere del nome" />
 		{#if errors.to}<p class="field-error">{errors.to}</p>{/if}
 	</div>
 	<div>

@@ -3,6 +3,7 @@ import { db, schema } from './db/index.ts';
 import { move, findCharacterByName } from './money.ts';
 import { roomCost } from '../economy.ts';
 import { fullName } from '../format.ts';
+import { deliverThread } from './messages.ts';
 
 /**
  * Stanze private: luoghi che si prenotano per qualche ora.
@@ -126,6 +127,29 @@ export async function invite(booking: Booking, name: string) {
 	return c;
 }
 
+/**
+ * Missiva automatica all'invitato, firmata da chi ha prenotato, con il collegamento per entrare.
+ * Non parte se i due personaggi sono dello stesso account (non ci si scrive da soli). Restituisce se è partita.
+ */
+export async function sendRoomInvite(
+	owner: { id: number; userId: number; name: string; surname: string | null },
+	guest: { id: number; userId: number },
+	location: Location,
+	booking: Booking
+) {
+	if (owner.userId === guest.userId) return false;
+	const until = booking.endsAt.toLocaleTimeString('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit' });
+	await deliverThread(owner.id, guest.id, {
+		subject: `Invito: ${location.name}`,
+		onGame: false,
+		body:
+			`${fullName(owner)} ti ha invitato nella stanza privata «${location.name}», prenotata fino alle ${until}.\n\n` +
+			`Entra da qui → /gioco/luogo/${location.id}\n\n` +
+			'Puoi entrare anche dall’elenco dei presenti o da Uffici → Stanze private, finché l’invito resta valido.'
+	});
+	return true;
+}
+
 export async function uninvite(booking: Booking, characterId: number) {
 	await db
 		.update(schema.roomBookings)
@@ -136,6 +160,42 @@ export async function uninvite(booking: Booking, characterId: number) {
 /** Libera la stanza prima della scadenza (senza rimborso). */
 export async function releaseBooking(booking: Booking) {
 	await db.update(schema.roomBookings).set({ endsAt: new Date() }).where(eq(schema.roomBookings.id, booking.id));
+}
+
+/** Tra queste stanze, quelle in cui il personaggio può entrare adesso (ha prenotato o è invitato). */
+export async function accessibleRoomIds(characterId: number, locationIds: number[]) {
+	if (!locationIds.length) return new Set<number>();
+	const now = new Date();
+	const rows = await db
+		.select({ id: schema.roomBookings.locationId })
+		.from(schema.roomBookings)
+		.where(
+			and(
+				inArray(schema.roomBookings.locationId, locationIds),
+				lte(schema.roomBookings.startsAt, now),
+				gt(schema.roomBookings.endsAt, now),
+				sql`(${schema.roomBookings.ownerCharacterId} = ${characterId} or ${characterId} = any(${schema.roomBookings.invitedIds}))`
+			)
+		);
+	return new Set(rows.map((r) => r.id));
+}
+
+/**
+ * Mappa "contenitore" di sole stanze private (senza immagine, es. «Stanze private»): la voce Mappa
+ * del menu non ci porta, perché non è un posto in cui girare.
+ */
+export async function isRoomsOnlyMap(mapId: number) {
+	const [row] = await db
+		.select({
+			image: schema.maps.image,
+			total: sql<number>`count(${schema.locations.id})::int`,
+			open: sql<number>`count(${schema.locations.id}) filter (where not ${schema.locations.isPrivate})::int`
+		})
+		.from(schema.maps)
+		.leftJoin(schema.locations, eq(schema.locations.mapId, schema.maps.id))
+		.where(eq(schema.maps.id, mapId))
+		.groupBy(schema.maps.id);
+	return !!row && !row.image && row.total > 0 && row.open === 0;
 }
 
 /** Stato delle stanze private di una mappa (per mostrare "libera / occupata"). */

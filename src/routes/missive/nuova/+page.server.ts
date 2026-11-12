@@ -1,16 +1,13 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { requireCharacter } from '#lib/server/guards.ts';
-import { characterDirectory, MessageError, startThread } from '#lib/server/messages.ts';
+import { MessageError, startThread } from '#lib/server/messages.ts';
 import { newMessageSchema } from '#lib/social.ts';
 import { fieldErrors } from '#lib/validation.ts';
 
 export const load: PageServerLoad = async (event) => {
-	const { user } = requireCharacter(event);
-	return {
-		to: (event.url.searchParams.get('a') ?? '').slice(0, 80),
-		directory: await characterDirectory(user.id)
-	};
+	requireCharacter(event);
+	return { to: (event.url.searchParams.get('a') ?? '').slice(0, 80) };
 };
 
 export const actions: Actions = {
