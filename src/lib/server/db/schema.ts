@@ -50,6 +50,25 @@ export const users = pgTable(
 	]
 );
 
+/**
+ * Lavori liberi: mansioni non regolamentate, scelte dal giocatore, che danno l'occupazione
+ * nella scheda e una paga accreditata in banca (ogni `salaryIntervalHours` dell'economia).
+ */
+export const jobs = pgTable(
+	'jobs',
+	{
+		id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+		name: text('name').notNull(),
+		description: text('description').notNull().default(''),
+		pay: integer('pay').notNull().default(0),
+		sortOrder: integer('sort_order').notNull().default(0),
+		/** Se falso nessuno può più sceglierlo; chi lo fa già lo conserva (con la paga). */
+		isOpen: boolean('is_open').notNull().default(true),
+		createdAt: createdAt()
+	},
+	(t) => [uniqueIndex('jobs_name_lower_idx').on(sql`lower(${t.name})`), check('jobs_pay_nonneg', sql`${t.pay} >= 0`)]
+);
+
 /** Personaggi: chi gioca nel mondo. */
 export const characters = pgTable(
 	'characters',
@@ -85,6 +104,10 @@ export const characters = pgTable(
 		money: integer('money').notNull().default(0),
 		/** Denaro sul conto in banca. */
 		bank: integer('bank').notNull().default(0),
+		/** Lavoro libero scelto dal giocatore (Uffici → Lavori): dà l'occupazione e una paga periodica. */
+		jobId: integer('job_id').references((): AnyPgColumn => jobs.id, { onDelete: 'set null' }),
+		/** Ultima paga del lavoro ritirata (il conteggio continua anche cambiando lavoro). */
+		lastJobPayAt: timestamp('last_job_pay_at', { withTimezone: true }),
 		createdAt: createdAt(),
 		lastPlayedAt: timestamp('last_played_at', { withTimezone: true }),
 		/** Cancellazione "morbida": il PG sparisce dal gioco ma resta nei log e nelle giocate. */

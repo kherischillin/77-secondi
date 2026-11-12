@@ -150,6 +150,13 @@
 						{#if errors[`profile_${f.key}`]}<p class="field-error">{errors[`profile_${f.key}`]}</p>{/if}
 					</div>
 				{/each}
+				<div>
+					<span class="label-like">Occupazione</span>
+					<p class="auto">
+						{data.occupation ?? 'Nessun lavoro'}
+						<span class="hint">si sceglie in <a href="/lavori">Uffici → Lavori</a></span>
+					</p>
+				</div>
 			</div>
 		</fieldset>
 
@@ -212,6 +219,15 @@
 </form>
 
 <style>
+	.label-like {
+		display: block;
+		font-weight: 600;
+		margin-bottom: 0.3rem;
+	}
+	.auto {
+		margin: 0;
+		padding: 0.55rem 0;
+	}
 	.edit {
 		max-width: none;
 	}

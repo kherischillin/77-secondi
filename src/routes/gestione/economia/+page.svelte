@@ -39,7 +39,7 @@
 				<input id="sellbackPercent" name="sellbackPercent" type="number" min="0" max="100" value={e.sellbackPercent} />
 			</div>
 			<div>
-				<label for="salaryIntervalHours">Stipendio ogni <span class="hint">ore (24 = una volta al giorno)</span></label>
+				<label for="salaryIntervalHours">Stipendi e paghe dei lavori ogni <span class="hint">ore (24 = una volta al giorno)</span></label>
 				<input id="salaryIntervalHours" name="salaryIntervalHours" type="number" min="1" max="720" value={e.salaryIntervalHours} />
 			</div>
 			<div><button type="submit">Salva</button></div>

@@ -65,7 +65,8 @@ Le stringhe del Master sono vincolanti. Alla fine della quest il Master assegna 
 - **Gilde**: gruppi organizzati con gradi, statuto e una bacheca riservata.
 
 # Denaro, oggetti e stanze private
-- **Banca**: contanti, conto, bonifici e stipendi di gilda.
+- **Banca**: contanti, conto, bonifici, stipendi di gilda e paga del lavoro.
+- **Lavori**: scegli un lavoro libero per il tuo personaggio; diventa la sua occupazione nella scheda e dà una paga da ritirare in banca.
 - **Mercato** e **Inventario**: compra, rivendi, indossa (ciò che indossi si vede nella scheda) e usa gli oggetti anche in chat.
 - **Stanze private**: si prenotano a ore e si invitano altri personaggi. L'elenco è in **Uffici**, insieme a gilde, banca, mercato e archivio delle giocate pubbliche.
 

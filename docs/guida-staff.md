@@ -80,6 +80,7 @@ Regole anti-abuso, sempre attive: nessuno può dare permessi che non ha, né agi
 ## Economia
 
 - **Economia**: nome della valuta, denaro iniziale, percentuale di rivendita al mercato, ogni quante ore si ritira lo stipendio; **stipendi** dei gradi di gilda; **correzioni** del denaro di un personaggio (premi, multe) con motivo; consultazione dei movimenti di un personaggio.
+- **Lavori** (Gestione → Lavori): lavori liberi che i giocatori scelgono da *Uffici → Lavori*. Ognuno ha nome, descrizione, paga e ordine. Il lavoro scelto compare come **Occupazione** nei dati anagrafici della scheda (il giocatore non la scrive più a mano) e dà una paga che si ritira in Banca insieme agli stipendi di gilda, con lo stesso intervallo. Un personaggio fa un solo lavoro; cambiarlo non fa ripartire il conteggio della paga. Un lavoro **chiuso** non si può più scegliere, ma chi lo fa già lo conserva; uno **cancellato** toglie l'occupazione a chi lo faceva. Al primo avvio ci sono 12 lavori di esempio con paghe provvisorie.
 - **Oggetti e mercato**: catalogo con immagine, categoria, dove si indossa, prezzo, pezzi disponibili (vuoto = illimitati), consumabile o no, bonus/malus nelle quest. Un oggetto che qualcuno possiede non si elimina: si **archivia**.
 - Tutti i passaggi di denaro e oggetti sono protetti dal "doppio clic" e restano nei movimenti e nel registro attività.
 

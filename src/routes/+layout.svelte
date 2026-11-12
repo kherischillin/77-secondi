@@ -15,7 +15,7 @@
 	// Voce attiva della barra: la pagina corrente inizia con quel percorso.
 	const here = (prefix: string) =>
 		page.url.pathname === prefix || page.url.pathname.startsWith(prefix + '/') ? ('page' as const) : undefined;
-	const OFFICES = ['/gilde', '/banca', '/mercato', '/stanze-private', '/archivio-giocate', '/pagine'];
+	const OFFICES = ['/gilde', '/banca', '/mercato', '/lavori', '/stanze-private', '/archivio-giocate', '/pagine'];
 	const mapHref = $derived(data.currentMapId ? `/gioco/mappa/${data.currentMapId}` : '/gioco');
 	const staffCount = $derived((data.masterPending ?? 0) + (canManage ? data.reportsOpen : 0));
 
@@ -114,6 +114,7 @@
 						<a href="/gilde" aria-current={here('/gilde')}>Gilde</a>
 						<a href="/banca" aria-current={here('/banca')}>Banca</a>
 						<a href="/mercato" aria-current={here('/mercato')}>Mercato</a>
+						<a href="/lavori" aria-current={here('/lavori')}>Lavori</a>
 						<a href="/stanze-private" aria-current={here('/stanze-private')}>Stanze private</a>
 						<a href="/archivio-giocate" aria-current={here('/archivio-giocate')}>Archivio giocate</a>
 						{#if data.footerPages.length}

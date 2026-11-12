@@ -15,6 +15,7 @@
 			{ href: '/gestione/bacheche', label: 'Bacheche', cap: 'boards.manage' },
 			{ href: '/gestione/oggetti', label: 'Oggetti e mercato', cap: 'items.manage' },
 			{ href: '/gestione/economia', label: 'Economia', cap: 'economy.manage' },
+			{ href: '/gestione/lavori', label: 'Lavori', cap: 'economy.manage' },
 			{ href: '/gestione/segnalazioni', label: 'Segnalazioni', cap: 'reports.handle' },
 			{ href: '/gestione/pagine', label: 'Pagine', cap: 'pages.manage' },
 			{ href: '/gestione/importa', label: 'Importa da GDRCD', cap: 'import.run' },

@@ -2,6 +2,7 @@ import { and, desc, eq, gt, gte, isNull, lte, or, sql } from 'drizzle-orm';
 import { db, schema } from './db/index.ts';
 import { salaryStatus } from '../economy.ts';
 import { fullName } from '../format.ts';
+import { claimJobPay } from './jobs.ts';
 
 /**
  * Denaro dei personaggi: contanti (money) e conto in banca (bank).
@@ -200,6 +201,8 @@ export async function claimSalaries(characterId: number, intervalHours: number) 
 			await move(tx, characterId, 'bank', d.salary, 'salary', { note: d.guildName });
 			total += d.salary;
 		}
+		// Paga del lavoro libero (Uffici → Lavori), con lo stesso intervallo.
+		total += await claimJobPay(tx, characterId, now, intervalHours);
 		return total;
 	});
 }

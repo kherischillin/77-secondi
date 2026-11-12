@@ -56,6 +56,7 @@ export async function bootstrapDatabase(): Promise<void> {
 
 	await seedExampleRules();
 	await seedExampleItems();
+	await seedJobs();
 	await seedBoards();
 	await seedPages();
 
@@ -133,4 +134,34 @@ async function seedExampleItems() {
 		console.log('Oggetti di esempio creati.');
 	}
 	await db.insert(schema.settings).values({ key: 'itemsSeeded', value: true }).onConflictDoNothing();
+}
+
+/**
+ * Al primo avvio crea qualche lavoro libero di esempio (Uffici → Lavori), con paghe provvisorie
+ * che lo staff sistemerà in Gestione → Lavori. Si fa una volta sola.
+ */
+async function seedJobs() {
+	const [done] = await db.select().from(schema.settings).where(eq(schema.settings.key, 'jobsSeeded'));
+	if (done) return;
+	const [{ total }] = await db.select({ total: count() }).from(schema.jobs);
+	if (total === 0) {
+		await db.insert(schema.jobs).values(
+			[
+				['Fattorino/a', 'Consegne a piedi, in moto o con un furgone scassato, da un distretto all’altro. Nessuna domanda sul contenuto dei pacchi.', 40],
+				['Barista', 'Dietro al bancone di un locale: drink sintetici, chiacchiere e orecchie sempre aperte.', 45],
+				['Tassista', 'Guida un taxi o un mezzo abusivo per le strade di Night City, a qualsiasi ora.', 50],
+				['Venditore/trice ambulante', 'Una bancarella al mercato o un carretto all’angolo: cibo di strada, gadget, ricambi.', 35],
+				['Meccanico/a di strada', 'Ripara auto e moto in un’officina di quartiere, spesso senza fare domande.', 60],
+				['Tecnico/a elettronico/a', 'Aggiusta terminali, telefoni e piccoli impianti in un laboratorio o a domicilio.', 55],
+				['Assistente in una clinica', 'Aiuta un medico di strada o un installatore di impianti: pulizia, strumenti, pazienti agitati.', 65],
+				['Buttafuori', 'Tiene l’ordine all’ingresso di un club o di un bar. Decide chi entra e chi no.', 55],
+				['Operaio/a al porto', 'Carico e scarico di container, turni lunghi e lavoro pesante sulle banchine.', 50],
+				['Addetto/a alle pulizie', 'Uffici, appartamenti, scene che è meglio non raccontare. Si vede di tutto.', 35],
+				['Rigattiere/a', 'Recupera e rivende rottami, pezzi usati e oggetti trovati tra le macerie.', 30],
+				['Musicista di strada', 'Suona per strada, nei locali o nei vagoni della metro in cambio di qualche spicciolo.', 25]
+			].map(([name, description, pay], i) => ({ name: name as string, description: description as string, pay: pay as number, sortOrder: i + 1 }))
+		);
+		console.log('Lavori di esempio creati.');
+	}
+	await db.insert(schema.settings).values({ key: 'jobsSeeded', value: true }).onConflictDoNothing();
 }

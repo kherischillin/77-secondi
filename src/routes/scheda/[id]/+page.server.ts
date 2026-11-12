@@ -19,6 +19,7 @@ import {
 import { getRules } from '#lib/server/settings.ts';
 import { requiredPoints, skillRaiseCost, statRaiseCost, type Allocation } from '#lib/rules.ts';
 import { profileRows } from '#lib/profile.ts';
+import { occupationOf } from '#lib/server/jobs.ts';
 import { audit } from '#lib/server/audit.ts';
 import { listPublicForCharacter } from '#lib/server/giocate.ts';
 import { fullName } from '#lib/format.ts';
@@ -68,7 +69,11 @@ export const load: PageServerLoad = async (event) => {
 			offGame: renderSheetHtml(character.offGame),
 			portraitUrl: portraitSrc(sheet.character.portrait, settings.portraitHosts)
 		},
-		profile: profileRows(sheet.character.profile),
+		profile: [
+			...profileRows(sheet.character.profile),
+			// Occupazione: compilata in automatico dal lavoro scelto (Uffici → Lavori).
+			...((occupation) => (occupation ? [{ key: 'occupation', label: 'Occupazione', value: occupation }] : []))(await occupationOf(character.id))
+		] as { key: string; label: string; value: string }[],
 		portraitBox: { width: settings.portraitMaxWidth, height: settings.portraitMaxHeight },
 		giocate: await listPublicForCharacter(character.id),
 		// L'equipaggiamento è la parte "visibile" in gioco: lo vedono tutti.

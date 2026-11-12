@@ -7,7 +7,7 @@
 
 	let { data, form }: PageProps = $props();
 	const fmt = (n: number) => n.toLocaleString('it-IT', { useGrouping: 'always' });
-	const readyCount = $derived(data.salaries.filter((s) => s.ready).length);
+	const readyCount = $derived(data.salaries.filter((s) => s.ready).length + (data.job?.ready ? 1 : 0));
 </script>
 
 <svelte:head><title>Banca · {data.siteName}</title></svelte:head>
@@ -55,10 +55,19 @@
 
 	<section class="card stack">
 		<h2>Stipendi</h2>
-		{#if data.salaries.length === 0}
-			<p class="muted">Nessuno stipendio: si riceve con un grado di gilda pagato dallo staff.</p>
+		{#if data.salaries.length === 0 && !data.job}
+			<p class="muted">Nessuno stipendio: si riceve con un <a href="/lavori">lavoro</a> o con un grado di gilda pagato dallo staff.</p>
 		{:else}
 			<ul class="pay">
+				{#if data.job}
+					<li>
+						<span><strong>{data.job.name}</strong> <span class="muted">· lavoro</span></span>
+						<span>
+							{fmt(data.job.pay)}
+							{#if data.job.ready}<span class="badge accent">pronto</span>{:else if data.job.nextAt}<span class="muted small">dal {formatDateTime(data.job.nextAt)}</span>{/if}
+						</span>
+					</li>
+				{/if}
 				{#each data.salaries as s (s.guildId)}
 					<li>
 						<span><strong>{s.guildName}</strong> <span class="muted">· {s.rankName}</span></span>

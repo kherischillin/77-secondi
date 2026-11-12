@@ -7,7 +7,8 @@
 	const links = [
 		{ href: '/inventario', label: 'Inventario' },
 		{ href: '/mercato', label: 'Mercato' },
-		{ href: '/banca', label: 'Banca' }
+		{ href: '/banca', label: 'Banca' },
+		{ href: '/lavori', label: 'Lavori' }
 	];
 	const fmt = (n: number) => n.toLocaleString('it-IT', { useGrouping: 'always' });
 </script>

@@ -3,6 +3,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { requireCharacter, clientIp } from '#lib/server/guards.ts';
 import { balances, claimSalaries, deposit, moneyHistory, MoneyError, salaries, transfer, withdraw } from '#lib/server/money.ts';
 import { getEconomy } from '#lib/server/settings.ts';
+import { jobPay } from '#lib/server/jobs.ts';
 import { amountSchema } from '#lib/economy.ts';
 import { audit } from '#lib/server/audit.ts';
 import { fullName } from '#lib/format.ts';
@@ -14,12 +15,13 @@ const transferLimiter = new RateLimiter(10, 60_000);
 export const load: PageServerLoad = async (event) => {
 	const { character } = requireCharacter(event);
 	const economy = await getEconomy();
-	const [purse, history, pay] = await Promise.all([
+	const [purse, history, pay, job] = await Promise.all([
 		balances(character.id),
 		moneyHistory(character.id),
-		salaries(character.id, economy.salaryIntervalHours)
+		salaries(character.id, economy.salaryIntervalHours),
+		jobPay(character.id, economy.salaryIntervalHours)
 	]);
-	return { me: { name: fullName(character) }, purse, history, salaries: pay, currency: economy.currencyName };
+	return { me: { name: fullName(character) }, purse, history, salaries: pay, job, currency: economy.currencyName };
 };
 
 function readAmount(form: FormData) {

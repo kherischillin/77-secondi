@@ -1,5 +1,6 @@
 /**
  * Dati anagrafici della scheda: brevi campi di testo libero, mostrati accanto al nome.
+ * L'occupazione non è qui: la compila il gioco dal lavoro scelto in Uffici → Lavori.
  * Per aggiungere, togliere o riordinare un campo basta modificare questo elenco:
  * i valori stanno in `characters.profile` (JSON), quindi non serve toccare il database.
  */
@@ -12,8 +13,7 @@ export const PROFILE_FIELDS = [
 	{ key: 'height', label: 'Altezza', placeholder: 'es. 1,82 m' },
 	{ key: 'weight', label: 'Peso', placeholder: 'es. 78 kg' },
 	{ key: 'eyes', label: 'Occhi', placeholder: 'es. grigi, impianti ottici Kiroshi' },
-	{ key: 'hair', label: 'Capelli', placeholder: 'es. neri, rasati ai lati' },
-	{ key: 'occupation', label: 'Occupazione', placeholder: 'es. tecnico di strada' }
+	{ key: 'hair', label: 'Capelli', placeholder: 'es. neri, rasati ai lati' }
 ] as const;
 
 export type ProfileKey = (typeof PROFILE_FIELDS)[number]['key'];

@@ -8,6 +8,7 @@ import { getCharacter } from '#lib/server/sheet.ts';
 import { deleteImage, mediaUrl } from '#lib/server/uploads.ts';
 import { checkPortraitUrl, isPortraitLink } from '#lib/portrait.ts';
 import { readProfile } from '#lib/profile.ts';
+import { occupationOf } from '#lib/server/jobs.ts';
 import { getRules } from '#lib/server/settings.ts';
 import { audit } from '#lib/server/audit.ts';
 import { fieldErrors } from '#lib/validation.ts';
@@ -43,6 +44,7 @@ export const load: PageServerLoad = async (event) => {
 	const { character } = await editable(event);
 	const rules = await getRules();
 	return {
+		occupation: await occupationOf(character.id),
 		character: {
 			id: character.id,
 			name: character.name,
