@@ -112,12 +112,23 @@ export async function getMap(id: number) {
 	return m ?? null;
 }
 
-/** La mappa di partenza; se nessuna è marcata, la prima in ordine. */
+/**
+ * La mappa principale (di partenza): quella marcata «partenza»; in mancanza, la prima mappa
+ * "madre" con un'immagine (es. Night City). I distretti (mappe figlie) e le mappe senza immagine,
+ * come quella che raccoglie le stanze private, vengono solo per ultimi.
+ */
 export async function getStartMap() {
 	const [start] = await db
 		.select()
 		.from(schema.maps)
-		.orderBy(sql`${schema.maps.isStart} desc`, asc(schema.maps.sortOrder), asc(schema.maps.id))
+		.orderBy(
+			sql`(${schema.maps.isStart} and ${schema.maps.parentMapId} is null) desc`,
+			sql`(${schema.maps.parentMapId} is null) desc`,
+			sql`(${schema.maps.image} is not null) desc`,
+			sql`${schema.maps.isStart} desc`,
+			asc(schema.maps.sortOrder),
+			asc(schema.maps.id)
+		)
 		.limit(1);
 	return start ?? null;
 }
