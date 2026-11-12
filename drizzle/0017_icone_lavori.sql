@@ -1,0 +1,3 @@
+ALTER TABLE "jobs" ADD COLUMN "icon" text DEFAULT 'briefcase' NOT NULL;--> statement-breakpoint
+-- Icone dei lavori di esempio già creati.
+UPDATE "jobs" SET "icon" = v.icon FROM (VALUES ('fattorino/a', 'package'), ('barista', 'cocktail'), ('tassista', 'car'), ('venditore/trice ambulante', 'stall'), ('meccanico/a di strada', 'wrench'), ('tecnico/a elettronico/a', 'chip'), ('assistente in una clinica', 'medical'), ('buttafuori', 'shield'), ('operaio/a al porto', 'anchor'), ('addetto/a alle pulizie', 'broom'), ('rigattiere/a', 'scrap'), ('musicista di strada', 'music')) AS v(name, icon) WHERE lower("jobs"."name") = v.name;

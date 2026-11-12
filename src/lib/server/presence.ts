@@ -11,6 +11,9 @@ export type PresentCharacter = {
 	surname: string | null;
 	/** Avatar quadrato già pronto da mostrare (null = iniziale del nome). */
 	avatarUrl: string | null;
+	/** Lavoro libero (Uffici → Lavori): nome e icona, se ne ha uno. */
+	jobName: string | null;
+	jobIcon: string | null;
 	lastPostAt: string | null;
 };
 
@@ -88,10 +91,13 @@ export async function listPresentAt(locationId: number): Promise<PresentCharacte
 			name: schema.characters.name,
 			surname: schema.characters.surname,
 			avatar: schema.characters.avatar,
+			jobName: schema.jobs.name,
+			jobIcon: schema.jobs.icon,
 			lastPostAt: schema.characterPresence.lastPostAt
 		})
 		.from(schema.characterPresence)
 		.innerJoin(schema.characters, eq(schema.characterPresence.characterId, schema.characters.id))
+		.leftJoin(schema.jobs, eq(schema.characters.jobId, schema.jobs.id))
 		.where(
 			and(
 				eq(schema.characterPresence.locationId, locationId),
@@ -112,6 +118,8 @@ export async function listOnline(): Promise<OnlineCharacter[]> {
 			name: schema.characters.name,
 			surname: schema.characters.surname,
 			avatar: schema.characters.avatar,
+			jobName: schema.jobs.name,
+			jobIcon: schema.jobs.icon,
 			lastPostAt: schema.characterPresence.lastPostAt,
 			mapId: schema.maps.id,
 			mapName: schema.maps.name,
@@ -121,6 +129,7 @@ export async function listOnline(): Promise<OnlineCharacter[]> {
 		})
 		.from(schema.characterPresence)
 		.innerJoin(schema.characters, eq(schema.characterPresence.characterId, schema.characters.id))
+		.leftJoin(schema.jobs, eq(schema.characters.jobId, schema.jobs.id))
 		.leftJoin(schema.maps, eq(schema.characterPresence.mapId, schema.maps.id))
 		.leftJoin(schema.locations, eq(schema.characterPresence.locationId, schema.locations.id))
 		.where(and(gt(schema.characterPresence.lastSeenAt, onlineSince()), isNull(schema.characters.deletedAt)))

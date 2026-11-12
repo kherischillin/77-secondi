@@ -1,4 +1,5 @@
 <script lang="ts">
+	import JobIcon from '#lib/components/JobIcon.svelte';
 	import { enhance } from '$app/forms';
 	import type { PageProps } from './$types';
 	import { fullName } from '#lib/format.ts';
@@ -153,7 +154,7 @@
 				<div>
 					<span class="label-like">Occupazione</span>
 					<p class="auto">
-						{data.occupation ?? 'Nessun lavoro'}
+						{#if data.occupation}<JobIcon icon={data.occupation.icon} size={16} /> {data.occupation.name}{:else}Nessun lavoro{/if}
 						<span class="hint">si sceglie in <a href="/lavori">Uffici → Lavori</a></span>
 					</p>
 				</div>

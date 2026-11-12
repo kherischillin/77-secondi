@@ -95,7 +95,7 @@ export async function jobPay(characterId: number, intervalHours: number, now = n
 	const row = await currentJob(characterId);
 	if (!row || row.job.pay <= 0) return null;
 	const status = salaryStatus(row.lastPayAt, now, intervalHours);
-	return { name: row.job.name, pay: row.job.pay, ready: status.ready, nextAt: status.nextAt?.toISOString() ?? null };
+	return { name: row.job.name, icon: row.job.icon, pay: row.job.pay, ready: status.ready, nextAt: status.nextAt?.toISOString() ?? null };
 }
 
 /**
@@ -125,7 +125,8 @@ export async function claimJobPay(tx: Parameters<Parameters<typeof db.transactio
 	return row.pay;
 }
 
-/** Occupazione mostrata nella scheda, compilata in automatico: il nome del lavoro libero. */
-export async function occupationOf(characterId: number): Promise<string | null> {
-	return (await currentJob(characterId))?.job.name ?? null;
+/** Occupazione mostrata nella scheda, compilata in automatico: nome e icona del lavoro libero. */
+export async function occupationOf(characterId: number): Promise<{ name: string; icon: string } | null> {
+	const row = await currentJob(characterId);
+	return row ? { name: row.job.name, icon: row.job.icon } : null;
 }

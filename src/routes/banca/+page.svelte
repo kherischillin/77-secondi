@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import type { PageProps } from './$types';
 	import EconomyNav from '#lib/components/EconomyNav.svelte';
+	import JobIcon from '#lib/components/JobIcon.svelte';
 	import { MONEY_KIND_LABELS } from '#lib/economy.ts';
 	import { formatDateTime } from '#lib/format.ts';
 
@@ -61,7 +62,7 @@
 			<ul class="pay">
 				{#if data.job}
 					<li>
-						<span><strong>{data.job.name}</strong> <span class="muted">· lavoro</span></span>
+						<span><JobIcon icon={data.job.icon} size={16} /> <strong>{data.job.name}</strong> <span class="muted">· lavoro</span></span>
 						<span>
 							{fmt(data.job.pay)}
 							{#if data.job.ready}<span class="badge accent">pronto</span>{:else if data.job.nextAt}<span class="muted small">dal {formatDateTime(data.job.nextAt)}</span>{/if}

@@ -61,6 +61,8 @@ export const jobs = pgTable(
 		name: text('name').notNull(),
 		description: text('description').notNull().default(''),
 		pay: integer('pay').notNull().default(0),
+		/** Icona (chiave di src/lib/job-icons.ts), mostrata in scheda, elenco lavori e presenti. */
+		icon: text('icon').notNull().default('briefcase'),
 		sortOrder: integer('sort_order').notNull().default(0),
 		/** Se falso nessuno può più sceglierlo; chi lo fa già lo conserva (con la paga). */
 		isOpen: boolean('is_open').notNull().default(true),

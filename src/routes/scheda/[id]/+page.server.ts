@@ -72,8 +72,8 @@ export const load: PageServerLoad = async (event) => {
 		profile: [
 			...profileRows(sheet.character.profile),
 			// Occupazione: compilata in automatico dal lavoro scelto (Uffici → Lavori).
-			...((occupation) => (occupation ? [{ key: 'occupation', label: 'Occupazione', value: occupation }] : []))(await occupationOf(character.id))
-		] as { key: string; label: string; value: string }[],
+			...((job) => (job ? [{ key: 'occupation', label: 'Occupazione', value: job.name, icon: job.icon }] : []))(await occupationOf(character.id))
+		] as { key: string; label: string; value: string; icon?: string }[],
 		portraitBox: { width: settings.portraitMaxWidth, height: settings.portraitMaxHeight },
 		giocate: await listPublicForCharacter(character.id),
 		// L'equipaggiamento è la parte "visibile" in gioco: lo vedono tutti.

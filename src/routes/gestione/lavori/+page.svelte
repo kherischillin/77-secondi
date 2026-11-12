@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { PageProps } from './$types';
+	import JobIcon from '#lib/components/JobIcon.svelte';
+	import { DEFAULT_JOB_ICON, JOB_ICON_KEYS, JOB_ICONS } from '#lib/job-icons.ts';
 
 	let { data, form }: PageProps = $props();
 	const errors = $derived<Record<string, string>>(form && 'errors' in form ? ((form.errors as Record<string, string>) ?? {}) : {});
@@ -40,6 +42,16 @@
 				<input id="sortOrder" name="sortOrder" type="number" value={data.jobs.length + 1} />
 			</div>
 		</div>
+		<fieldset class="icons">
+			<legend>Icona</legend>
+			{#each JOB_ICON_KEYS as k (k)}
+				<label class="icon-opt" title={JOB_ICONS[k].label}>
+					<input type="radio" name="icon" value={k} checked={DEFAULT_JOB_ICON === k} />
+					<JobIcon icon={k} size={22} />
+					<span class="visually-hidden">{JOB_ICONS[k].label}</span>
+				</label>
+			{/each}
+		</fieldset>
 		<div>
 			<label for="description">Descrizione</label>
 			<textarea id="description" name="description" rows="2" maxlength="1000"></textarea>
@@ -73,6 +85,16 @@
 							<input id="sort-{j.id}" name="sortOrder" type="number" value={j.sortOrder} />
 						</div>
 					</div>
+					<fieldset class="icons">
+						<legend>Icona</legend>
+						{#each JOB_ICON_KEYS as k (k)}
+							<label class="icon-opt" title={JOB_ICONS[k].label}>
+								<input type="radio" name="icon" value={k} checked={j.icon === k} />
+								<JobIcon icon={k} size={22} />
+								<span class="visually-hidden">{JOB_ICONS[k].label}</span>
+							</label>
+						{/each}
+					</fieldset>
 					<div>
 						<label for="desc-{j.id}">Descrizione</label>
 						<textarea id="desc-{j.id}" name="description" rows="2" maxlength="1000">{j.description}</textarea>
@@ -125,6 +147,52 @@
 		margin: 0;
 		display: grid;
 		gap: 1rem;
+	}
+	.icons {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+		border: 0;
+		padding: 0;
+		margin: 0;
+	}
+	.icons legend {
+		font-weight: 600;
+		margin-bottom: 0.3rem;
+		padding: 0;
+	}
+	.icon-opt {
+		position: relative;
+		display: grid;
+		place-items: center;
+		width: 2.4rem;
+		height: 2.4rem;
+		margin: 0;
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		cursor: pointer;
+	}
+	.icon-opt input {
+		position: absolute;
+		opacity: 0;
+		inset: 0;
+		margin: 0;
+		cursor: pointer;
+	}
+	.icon-opt .visually-hidden {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+	.icon-opt:has(input:checked) {
+		border-color: var(--accent);
+		background: var(--bg-sunken);
+	}
+	.icon-opt:has(input:focus-visible) {
+		outline: 2px solid var(--focus);
 	}
 	.jobs li.closed {
 		opacity: 0.7;

@@ -2,6 +2,7 @@
 	import type { PageProps } from './$types';
 	import { fullName } from '#lib/format.ts';
 	import Avatar from '#lib/components/Avatar.svelte';
+	import JobIcon from '#lib/components/JobIcon.svelte';
 
 	let { data }: PageProps = $props();
 </script>
@@ -21,7 +22,7 @@
 				</h2>
 				<ul>
 					{#each g.people as p (p.characterId)}
-						<li><a href="/scheda/{p.characterId}"><Avatar src={p.avatarUrl} name={p.name} size={30} /> {fullName(p)}</a></li>
+						<li><a href="/scheda/{p.characterId}"><Avatar src={p.avatarUrl} name={p.name} size={30} /> {fullName(p)}</a>{#if p.jobName} <JobIcon icon={p.jobIcon} title={p.jobName} size={15} />{/if}</li>
 					{/each}
 				</ul>
 			</section>

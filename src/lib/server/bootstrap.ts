@@ -147,19 +147,19 @@ async function seedJobs() {
 	if (total === 0) {
 		await db.insert(schema.jobs).values(
 			[
-				['Fattorino/a', 'Consegne a piedi, in moto o con un furgone scassato, da un distretto all’altro. Nessuna domanda sul contenuto dei pacchi.', 40],
-				['Barista', 'Dietro al bancone di un locale: drink sintetici, chiacchiere e orecchie sempre aperte.', 45],
-				['Tassista', 'Guida un taxi o un mezzo abusivo per le strade di Night City, a qualsiasi ora.', 50],
-				['Venditore/trice ambulante', 'Una bancarella al mercato o un carretto all’angolo: cibo di strada, gadget, ricambi.', 35],
-				['Meccanico/a di strada', 'Ripara auto e moto in un’officina di quartiere, spesso senza fare domande.', 60],
-				['Tecnico/a elettronico/a', 'Aggiusta terminali, telefoni e piccoli impianti in un laboratorio o a domicilio.', 55],
-				['Assistente in una clinica', 'Aiuta un medico di strada o un installatore di impianti: pulizia, strumenti, pazienti agitati.', 65],
-				['Buttafuori', 'Tiene l’ordine all’ingresso di un club o di un bar. Decide chi entra e chi no.', 55],
-				['Operaio/a al porto', 'Carico e scarico di container, turni lunghi e lavoro pesante sulle banchine.', 50],
-				['Addetto/a alle pulizie', 'Uffici, appartamenti, scene che è meglio non raccontare. Si vede di tutto.', 35],
-				['Rigattiere/a', 'Recupera e rivende rottami, pezzi usati e oggetti trovati tra le macerie.', 30],
-				['Musicista di strada', 'Suona per strada, nei locali o nei vagoni della metro in cambio di qualche spicciolo.', 25]
-			].map(([name, description, pay], i) => ({ name: name as string, description: description as string, pay: pay as number, sortOrder: i + 1 }))
+				['Fattorino/a', 'package', 'Consegne a piedi, in moto o con un furgone scassato, da un distretto all’altro. Nessuna domanda sul contenuto dei pacchi.', 40],
+				['Barista', 'cocktail', 'Dietro al bancone di un locale: drink sintetici, chiacchiere e orecchie sempre aperte.', 45],
+				['Tassista', 'car', 'Guida un taxi o un mezzo abusivo per le strade di Night City, a qualsiasi ora.', 50],
+				['Venditore/trice ambulante', 'stall', 'Una bancarella al mercato o un carretto all’angolo: cibo di strada, gadget, ricambi.', 35],
+				['Meccanico/a di strada', 'wrench', 'Ripara auto e moto in un’officina di quartiere, spesso senza fare domande.', 60],
+				['Tecnico/a elettronico/a', 'chip', 'Aggiusta terminali, telefoni e piccoli impianti in un laboratorio o a domicilio.', 55],
+				['Assistente in una clinica', 'medical', 'Aiuta un medico di strada o un installatore di impianti: pulizia, strumenti, pazienti agitati.', 65],
+				['Buttafuori', 'shield', 'Tiene l’ordine all’ingresso di un club o di un bar. Decide chi entra e chi no.', 55],
+				['Operaio/a al porto', 'anchor', 'Carico e scarico di container, turni lunghi e lavoro pesante sulle banchine.', 50],
+				['Addetto/a alle pulizie', 'broom', 'Uffici, appartamenti, scene che è meglio non raccontare. Si vede di tutto.', 35],
+				['Rigattiere/a', 'scrap', 'Recupera e rivende rottami, pezzi usati e oggetti trovati tra le macerie.', 30],
+				['Musicista di strada', 'music', 'Suona per strada, nei locali o nei vagoni della metro in cambio di qualche spicciolo.', 25]
+			].map(([name, icon, description, pay], i) => ({ name: name as string, icon: icon as string, description: description as string, pay: pay as number, sortOrder: i + 1 }))
 		);
 		console.log('Lavori di esempio creati.');
 	}

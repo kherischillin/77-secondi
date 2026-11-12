@@ -120,6 +120,13 @@
       "when": 1794516955555,
       "tag": "0016_lavori",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1794517479372,
+      "tag": "0017_icone_lavori",
+      "breakpoints": true
     }
   ]
 }

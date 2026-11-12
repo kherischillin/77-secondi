@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import type { PageProps } from './$types';
 	import EconomyNav from '#lib/components/EconomyNav.svelte';
+	import JobIcon from '#lib/components/JobIcon.svelte';
 	import { formatDateTime } from '#lib/format.ts';
 
 	let { data, form }: PageProps = $props();
@@ -28,7 +29,7 @@
 	{#if data.current}
 		<div>
 			<span class="label">Lavoro di {data.me.name}</span>
-			<strong class="name">{data.current.name}</strong>
+			<strong class="name"><JobIcon icon={data.current.icon} size={22} /> {data.current.name}</strong>
 			{#if data.pay}
 				<span class="muted small">
 					{fmt(data.pay.pay)} {data.currency} {every} ·
@@ -57,7 +58,7 @@
 		{#each data.jobs as j (j.id)}
 			<li class="card" class:mine={data.current?.id === j.id}>
 				<div class="info">
-					<h2>{j.name}</h2>
+					<h2><JobIcon icon={j.icon} size={20} /> {j.name}</h2>
 					{#if j.description}<p>{j.description}</p>{/if}
 					<p class="muted small">
 						Paga: <strong>{fmt(j.pay)} {data.currency}</strong> {every}

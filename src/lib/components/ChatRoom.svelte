@@ -4,12 +4,13 @@
 	import { invalidateAll } from '$app/navigation';
 	import ChatLine from './ChatLine.svelte';
 	import Avatar from './Avatar.svelte';
+	import JobIcon from './JobIcon.svelte';
 	import { MAX_MESSAGE_LENGTH, timeAgo, type ChatMessageView, type ChosenKind } from '#lib/chat.ts';
 	import { fullName } from '#lib/format.ts';
 	import { page } from '$app/state';
 	import { playTone } from '#lib/sound.ts';
 
-	type Present = { characterId: number; name: string; surname: string | null; avatarUrl: string | null; lastPostAt: string | null };
+	type Present = { characterId: number; name: string; surname: string | null; avatarUrl: string | null; jobName?: string | null; jobIcon?: string | null; lastPostAt: string | null };
 
 	let {
 		locationId,
@@ -311,7 +312,10 @@
 					<li>
 						<Avatar src={p.avatarUrl} name={p.name} size={36} />
 						<div class="who-box">
-							<a class="name" class:me={p.characterId === me} href="/scheda/{p.characterId}" target="_blank">{fullName(p)}</a>
+							<span class="name-row">
+								<a class="name" class:me={p.characterId === me} href="/scheda/{p.characterId}" target="_blank">{fullName(p)}</a>
+								{#if p.jobName}<JobIcon icon={p.jobIcon} title={p.jobName} size={15} />{/if}
+							</span>
 							<span class="muted small">ultima azione: {timeAgo(p.lastPostAt, now)}</span>
 							{#if p.characterId !== me}
 								<button type="button" class="link small" onclick={() => whisperTo(p)}>sussurra</button>
@@ -487,5 +491,10 @@
 		height: 1px;
 		overflow: hidden;
 		clip: rect(0 0 0 0);
+	}
+	.name-row {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
 	}
 </style>

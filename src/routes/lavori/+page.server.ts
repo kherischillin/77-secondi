@@ -18,7 +18,7 @@ export const load: PageServerLoad = async (event) => {
 	return {
 		me: { name: fullName(character) },
 		jobs,
-		current: mine ? { id: mine.job.id, name: mine.job.name, isOpen: mine.job.isOpen } : null,
+		current: mine ? { id: mine.job.id, name: mine.job.name, icon: mine.job.icon, isOpen: mine.job.isOpen } : null,
 		pay,
 		purse,
 		currency: economy.currencyName,

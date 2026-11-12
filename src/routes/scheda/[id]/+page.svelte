@@ -1,4 +1,5 @@
 <script lang="ts">
+	import JobIcon from '#lib/components/JobIcon.svelte';
 	import { enhance } from '$app/forms';
 	import type { PageProps } from './$types';
 	import { formatDate, formatDateTime, fullName } from '#lib/format.ts';
@@ -131,7 +132,7 @@
 							{#each data.profile as row (row.key)}
 								<div>
 									<dt>{row.label}</dt>
-									<dd>{row.value}</dd>
+									<dd>{#if row.icon}<JobIcon icon={row.icon} size={16} /> {/if}{row.value}</dd>
 								</div>
 							{/each}
 						</dl>
@@ -846,5 +847,8 @@
 	.small-btn {
 		font-size: 0.85rem;
 		padding: 0.25rem 0.7rem;
+	}
+	dd :global(.job-icon) {
+		margin-right: 0.3rem;
 	}
 </style>
