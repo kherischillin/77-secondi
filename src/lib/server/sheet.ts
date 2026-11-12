@@ -74,6 +74,7 @@ export async function loadSheet(characterId: number) {
 			appearance: character.appearance,
 			personality: character.personality,
 			background: character.background,
+			offGame: character.offGame,
 			portraitUrl: mediaUrl(character.portrait),
 			portraitCredit: character.portraitCredit,
 			statsAllocated: character.statsAllocated,

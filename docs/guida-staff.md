@@ -41,6 +41,7 @@ Regole anti-abuso, sempre attive: nessuno può dare permessi che non ha, né agi
 - **Fine quest**: il Master clicca **Termina quest** e assegna i PX ai partecipanti (lui e i suoi personaggi sono esclusi; i PX di una quest si assegnano una volta sola).
 - **Caratteristiche e abilità** si creano e modificano in Regole di gioco, con valori minimi e massimi; ogni abilità può essere legata a una caratteristica.
 - Dalla **scheda** di un personaggio lo staff può correggere i valori, azzerare la distribuzione iniziale, assegnare PX, consegnare o togliere oggetti.
+- Le sezioni **Aspetto, Carattere, Background e OFF Game** della scheda accettano testo semplice oppure HTML e CSS. Sono mostrate in riquadri isolati: lo stile di un giocatore vale solo nel suo riquadro e JavaScript non viene mai eseguito (script e attributi come `onclick` vengono tolti al salvataggio). Immagini e caratteri esterni si caricano solo da indirizzi `https://`, quindi i siti che li ospitano vedono l'indirizzo IP di chi apre la scheda.
 
 ## Strumenti dei Master (link "Master" in alto)
 

@@ -50,6 +50,13 @@
       "when": 1794442834535,
       "tag": "0006_temi_pagine",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794497611806,
+      "tag": "0007_scheda_off_game",
+      "breakpoints": true
     }
   ]
 }

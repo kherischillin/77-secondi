@@ -2,10 +2,41 @@
 	import { enhance } from '$app/forms';
 	import type { PageProps } from './$types';
 	import { fullName } from '#lib/format.ts';
+	import SheetFrame from '#lib/components/SheetFrame.svelte';
+	import { prepareSheetText, SHEET_LIMITS, type SheetSection } from '#lib/sheet-html.ts';
 
 	let { data, form }: PageProps = $props();
 	const errors = $derived<Record<string, string>>(form?.errors ?? {});
 	const c = $derived(data.character);
+
+	// Testi delle quattro sezioni personalizzabili, per l'anteprima dal vivo.
+	let texts = $state<Record<SheetSection, string>>({ appearance: '', personality: '', background: '', offGame: '' });
+	$effect.pre(() => {
+		texts = {
+			appearance: data.character.appearance ?? '',
+			personality: data.character.personality ?? '',
+			background: data.character.background ?? '',
+			offGame: data.character.offGame ?? ''
+		};
+	});
+	let preview = $state<Record<SheetSection, boolean>>({ appearance: false, personality: false, background: false, offGame: false });
+
+	const sections: { key: SheetSection; label: string; rows: number; hint: () => string }[] = [
+		{ key: 'appearance', label: 'Aspetto', rows: 8, hint: () => 'ON GAME. Corporatura, viso, abiti, segni particolari: ciò che si vede.' },
+		{ key: 'personality', label: 'Carattere', rows: 8, hint: () => 'Modi di fare, pregi e difetti.' },
+		{
+			key: 'background',
+			label: 'Background',
+			rows: 12,
+			hint: () => (data.backgroundPublic ? 'Visibile a tutti i giocatori.' : 'Visibile solo a te e allo staff: gli altri lo scopriranno giocando.')
+		},
+		{
+			key: 'offGame',
+			label: 'OFF Game',
+			rows: 8,
+			hint: () => 'Lo spazio del giocatore: presentazione, orari, preferenze di gioco, quello che vuoi. Il personaggio non lo sa.'
+		}
+	];
 </script>
 
 <svelte:head><title>Modifica {fullName(c)}</title></svelte:head>
@@ -24,27 +55,39 @@
 		<span class="hint">Una frase o due che compaiono in cima alla scheda.</span>
 		{#if errors.bio}<p class="field-error">{errors.bio}</p>{/if}
 	</div>
-	<div>
-		<label for="appearance">Aspetto</label>
-		<textarea id="appearance" name="appearance" maxlength="5000" rows="6">{c.appearance ?? ''}</textarea>
-		<span class="hint">Corporatura, viso, abiti, segni particolari: ciò che si vede.</span>
-		{#if errors.appearance}<p class="field-error">{errors.appearance}</p>{/if}
+	<div class="howto">
+		<strong>Aspetto, Carattere, Background e OFF Game</strong> si possono scrivere come testo semplice oppure
+		personalizzare con <strong>HTML e CSS</strong> (anche un blocco <code>&lt;style&gt;</code>). Lo stile vale solo
+		dentro quella sezione. JavaScript non è ammesso: script, <code>onclick</code> e simili vengono tolti al salvataggio.
+		Immagini e caratteri esterni solo da indirizzi <code>https://</code>.
 	</div>
-	<div>
-		<label for="personality">Carattere</label>
-		<textarea id="personality" name="personality" maxlength="5000" rows="6">{c.personality ?? ''}</textarea>
-		{#if errors.personality}<p class="field-error">{errors.personality}</p>{/if}
-	</div>
-	<div>
-		<label for="background">Background</label>
-		<textarea id="background" name="background" maxlength="20000" rows="10">{c.background ?? ''}</textarea>
-		<span class="hint">
-			{data.backgroundPublic
-				? 'Visibile a tutti i giocatori.'
-				: 'Visibile solo a te e allo staff: gli altri lo scopriranno giocando.'}
-		</span>
-		{#if errors.background}<p class="field-error">{errors.background}</p>{/if}
-	</div>
+	{#each sections as s (s.key)}
+		<div class="field">
+			<div class="field-head">
+				<label for={s.key}>{s.label}</label>
+				<button type="button" class="link" onclick={() => (preview[s.key] = !preview[s.key])}>
+					{preview[s.key] ? 'Nascondi anteprima' : 'Anteprima'}
+				</button>
+			</div>
+			<textarea
+				id={s.key}
+				name={s.key}
+				class="code"
+				maxlength={SHEET_LIMITS[s.key]}
+				rows={s.rows}
+				spellcheck="false"
+				bind:value={texts[s.key]}
+			></textarea>
+			<span class="hint">{s.hint()} <span class="count">{texts[s.key].length}/{SHEET_LIMITS[s.key]}</span></span>
+			{#if errors[s.key]}<p class="field-error">{errors[s.key]}</p>{/if}
+			{#if preview[s.key]}
+				{@const html = prepareSheetText(texts[s.key])}
+				<div class="preview">
+					{#if html}<SheetFrame {html} title="Anteprima di {s.label}" />{:else}<p class="muted">Niente da mostrare.</p>{/if}
+				</div>
+			{/if}
+		</div>
+	{/each}
 	<div class="portrait-row">
 		{#if c.portraitUrl}<img src={c.portraitUrl} alt="Presta-volto attuale" />{/if}
 		<div class="stack">
@@ -68,7 +111,40 @@
 
 <style>
 	.edit {
-		max-width: 760px;
+		max-width: none;
+	}
+	.howto {
+		font-size: 0.9rem;
+		padding: 0.75rem 1rem;
+		border: 1px dashed var(--border);
+		border-radius: var(--radius);
+		color: var(--text-muted);
+	}
+	.howto strong {
+		color: var(--text);
+	}
+	.field-head {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 1rem;
+	}
+	.code {
+		font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+		font-size: 0.88rem;
+		line-height: 1.5;
+		tab-size: 2;
+	}
+	.count {
+		float: right;
+		font-variant-numeric: tabular-nums;
+	}
+	.preview {
+		margin-top: 0.75rem;
+		padding: 1rem;
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		background: var(--bg-raised);
 	}
 	.portrait-row {
 		display: flex;

@@ -32,7 +32,7 @@ const GUIDA = `Benvenuto! Questa è una land di **gioco di ruolo testuale** (pla
 
 # Primi passi
 1. Crea il tuo account e poi il tuo **personaggio** (puoi averne più di uno).
-2. Completa la **scheda**: aspetto, carattere, storia. L'aspetto è ciò che gli altri vedono in gioco.
+2. Completa la **scheda**: aspetto, carattere, storia e uno spazio OFF Game tutto tuo. L'aspetto è ciò che gli altri vedono in gioco. Puoi scrivere testo semplice o personalizzare le sezioni con HTML e CSS (niente JavaScript).
 3. Distribuisci i punti iniziali di caratteristiche e abilità (servono solo nelle quest).
 4. Dalla **mappa** entra in un luogo e comincia a giocare.
 

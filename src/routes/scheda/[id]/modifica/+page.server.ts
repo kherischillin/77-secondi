@@ -9,6 +9,7 @@ import { deleteImage, mediaUrl, saveImage, UploadError } from '#lib/server/uploa
 import { getRules } from '#lib/server/settings.ts';
 import { audit } from '#lib/server/audit.ts';
 import { fieldErrors } from '#lib/validation.ts';
+import { SHEET_LIMITS } from '#lib/sheet-html.ts';
 
 /** Il proprietario, oppure lo staff con il permesso di gestire i personaggi. */
 async function editable(event: Pick<RequestEvent, 'locals' | 'url' | 'params'>) {
@@ -30,9 +31,10 @@ const optionalText = (max: number, label: string) =>
 
 const sheetSchema = z.object({
 	bio: optionalText(2000, 'Presentazione'),
-	appearance: optionalText(5000, 'Aspetto'),
-	personality: optionalText(5000, 'Carattere'),
-	background: optionalText(20000, 'Background'),
+	appearance: optionalText(SHEET_LIMITS.appearance, 'Aspetto'),
+	personality: optionalText(SHEET_LIMITS.personality, 'Carattere'),
+	background: optionalText(SHEET_LIMITS.background, 'Background'),
+	offGame: optionalText(SHEET_LIMITS.offGame, 'OFF Game'),
 	portraitCredit: optionalText(100, 'Presta-volto')
 });
 
@@ -48,6 +50,7 @@ export const load: PageServerLoad = async (event) => {
 			appearance: character.appearance,
 			personality: character.personality,
 			background: character.background,
+			offGame: character.offGame,
 			portraitUrl: mediaUrl(character.portrait),
 			portraitCredit: character.portraitCredit
 		},
@@ -64,6 +67,7 @@ export const actions: Actions = {
 			appearance: String(form.get('appearance') ?? ''),
 			personality: String(form.get('personality') ?? ''),
 			background: String(form.get('background') ?? ''),
+			offGame: String(form.get('offGame') ?? ''),
 			portraitCredit: String(form.get('portraitCredit') ?? '')
 		});
 		if (!parsed.success) return fail(400, { errors: fieldErrors(parsed.error) });

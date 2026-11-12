@@ -1,0 +1,1 @@
+ALTER TABLE "characters" ADD COLUMN "off_game" text;

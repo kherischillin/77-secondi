@@ -3,6 +3,7 @@
 	import type { PageProps } from './$types';
 	import { formatDate, formatDateTime, fullName } from '#lib/format.ts';
 	import ReportButton from '#lib/components/ReportButton.svelte';
+	import SheetFrame from '#lib/components/SheetFrame.svelte';
 
 	let { data, form }: PageProps = $props();
 
@@ -65,27 +66,39 @@
 	{#if message}<div class="alert success">{message}</div>{/if}
 	{#if errorMsg}<div class="alert error">{errorMsg}</div>{/if}
 
-	<section class="grid texts">
-		<div class="card">
-			<h2>Aspetto</h2>
-			<p class="hint-on">Ciò che gli altri personaggi vedono in gioco.</p>
-			{#if c.appearance}<p class="text">{c.appearance}</p>{:else}<p class="muted">Non ancora descritto.</p>{/if}
-		</div>
-		<div class="card">
-			<h2>Carattere</h2>
-			{#if c.personality}<p class="text">{c.personality}</p>{:else}<p class="muted">Non ancora descritto.</p>{/if}
-		</div>
-		<div class="card">
-			<h2>Background</h2>
-			{#if c.backgroundHidden}
-				<p class="muted">Il passato di questo personaggio è da scoprire giocando.</p>
-			{:else if c.background}
-				<p class="text">{c.background}</p>
-				{#if !data.rules.backgroundPublic}<p class="muted small">Visibile solo a te e allo staff.</p>{/if}
-			{:else}
-				<p class="muted">Non ancora scritto.</p>
-			{/if}
-		</div>
+	<!-- Sezioni scritte dal giocatore: HTML e CSS ammessi, mostrati in riquadri isolati senza JavaScript. -->
+	<section class="texts">
+		{#snippet section(title: string, html: string | null, opts: { hint?: string; tag?: string; empty?: string; note?: string })}
+			<details class="card section">
+				<summary>
+					<span class="summary-title">
+						<h2>{title}</h2>
+						{#if opts.tag}<span class="tag">{opts.tag}</span>{/if}
+					</span>
+					{#if opts.hint}<span class="hint-on">{opts.hint}</span>{/if}
+				</summary>
+				<div class="section-body">
+					{#if html}
+						<SheetFrame {html} title="{title} di {fullName(c)}" />
+						{#if opts.note}<p class="muted small note">{opts.note}</p>{/if}
+					{:else}
+						<p class="muted">{opts.empty ?? 'Non ancora descritto.'}</p>
+					{/if}
+				</div>
+			</details>
+		{/snippet}
+
+		{@render section('Aspetto', c.appearance, { tag: 'ON', hint: 'Ciò che gli altri personaggi vedono in gioco.' })}
+		{@render section('Carattere', c.personality, {})}
+		{@render section('Background', c.background, {
+			empty: c.backgroundHidden ? 'Il passato di questo personaggio è da scoprire giocando.' : 'Non ancora scritto.',
+			note: data.rules.backgroundPublic ? undefined : 'Visibile solo al giocatore e allo staff.'
+		})}
+		{@render section('OFF Game', c.offGame, {
+			tag: 'OFF',
+			hint: 'Lo spazio del giocatore: non è un\'informazione che il personaggio conosce.',
+			empty: 'Il giocatore non ha scritto nulla.'
+		})}
 	</section>
 
 	<!-- Parte numerica: conta solo nelle quest. -->
@@ -429,8 +442,7 @@
 		color: var(--text-muted);
 		margin: 0;
 	}
-	.bio,
-	.text {
+	.bio {
 		white-space: pre-line;
 	}
 	.bio {
@@ -445,10 +457,75 @@
 	.hint-on {
 		font-size: 0.8rem;
 		color: var(--text-muted);
-		margin-top: -0.4rem;
 	}
-	.texts h2 {
+	.texts {
+		display: grid;
+		gap: 0.75rem;
+	}
+	.section {
+		padding: 0;
+	}
+	.section summary {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.25rem 1rem;
+		flex-wrap: wrap;
+		padding: 1rem 1.25rem 1rem 2.75rem;
+		cursor: pointer;
+		list-style: none;
+		position: relative;
+		border-radius: var(--radius);
+	}
+	.section summary::-webkit-details-marker {
+		display: none;
+	}
+	.section summary::before {
+		content: '';
+		position: absolute;
+		left: 1.25rem;
+		top: 1.5rem;
+		width: 0.5rem;
+		height: 0.5rem;
+		border-right: 2px solid var(--accent);
+		border-bottom: 2px solid var(--accent);
+		transform: translateY(-50%) rotate(-45deg);
+		transition: transform 0.15s ease;
+	}
+	.section[open] summary::before {
+		transform: translateY(-75%) rotate(45deg);
+	}
+	.section summary:hover h2 {
+		color: var(--accent);
+	}
+	.summary-title {
+		display: inline-flex;
+		align-items: baseline;
+		gap: 0.6rem;
+	}
+	.section h2 {
 		font-size: 1.25rem;
+		margin: 0;
+	}
+	.tag {
+		font-size: 0.7rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		padding: 0.1rem 0.45rem;
+		border: 1px solid var(--border);
+		border-radius: 999px;
+		color: var(--text-muted);
+	}
+	.section-body {
+		padding: 0 1.25rem 1.25rem;
+		border-top: 1px solid var(--border);
+		padding-top: 1rem;
+	}
+	.section-body > p {
+		margin: 0;
+	}
+	.note {
+		margin-top: 0.75rem !important;
 	}
 	.numbers-head {
 		display: flex;

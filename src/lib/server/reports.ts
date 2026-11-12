@@ -94,7 +94,7 @@ export async function snapshotFor(type: ReportTarget, id: number, locals: App.Lo
 			return {
 				author: fullName(c),
 				authorCharacterId: c.id,
-				text: [c.bio, c.appearance, c.personality].filter(Boolean).join('\n\n') || '(scheda senza testo)',
+				text: [c.bio, c.appearance, c.personality, c.offGame].filter(Boolean).join('\n\n') || '(scheda senza testo)',
 				where: 'Scheda del personaggio',
 				link: `/scheda/${c.id}`,
 				createdAt: null

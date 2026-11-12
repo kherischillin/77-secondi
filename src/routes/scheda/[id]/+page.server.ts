@@ -22,6 +22,7 @@ import { fullName } from '#lib/format.ts';
 import { membershipsOf } from '#lib/server/guilds.ts';
 import { confiscate, equippedOf, giveItem, inventory, ItemError, listCatalog } from '#lib/server/items.ts';
 import { describeBonuses, isSlot, SLOT_LABELS } from '#lib/economy.ts';
+import { renderSheetHtml } from '#lib/server/sheet-html.ts';
 
 async function sheetOr404(id: string) {
 	const sheet = await loadSheet(Number(id));
@@ -54,9 +55,13 @@ export const load: PageServerLoad = async (event) => {
 	return {
 		character: {
 			...character,
+			// Sezioni personalizzabili: HTML già pulito, da mostrare solo nel riquadro isolato.
+			appearance: renderSheetHtml(character.appearance),
+			personality: renderSheetHtml(character.personality),
 			// Background "in scuro": visibile solo al proprietario e allo staff.
-			background: rules.backgroundPublic || seesPrivate ? character.background : null,
-			backgroundHidden: !rules.backgroundPublic && !seesPrivate && !!character.background
+			background: rules.backgroundPublic || seesPrivate ? renderSheetHtml(character.background) : null,
+			backgroundHidden: !rules.backgroundPublic && !seesPrivate && !!character.background,
+			offGame: renderSheetHtml(character.offGame)
 		},
 		giocate: await listPublicForCharacter(character.id),
 		// L'equipaggiamento è la parte "visibile" in gioco: lo vedono tutti.

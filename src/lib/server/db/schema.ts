@@ -65,6 +65,8 @@ export const characters = pgTable(
 		personality: text('personality'),
 		/** Scheda: storia passata. Pubblica o riservata secondo le regole del gioco. */
 		background: text('background'),
+		/** Scheda: spazio OFF GAME del giocatore (note, disponibilità, preferenze di gioco). */
+		offGame: text('off_game'),
 		/** Immagine del presta-volto. */
 		portrait: text('portrait'),
 		/** Nome del presta-volto (attore, illustrazione...). */
