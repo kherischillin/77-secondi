@@ -1,5 +1,9 @@
 # Avvia il gioco completo (sito + database) con:  docker compose up --build
-# Poi apri http://localhost:3000
+# Poi apri http://localhost:3001
+#
+# Il nome del progetto tiene separati dati e immagini da quelli dello scheletro (gdr-online),
+# e la porta 3001 permette di avviare le due versioni insieme.
+name: 77-secondi
 
 services:
   db:
@@ -25,7 +29,7 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgres://gdr:gdr@db:5432/gdr
-      ORIGIN: http://localhost:3000
+      ORIGIN: http://localhost:3001
       PORT: 3000
       UPLOAD_DIR: /app/uploads
       # Dimensione massima di un invio (le immagini possono arrivare a 5 MB).
@@ -33,7 +37,7 @@ services:
     volumes:
       - immagini:/app/uploads
     ports:
-      - '3000:3000'
+      - '3001:3000'
 
 volumes:
   # I dati del gioco restano qui anche se spegni o ricostruisci i container.

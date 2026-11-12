@@ -1,10 +1,10 @@
-# GDR Online
+# 77 Secondi
 
-Motore per **giochi di ruolo testuali online** (play by chat), ricostruito da zero in chiave moderna prendendo come riferimento [GDRCD](https://github.com/GDRCD/GDRCD).
+Gioco di ruolo testuale online (play by chat) ambientato nell'universo cyberpunk di **77 Secondi**.
 
-**Stato:** tutte e 7 le fasi previste sono completate.
+È costruito sullo scheletro [gdr-online](https://github.com/kherischillin/gdr-online) (versione pulita nel ramo `scheletro-v1`): qui si fanno tutte le modifiche e le personalizzazioni del gioco, lo scheletro resta intatto.
 
-## Cosa c'è
+## Cosa c'è (dallo scheletro)
 
 - **Account e personaggi**: un account, più personaggi; accesso sicuro; ruoli e permessi configurabili; regole anti-abuso per lo staff.
 - **Mondo**: mappe con luoghi cliccabili, collegamenti tra mappe, **meteo** automatico per clima e stagione con fasi lunari, **stanze private** prenotabili.
@@ -41,8 +41,8 @@ Docker fa girare il sito e il database in "contenitori" già pronti, senza insta
 ### 2. Installa GitHub Desktop e scarica il progetto
 
 1. Scarica **GitHub Desktop** da https://desktop.github.com/ e accedi con il tuo account GitHub.
-2. Menu **File → Clone repository**, scegli `kherischillin/gdr-online` e clicca **Clone**.
-3. Annota la cartella in cui l'ha salvato (di solito `Documenti\GitHub\gdr-online`).
+2. Menu **File → Clone repository**, scegli `kherischillin/77-secondi` e clicca **Clone**.
+3. Annota la cartella in cui l'ha salvato (di solito `Documenti\GitHub\77-secondi`).
 
 ### 3. Avvia il gioco
 
@@ -54,7 +54,9 @@ Docker fa girare il sito e il database in "contenitori" già pronti, senza insta
    ```
 
 3. La prima volta ci mette qualche minuto. Quando compare la riga **`Listening on http://0.0.0.0:3000`** è pronto.
-4. Apri il browser su **http://localhost:3000**
+4. Apri il browser su **http://localhost:3001**
+
+   (La porta è 3001, non 3000: così puoi tenere acceso anche lo scheletro pulito, che usa la 3000. I dati delle due versioni sono separati.)
 
 **Il primo account che crei diventa automaticamente Amministratore.** Registrati subito tu, poi segui i "Primi passi" della [guida per lo staff](docs/guida-staff.md).
 

@@ -1,5 +1,7 @@
 # Note per lo sviluppo
 
+**Questo repository è "77 Secondi", la copia del gioco da personalizzare.** Lo scheletro pulito è in `kherischillin/gdr-online` (ramo `scheletro-v1`, da non modificare): le correzioni generiche allo scheletro si possono riportare qui con `git fetch scheletro` + merge. In Docker questa copia usa la porta 3001 e il nome di progetto `77-secondi` (dati separati).
+
 Il proprietario del progetto non programma: tutto il codice lo scrive Claude. Spiegazioni e istruzioni per lui in italiano semplice, passo passo; usa Windows e avvia il gioco con Docker Desktop.
 
 ## Stack e convenzioni
