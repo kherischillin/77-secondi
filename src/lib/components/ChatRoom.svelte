@@ -5,6 +5,8 @@
 	import ChatLine from './ChatLine.svelte';
 	import { MAX_MESSAGE_LENGTH, timeAgo, type ChatMessageView, type ChosenKind } from '#lib/chat.ts';
 	import { fullName } from '#lib/format.ts';
+	import { page } from '$app/state';
+	import { playTone } from '#lib/sound.ts';
 
 	type Present = { characterId: number; name: string; surname: string | null; lastPostAt: string | null };
 
@@ -75,6 +77,12 @@
 
 	function addMessage(m: ChatMessageView) {
 		if (messages.some((x) => x.id === m.id)) return;
+		// Avvisi sonori scelti in Impostazioni → Notifiche (mai per i propri messaggi).
+		const notify = page.data.notify as { soundWhisper?: boolean; soundMaster?: boolean } | undefined;
+		if (m.characterId !== me) {
+			if (m.kind === 'whisper' && m.recipientCharacterId === me && notify?.soundWhisper) playTone('whisper');
+			else if ((m.kind === 'master' || m.kind === 'npc') && notify?.soundMaster) playTone('master');
+		}
 		const stick = nearBottom() || m.characterId === me;
 		messages = [...messages, m].sort((a, b) => a.id - b.id);
 		if (stick) scrollToBottom();

@@ -32,7 +32,7 @@ export function requireCapability(
 export function requireCharacter(event: Pick<RequestEvent, 'locals' | 'url'>) {
 	const ctx = requireUser(event);
 	const character = event.locals.character;
-	if (!character) redirect(303, '/account');
+	if (!character) redirect(303, '/scegli-personaggio');
 	return { ...ctx, character };
 }
 

@@ -2,7 +2,6 @@
 	import { enhance } from '$app/forms';
 	import type { PageProps } from './$types';
 	import { formatDate, formatDateTime, fullName } from '#lib/format.ts';
-	import { THEMES, THEME_IDS } from '#lib/themes.ts';
 
 	let { data, form }: PageProps = $props();
 
@@ -27,6 +26,8 @@
 	</div>
 {:else if data.welcome}
 	<div class="alert success">Account creato. Ora dai vita al tuo primo personaggio.</div>
+{:else if data.needsCharacter}
+	<div class="alert success">Per entrare in gioco crea il tuo primo personaggio qui sotto.</div>
 {/if}
 
 <section class="card account">
@@ -66,11 +67,12 @@
 {/if}
 
 <h2>I miei personaggi <span class="muted count">{data.characters.length}/{data.maxCharacters}</span></h2>
+<p class="muted">Per giocare con un altro personaggio usa <strong>Esci → Cambia personaggio</strong>.</p>
 
 {#if form?.action === 'elimina' && form.success}
 	<div class="alert success">Personaggio eliminato.</div>
 {/if}
-{#if (form?.action === 'gioca' || form?.action === 'elimina') && form.errors?.form}
+{#if form?.action === 'elimina' && form.errors?.form}
 	<div class="alert error">{form.errors.form}</div>
 {/if}
 
@@ -86,12 +88,6 @@
 					{#if c.lastPlayedAt}· ultima giocata {formatDateTime(c.lastPlayedAt)}{/if}
 				</p>
 				<div class="row">
-					<form method="post" action="?/gioca" use:enhance>
-						<input type="hidden" name="id" value={c.id} />
-						<button type="submit">
-							{c.id === data.activeCharacterId ? 'Torna in gioco' : 'Gioca'}
-						</button>
-					</form>
 					<a class="button secondary" href="/scheda/{c.id}">Scheda</a>
 					<button class="danger" type="button" onclick={() => (deleting = deleting === c.id ? null : c.id)}>
 						Elimina
@@ -140,23 +136,6 @@
 	</form>
 {/if}
 
-<h2 class="spaced">Aspetto del sito</h2>
-{#if notice('tema') && 'success' in notice('tema')!}<div class="alert success">Tema aggiornato.</div>{/if}
-<form method="post" action="?/tema" class="card themes" use:enhance={() => async ({ update }) => update({ reset: false, invalidateAll: true })}>
-	<label class="theme">
-		<input type="radio" name="theme" value="" checked={!data.account.theme} />
-		<span><strong>Quello del sito</strong> <span class="hint">scelto dallo staff</span></span>
-	</label>
-	{#each THEME_IDS as id (id)}
-		<label class="theme">
-			<input type="radio" name="theme" value={id} checked={data.account.theme === id} />
-			<span class="swatch" aria-hidden="true">{#each THEMES[id].swatch as c (c)}<span style="background: {c}"></span>{/each}</span>
-			<span><strong>{THEMES[id].label}</strong> <span class="hint">{THEMES[id].description}</span></span>
-		</label>
-	{/each}
-	<div><button type="submit">Usa questo tema</button></div>
-</form>
-
 <style>
 	.email-form {
 		max-width: 480px;
@@ -165,33 +144,6 @@
 	.small {
 		font-size: 0.85rem;
 		margin-left: 0.5rem;
-	}
-	.themes {
-		display: grid;
-		gap: 0.6rem;
-		max-width: 560px;
-	}
-	.theme {
-		display: flex;
-		gap: 0.75rem;
-		align-items: center;
-		font-weight: 400;
-		margin: 0;
-		cursor: pointer;
-	}
-	.theme input {
-		width: auto;
-	}
-	.swatch {
-		display: inline-flex;
-		border: 1px solid var(--border);
-		border-radius: 4px;
-		overflow: hidden;
-		flex: 0 0 auto;
-	}
-	.swatch span {
-		width: 18px;
-		height: 22px;
 	}
 	.account {
 		display: flex;

@@ -13,7 +13,7 @@ import { db, schema } from '#lib/server/db/index.ts';
 const GENERIC_ERROR = 'Nome utente o password non corretti.';
 
 export const load: PageServerLoad = ({ locals, url }) => {
-	if (locals.user) redirect(303, safeRedirectTarget(url.searchParams.get('dopo')));
+	if (locals.user) redirect(303, safeRedirectTarget(url.searchParams.get('dopo'), '/scegli-personaggio'));
 	return {};
 };
 
@@ -82,6 +82,6 @@ export const actions: Actions = {
 		await db.update(schema.users).set({ lastLoginAt: new Date() }).where(eq(schema.users.id, user.id));
 		await audit({ actorUserId: user.id, action: 'auth.login', ip });
 
-		redirect(303, safeRedirectTarget(url.searchParams.get('dopo')));
+		redirect(303, safeRedirectTarget(url.searchParams.get('dopo'), '/scegli-personaggio'));
 	}
 };

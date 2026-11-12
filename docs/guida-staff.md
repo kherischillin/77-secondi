@@ -1,6 +1,15 @@
 # Guida per lo staff
 
-Tutto quello che serve per configurare e gestire il gioco. Le voci tra **grassetti** si trovano nel menu **Gestione** in alto (compare solo a chi ha i permessi).
+Tutto quello che serve per configurare e gestire il gioco. Le voci tra **grassetti** si trovano in **Gestione → Pannello di controllo**, nella barra in alto (il menu Gestione compare solo a chi ha i permessi; i Master vi trovano lo **Spazio Master**).
+
+## La barra in alto
+- **[Nome del personaggio]** porta alla sua scheda (da lì: inventario, equipaggiamento, giocate, esiti), poi **Missive, Mappa, Presenti, Bacheche**.
+- **Uffici**: gilde, banca, mercato, stanze private, archivio delle giocate pubbliche, e le pagine Guida, Regolamento, Ambientazione.
+- **Impostazioni**: il mio account (creare ed eliminare personaggi, email), temi, notifiche.
+- **Gestione**: Spazio Master e Pannello di controllo, solo per chi ha i permessi.
+- **Esci**: cambia personaggio, oppure esci dal gioco.
+- Dopo l'accesso si sceglie sempre il personaggio (con uno solo si entra direttamente). Lo staff può usare Gestione anche senza aver scelto un personaggio.
+- Su telefono la barra si raccoglie nel pulsante ☰.
 
 ## Primi passi
 

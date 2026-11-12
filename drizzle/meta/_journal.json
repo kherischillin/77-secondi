@@ -71,6 +71,13 @@
       "when": 1794501221735,
       "tag": "0009_presta_volto_350x500",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794503421099,
+      "tag": "0010_notifiche",
+      "breakpoints": true
     }
   ]
 }

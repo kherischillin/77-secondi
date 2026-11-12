@@ -40,7 +40,9 @@ export const users = pgTable(
 		bannedUntil: timestamp('banned_until', { withTimezone: true }),
 		banReason: text('ban_reason'),
 		/** Tema grafico scelto dal giocatore (null = quello del sito). */
-		theme: text('theme')
+		theme: text('theme'),
+		/** Preferenze di notifica (src/lib/notify.ts). */
+		notify: jsonb('notify').$type<Record<string, boolean>>().notNull().default({})
 	},
 	(t) => [
 		uniqueIndex('users_username_lower_idx').on(sql`lower(${t.username})`),

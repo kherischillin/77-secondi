@@ -31,10 +31,10 @@ export async function footerPages(loggedIn: boolean) {
 const GUIDA = `Benvenuto! Questa è una land di **gioco di ruolo testuale** (play by chat): si scrive insieme una storia, ognuno interpretando il proprio personaggio, nei luoghi del mondo di gioco.
 
 # Primi passi
-1. Crea il tuo account e poi il tuo **personaggio** (puoi averne più di uno).
+1. Crea il tuo account e poi il tuo **personaggio** (puoi averne più di uno). A ogni accesso scegli con chi giocare; per cambiarlo usa **Esci → Cambia personaggio**.
 2. Completa la **scheda**: dati anagrafici, presta-volto (con un link a un'immagine), aspetto, carattere, storia e uno spazio OFF Game tutto tuo. L'aspetto è ciò che gli altri vedono in gioco. Puoi scrivere testo semplice o personalizzare le sezioni con HTML e CSS (niente JavaScript).
 3. Distribuisci i punti iniziali di caratteristiche e abilità (servono solo nelle quest).
-4. Dalla **mappa** entra in un luogo e comincia a giocare.
+4. Dalla **mappa** entra in un luogo e comincia a giocare. Il nome del tuo personaggio, in alto a sinistra, porta alla sua scheda: da lì raggiungi anche inventario, equipaggiamento, giocate ed esiti.
 
 # ON GAME e OFF GAME
 - **ON GAME** è ciò che accade ai personaggi nel mondo di gioco.
@@ -56,7 +56,7 @@ Il sistema è **ibrido**:
 Le stringhe del Master sono vincolanti. Alla fine della quest il Master assegna i **punti esperienza**, che si spendono nella scheda per migliorare il personaggio.
 
 # Esiti e giocate
-- **Esiti**: per ciò che il personaggio fa fuori dalla chat (un'indagine, un viaggio, un lavoro) chiedi a un Master di raccontarne il risultato.
+- **Esiti**: per ciò che il personaggio fa fuori dalla chat (un'indagine, un viaggio, un lavoro) chiedi a un Master di raccontarne il risultato, dalla tua scheda.
 - **Giocate**: in ogni luogo puoi registrare una giocata (senza sussurri), scaricarla, renderla pubblica o inviarla ai Master per la revisione.
 
 # Missive, bacheche e gilde
@@ -67,7 +67,7 @@ Le stringhe del Master sono vincolanti. Alla fine della quest il Master assegna 
 # Denaro, oggetti e stanze private
 - **Banca**: contanti, conto, bonifici e stipendi di gilda.
 - **Mercato** e **Inventario**: compra, rivendi, indossa (ciò che indossi si vede nella scheda) e usa gli oggetti anche in chat.
-- **Stanze private**: si prenotano a ore e si invitano altri personaggi.
+- **Stanze private**: si prenotano a ore e si invitano altri personaggi. L'elenco è in **Uffici**, insieme a gilde, banca, mercato e archivio delle giocate pubbliche.
 
 # Segnalazioni
 Se qualcosa non va, usa il pulsante **Segnala** su un messaggio, un post o una scheda: lo staff lo riceve con una copia del testo.`;

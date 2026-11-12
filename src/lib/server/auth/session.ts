@@ -17,6 +17,7 @@ export type SessionUser = {
 	bannedUntil: Date | null;
 	banReason: string | null;
 	theme: string | null;
+	notify: unknown;
 	roles: string[];
 	capabilities: Set<string>;
 };
@@ -120,6 +121,7 @@ export async function validateSessionToken(token: string): Promise<ValidatedSess
 			bannedUntil: user.bannedUntil,
 			banReason: user.banReason,
 			theme: user.theme,
+			notify: user.notify,
 			roles: roleRows.map((r) => r.name),
 			capabilities: new Set(roleRows.flatMap((r) => r.capabilities))
 		},

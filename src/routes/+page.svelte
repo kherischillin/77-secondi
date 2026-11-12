@@ -12,8 +12,9 @@
 		<div class="actions">
 			{#if data.character}
 				<a class="button" href="/gioco">Entra in gioco come {data.character.name}</a>
+			{:else}
+				<a class="button" href="/scegli-personaggio">Scegli il personaggio</a>
 			{/if}
-			<a class="button secondary" href="/account">I miei personaggi</a>
 		</div>
 	{:else}
 		<div class="actions">

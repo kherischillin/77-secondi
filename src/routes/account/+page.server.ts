@@ -6,14 +6,11 @@ import {
 	createCharacter,
 	getOwnedCharacter,
 	listUserCharacters,
-	softDeleteCharacter,
-	touchCharacter
+	softDeleteCharacter
 } from '#lib/server/characters.ts';
-import { setActiveCharacter } from '#lib/server/auth/session.ts';
 import { characterSchema, emailSchema, fieldErrors } from '#lib/validation.ts';
 import { changeEmail, isPlaceholderEmail } from '#lib/server/users.ts';
 import { verifyPassword } from '#lib/server/auth/password.ts';
-import { isTheme } from '#lib/themes.ts';
 import { db, schema } from '#lib/server/db/index.ts';
 import { eq } from 'drizzle-orm';
 import { getEconomy } from '#lib/server/settings.ts';
@@ -33,7 +30,8 @@ export const load: PageServerLoad = async (event) => {
 		})),
 		activeCharacterId: event.locals.character?.id ?? null,
 		maxCharacters: event.locals.settings.maxCharactersPerUser,
-		welcome: event.url.searchParams.get('benvenuto')
+		welcome: event.url.searchParams.get('benvenuto'),
+		needsCharacter: characters.length === 0 && event.url.searchParams.has('nuovo')
 	};
 };
 
@@ -43,15 +41,6 @@ function readId(form: FormData): number | null {
 }
 
 export const actions: Actions = {
-	tema: async (event) => {
-		const { user } = requireUser(event);
-		const raw = String((await event.request.formData()).get('theme') ?? '');
-		const theme = raw === '' ? null : isTheme(raw) ? raw : undefined;
-		if (theme === undefined) return fail(400, { action: 'tema', error: 'Tema non valido.' });
-		await db.update(schema.users).set({ theme }).where(eq(schema.users.id, user.id));
-		return { action: 'tema', success: 'Tema aggiornato.' };
-	},
-
 	email: async (event) => {
 		const { user } = requireUser(event);
 		const form = await event.request.formData();
@@ -101,18 +90,9 @@ export const actions: Actions = {
 			}
 			throw e;
 		}
+		// Senza un personaggio attivo si passa subito alla scelta (con uno solo si entra direttamente).
+		if (!event.locals.character) redirect(303, '/scegli-personaggio');
 		return { action: 'crea', success: true };
-	},
-
-	gioca: async (event) => {
-		const { user, session } = requireUser(event);
-		const id = readId(await event.request.formData());
-		const character = id ? await getOwnedCharacter(user.id, id) : null;
-		if (!character) return fail(404, { action: 'gioca', errors: { form: 'Personaggio non trovato.' } as FormErrors });
-
-		await setActiveCharacter(session.id, character.id);
-		await touchCharacter(character.id);
-		redirect(303, '/gioco');
 	},
 
 	elimina: async (event) => {

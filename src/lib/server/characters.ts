@@ -17,6 +17,7 @@ export async function listUserCharacters(userId: number) {
 			name: schema.characters.name,
 			surname: schema.characters.surname,
 			bio: schema.characters.bio,
+			portrait: schema.characters.portrait,
 			createdAt: schema.characters.createdAt,
 			lastPlayedAt: schema.characters.lastPlayedAt
 		})

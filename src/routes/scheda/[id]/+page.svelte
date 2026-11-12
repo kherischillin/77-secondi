@@ -73,6 +73,16 @@
 						{/if}
 						{#if !owner}<ReportButton targetType="character" targetId={c.id} label="Segnala questa scheda" />{/if}
 					</div>
+					{#if owner}
+						<nav class="owner-links" aria-label="Il tuo personaggio">
+							<a class="button secondary compact" href="/inventario">Inventario</a>
+							<a class="button secondary compact" href="#equipaggiamento">Equipaggiamento</a>
+							<a class="button secondary compact" href="/giocate">Giocate</a>
+							<a class="button secondary compact with-count" href="/esiti">
+								Esiti{#if data.esitiUnread > 0}<span class="count" aria-label="{data.esitiUnread} con novità">{data.esitiUnread}</span>{/if}
+							</a>
+						</nav>
+					{/if}
 					{#if data.guilds.length}
 						<ul class="guilds">
 							{#each data.guilds as g (g.id)}
@@ -266,9 +276,15 @@
 		})}
 	</section>
 
-	{#if data.equipped.length}
-		<section class="card equipment">
-			<h2>Equipaggiamento</h2>
+	{#if data.equipped.length || owner}
+		<section class="card equipment" id="equipaggiamento">
+			<div class="equip-head">
+				<h2>Equipaggiamento</h2>
+				{#if owner}<a class="small" href="/inventario">Cambia dall'inventario →</a>{/if}
+			</div>
+			{#if data.equipped.length === 0}
+				<p class="muted">Nessun oggetto indossato. Gli oggetti si indossano dall'inventario: qui compare ciò che gli altri vedono addosso al personaggio.</p>
+			{/if}
 			<ul>
 				{#each data.equipped as it (it.id)}
 					<li>
@@ -789,6 +805,36 @@
 	.raise.max {
 		color: var(--text-muted);
 		text-align: center;
+	}
+	.owner-links {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+		margin-bottom: 0.25rem;
+	}
+	.with-count {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+	.count {
+		background: var(--accent);
+		color: var(--accent-text);
+		border-radius: 999px;
+		font-size: 0.72rem;
+		font-weight: 700;
+		padding: 0 0.4rem;
+		line-height: 1.5;
+	}
+	.equip-head {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 1rem;
+		flex-wrap: wrap;
+	}
+	#equipaggiamento {
+		scroll-margin-top: 90px;
 	}
 	.redo {
 		display: flex;
