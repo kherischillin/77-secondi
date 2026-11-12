@@ -24,7 +24,11 @@ export const settingsSchema = z.object({
 	portraitHosts: z.array(z.string().regex(HOST_PATTERN)).max(100),
 	/** Dimensioni del riquadro del presta-volto nella scheda, in pixel (l'immagine lo riempie). */
 	portraitMaxWidth: z.number().int().min(80).max(1000),
-	portraitMaxHeight: z.number().int().min(80).max(1500)
+	portraitMaxHeight: z.number().int().min(80).max(1500),
+	/** Missive: quante conversazioni può tenere in archivio ogni personaggio. */
+	missiveArchiveLimit: z.number().int().min(0).max(1000),
+	/** Missive lette e non archiviate: dopo quanti giorni dalla lettura si cancellano (0 = mai). */
+	missiveAutoDeleteDays: z.number().int().min(0).max(365)
 });
 
 export type SiteSettings = z.infer<typeof settingsSchema>;
@@ -39,7 +43,9 @@ export const DEFAULT_SETTINGS: SiteSettings = {
 	customCss: '',
 	portraitHosts: DEFAULT_PORTRAIT_HOSTS,
 	portraitMaxWidth: 350,
-	portraitMaxHeight: 500
+	portraitMaxHeight: 500,
+	missiveArchiveLimit: 50,
+	missiveAutoDeleteDays: 7
 };
 
 let cache: SiteSettings | null = null;

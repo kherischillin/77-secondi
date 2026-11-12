@@ -2,6 +2,7 @@ import { isTheme } from '#lib/themes.ts';
 import type { Handle, ServerInit } from '@sveltejs/kit/hooks';
 import { bootstrapDatabase } from '#lib/server/bootstrap.ts';
 import { getSettings } from '#lib/server/settings.ts';
+import { messagesMaintenance } from '#lib/server/messages.ts';
 import {
 	SESSION_COOKIE,
 	deleteExpiredSessions,
@@ -13,10 +14,13 @@ import {
 /** All'avvio: migrazioni del database, ruoli iniziali e pulizia periodica delle sessioni. */
 export const init: ServerInit = async () => {
 	await bootstrapDatabase();
-	setInterval(
-		() => deleteExpiredSessions().catch((e) => console.error(e)),
-		60 * 60 * 1000
-	).unref();
+	// Ogni ora: sessioni scadute, missive lette da cancellare e messaggi eliminati da tutti.
+	const hourly = async () => {
+		await deleteExpiredSessions();
+		await messagesMaintenance((await getSettings()).missiveAutoDeleteDays);
+	};
+	hourly().catch((e) => console.error(e));
+	setInterval(() => hourly().catch((e) => console.error(e)), 60 * 60 * 1000).unref();
 	console.log('Database pronto.');
 };
 

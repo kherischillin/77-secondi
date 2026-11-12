@@ -60,7 +60,7 @@ Le stringhe del Master sono vincolanti. Alla fine della quest il Master assegna 
 - **Giocate**: in ogni luogo puoi registrare una giocata (senza sussurri), scaricarla, renderla pubblica o inviarla ai Master per la revisione.
 
 # Missive, bacheche e gilde
-- **Missive**: messaggi privati tra personaggi, segnati ON o OFF game.
+- **Missive**: messaggi privati tra personaggi, segnati ON o OFF game. Puoi archiviarle (con un limite) o eliminarle; quelle lette e non archiviate si cancellano da sole dopo qualche giorno.
 - **Bacheche**: si scrive sempre come personaggio, con il suo avatar; le sezioni ON GAME riguardano il gioco, le OFF GAME l'organizzazione.
 - **Gilde**: gruppi organizzati con gradi, statuto e una bacheca riservata.
 

@@ -68,6 +68,10 @@ Regole anti-abuso, sempre attive: nessuno può dare permessi che non ha, né agi
 - **Bacheche**: sezioni ON GAME e OFF GAME, in entrambe si scrive come personaggio (con il suo avatar); visibili a tutti, ai membri di una gilda o solo allo staff; si può riservare l'apertura di discussioni allo staff. Moderazione: nascondi, chiudi, metti in evidenza, elimina.
 - **Gilde**: le crea lo staff (nascono con 4 gradi e una bacheca riservata). Ingresso libero, su candidatura o su invito. Il **livello** del grado decide la gerarchia: i capi agiscono solo su chi sta sotto.
 - **Missive**: messaggi privati tra personaggi, ON o OFF game. Lo staff non le legge, salvo i singoli messaggi segnalati.
+  - Ogni personaggio può **archiviarle** (fino a un massimo, di base 50) o **eliminarle** (una alla volta o selezionandone più insieme). Eliminare toglie la missiva solo a chi la elimina: se l'altro risponde, la conversazione ricompare con i soli messaggi nuovi.
+  - Le missive **lette e non archiviate** si cancellano da sole dopo un certo numero di giorni dall'ultima lettura (di base 7). Quelle non lette o archiviate non si cancellano mai da sole.
+  - Quando tutti i partecipanti hanno eliminato una conversazione, i messaggi vengono cancellati davvero dal database. Il controllo gira ogni ora.
+  - Massimo dell'archivio e giorni si cambiano in **Gestione → Impostazioni**, sezione *Missive* (0 giorni = mai).
 
 ## Economia
 

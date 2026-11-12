@@ -6,6 +6,7 @@
 
 	let { data, form }: PageProps = $props();
 	let body = $state('');
+	let confirmDelete = $state(false);
 </script>
 
 <svelte:head><title>{data.thread.subject} · Missive</title></svelte:head>
@@ -20,10 +21,27 @@
 			{#each data.others as o, i (o.id)}{i > 0 ? ', ' : ''}<a href="/scheda/{o.id}">{fullName(o)}</a>{/each}
 		</p>
 	</div>
-	<form method="post" action={data.thread.archived ? '?/ripristina' : '?/archivia'} use:enhance>
-		<button type="submit" class="secondary">{data.thread.archived ? 'Riporta in arrivo' : 'Archivia'}</button>
-	</form>
+	<div class="actions">
+		<form method="post" action={data.thread.archived ? '?/ripristina' : '?/archivia'} use:enhance>
+			<button type="submit" class="secondary">{data.thread.archived ? 'Riporta in arrivo' : 'Archivia'}</button>
+		</form>
+		{#if confirmDelete}
+			<form method="post" action="?/elimina" class="confirm">
+				<span class="small">Eliminarla? Per te sparisce, l'altro la conserva.</span>
+				<button type="submit" class="danger">Sì, elimina</button>
+				<button type="button" class="link" onclick={() => (confirmDelete = false)}>Annulla</button>
+			</form>
+		{:else}
+			<button type="button" class="danger" onclick={() => (confirmDelete = true)}>Elimina</button>
+		{/if}
+	</div>
 </div>
+{#if form && 'archiveError' in form}<div class="alert error">{form.archiveError}</div>{/if}
+{#if !data.thread.archived && data.autoDeleteDays > 0}
+	<p class="muted small">
+		Non archiviata: si cancellerà da sola {data.autoDeleteDays === 1 ? 'il giorno dopo' : `${data.autoDeleteDays} giorni dopo`} la tua ultima lettura.
+	</p>
+{/if}
 
 {#if !data.thread.onGame}
 	<p class="off-note">Conversazione OFF game: quello che vi dite qui non lo sanno i personaggi.</p>
@@ -109,6 +127,21 @@
 	}
 	.reply {
 		max-width: 820px;
+	}
+	.small {
+		font-size: 0.85rem;
+	}
+	.actions {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+	.confirm {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		flex-wrap: wrap;
 	}
 	.small {
 		font-size: 0.85rem;

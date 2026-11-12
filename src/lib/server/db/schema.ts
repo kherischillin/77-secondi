@@ -416,7 +416,13 @@ export const messageParticipants = pgTable(
 		/** Ultima lettura: i messaggi più recenti sono "non letti". */
 		lastReadAt: timestamp('last_read_at', { withTimezone: true }),
 		/** Archiviata da questo partecipante: torna visibile se arriva un nuovo messaggio. */
-		archivedAt: timestamp('archived_at', { withTimezone: true })
+		archivedAt: timestamp('archived_at', { withTimezone: true }),
+		/**
+		 * Eliminata (a mano o in automatico) da questo partecipante: i messaggi fino a qui non li vede più.
+		 * Se arriva un messaggio nuovo la conversazione ricompare, solo con i messaggi successivi.
+		 * Quando tutti i partecipanti l'hanno eliminata, i messaggi vengono cancellati davvero.
+		 */
+		clearedAt: timestamp('cleared_at', { withTimezone: true })
 	},
 	(t) => [primaryKey({ columns: [t.threadId, t.characterId] }), index('message_participants_character_idx').on(t.characterId)]
 );

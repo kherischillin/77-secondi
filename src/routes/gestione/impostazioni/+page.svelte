@@ -69,6 +69,25 @@
 		</div>
 		<p class="hint">Nella scheda il presta-volto occupa sempre questo riquadro (di base 350 × 500): l'immagine viene adattata senza deformarla e, se ha proporzioni diverse, i bordi in eccesso vengono tagliati.</p>
 	</fieldset>
+	<fieldset class="portrait-settings">
+		<legend>Missive</legend>
+		<div class="sizes">
+			<div>
+				<label for="missiveArchiveLimit">Missive archiviabili per personaggio</label>
+				<input id="missiveArchiveLimit" name="missiveArchiveLimit" type="number" min="0" max="1000" required value={data.current.missiveArchiveLimit} />
+				{#if errors.missiveArchiveLimit}<p class="field-error">Scegli un numero tra 0 e 1000.</p>{/if}
+			</div>
+			<div>
+				<label for="missiveAutoDeleteDays">Cancella le lette dopo (giorni)</label>
+				<input id="missiveAutoDeleteDays" name="missiveAutoDeleteDays" type="number" min="0" max="365" required value={data.current.missiveAutoDeleteDays} />
+				{#if errors.missiveAutoDeleteDays}<p class="field-error">Scegli un numero tra 0 e 365.</p>{/if}
+			</div>
+		</div>
+		<p class="hint">
+			Le missive lette e <strong>non archiviate</strong> si cancellano da sole dopo questi giorni dall'ultima lettura (0 = mai).
+			Quelle non lette e quelle in archivio non si cancellano mai da sole. Il controllo avviene ogni ora.
+		</p>
+	</fieldset>
 	<fieldset class="themes">
 		<legend>Tema grafico del sito <span class="hint">ogni giocatore può sceglierne un altro dal proprio account</span></legend>
 		{#each THEME_IDS as id (id)}

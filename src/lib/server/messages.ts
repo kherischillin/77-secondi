@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, isNotNull, isNull, ne, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, ne, sql } from 'drizzle-orm';
 import { db, schema } from './db/index.ts';
 import { RateLimiter } from './rate-limit.ts';
 import { fullName } from '../format.ts';
@@ -90,6 +90,11 @@ export async function reply(threadId: number, senderId: number, body: string) {
 	});
 }
 
+/** Condizione SQL: per questo partecipante la conversazione non è eliminata (o ha messaggi nuovi dopo l'eliminazione). */
+function visibleExpr() {
+	return sql<boolean>`(${schema.messageParticipants.clearedAt} is null or ${schema.messageThreads.lastMessageAt} > ${schema.messageParticipants.clearedAt})`;
+}
+
 /** Condizione SQL: la conversazione ha messaggi altrui più recenti dell'ultima lettura. */
 function unreadExpr(characterId: number) {
 	return sql<boolean>`exists (
@@ -108,6 +113,7 @@ export async function listThreads(characterId: number, archived: boolean) {
 			onGame: schema.messageThreads.onGame,
 			lastMessageAt: schema.messageThreads.lastMessageAt,
 			unread: unreadExpr(characterId),
+			lastReadAt: schema.messageParticipants.lastReadAt,
 			other: sql<string>`(
 				select string_agg(c.name || coalesce(' ' || c.surname, ''), ', ')
 				from ${schema.messageParticipants} mp2 join ${schema.characters} c on c.id = mp2.character_id
@@ -115,7 +121,9 @@ export async function listThreads(characterId: number, archived: boolean) {
 			)`,
 			preview: sql<string>`(
 				select left(pm.body, 140) from ${schema.privateMessages} pm
-				where pm.thread_id = ${schema.messageThreads.id} order by pm.id desc limit 1
+				where pm.thread_id = ${schema.messageThreads.id}
+				and pm.created_at > coalesce(${schema.messageParticipants.clearedAt}, '-infinity'::timestamptz)
+				order by pm.id desc limit 1
 			)`
 		})
 		.from(schema.messageParticipants)
@@ -123,12 +131,19 @@ export async function listThreads(characterId: number, archived: boolean) {
 		.where(
 			and(
 				eq(schema.messageParticipants.characterId, characterId),
-				archived ? isNotNull(schema.messageParticipants.archivedAt) : isNull(schema.messageParticipants.archivedAt)
+				archived ? isNotNull(schema.messageParticipants.archivedAt) : isNull(schema.messageParticipants.archivedAt),
+				visibleExpr()
 			)
 		)
 		.orderBy(desc(schema.messageThreads.lastMessageAt))
 		.limit(200);
-	return rows.map((r) => ({ ...r, lastMessageAt: r.lastMessageAt.toISOString() }));
+	return rows.map((r) => ({
+		...r,
+		lastMessageAt: r.lastMessageAt.toISOString(),
+		// Letta del tutto: l'ultima lettura è successiva all'ultimo messaggio.
+		readAt: !r.unread && r.lastReadAt ? r.lastReadAt.toISOString() : null,
+		lastReadAt: undefined
+	}));
 }
 
 export async function unreadCount(characterId: number): Promise<number> {
@@ -145,6 +160,7 @@ export async function openThread(threadId: number, characterId: number) {
 	if (!Number.isInteger(threadId) || threadId <= 0) return null;
 	const me = await participant(threadId, characterId);
 	if (!me) return null;
+	const since = me.clearedAt ?? new Date(0);
 	const [thread] = await db.select().from(schema.messageThreads).where(eq(schema.messageThreads.id, threadId));
 	const messages = await db
 		.select({
@@ -157,8 +173,10 @@ export async function openThread(threadId: number, characterId: number) {
 		})
 		.from(schema.privateMessages)
 		.leftJoin(schema.characters, eq(schema.privateMessages.senderCharacterId, schema.characters.id))
-		.where(eq(schema.privateMessages.threadId, threadId))
+		.where(and(eq(schema.privateMessages.threadId, threadId), gt(schema.privateMessages.createdAt, since)))
 		.orderBy(asc(schema.privateMessages.id));
+	// Eliminata e senza messaggi nuovi: per questo personaggio non esiste più.
+	if (!messages.length) return null;
 	const others = await db
 		.select({ id: schema.characters.id, name: schema.characters.name, surname: schema.characters.surname })
 		.from(schema.messageParticipants)
@@ -183,9 +201,89 @@ export async function openThread(threadId: number, characterId: number) {
 	};
 }
 
-export async function setArchived(threadId: number, characterId: number, archived: boolean) {
+/** Quante conversazioni ha in archivio un personaggio. */
+export async function archivedCount(characterId: number): Promise<number> {
+	const [{ n }] = await db
+		.select({ n: sql<number>`count(*)::int` })
+		.from(schema.messageParticipants)
+		.innerJoin(schema.messageThreads, eq(schema.messageParticipants.threadId, schema.messageThreads.id))
+		.where(and(eq(schema.messageParticipants.characterId, characterId), isNotNull(schema.messageParticipants.archivedAt), visibleExpr()));
+	return n;
+}
+
+export async function setArchived(threadId: number, characterId: number, archived: boolean, archiveLimit = Infinity) {
+	if (archived && (await archivedCount(characterId)) >= archiveLimit) {
+		throw new MessageError(
+			archiveLimit === 0
+				? 'L\'archivio delle missive è disattivato.'
+				: `Hai già ${archiveLimit} missive in archivio, il massimo: eliminane qualcuna prima di archiviarne altre.`
+		);
+	}
 	await db
 		.update(schema.messageParticipants)
 		.set({ archivedAt: archived ? new Date() : null })
 		.where(and(eq(schema.messageParticipants.threadId, threadId), eq(schema.messageParticipants.characterId, characterId)));
+}
+
+/**
+ * Elimina la conversazione per questo personaggio: non la vede più, ma l'altro sì.
+ * Se poi arriva un messaggio nuovo ricompare, solo con i messaggi successivi.
+ */
+export async function deleteForMe(threadIds: number[], characterId: number): Promise<number> {
+	const ids = threadIds.filter((id) => Number.isInteger(id) && id > 0);
+	if (!ids.length) return 0;
+	const rows = await db
+		.update(schema.messageParticipants)
+		.set({ clearedAt: new Date(), archivedAt: null, lastReadAt: new Date() })
+		.where(and(eq(schema.messageParticipants.characterId, characterId), inArray(schema.messageParticipants.threadId, ids)))
+		.returning({ id: schema.messageParticipants.threadId });
+	await purgeMessages();
+	return rows.length;
+}
+
+/**
+ * Cancellazione automatica: le conversazioni lette del tutto, non archiviate, la cui ultima lettura
+ * è più vecchia di `days` giorni vengono eliminate per quel personaggio. Quelle non lette non si toccano.
+ */
+export async function expireReadThreads(days: number): Promise<number> {
+	if (!(days > 0)) return 0;
+	const rows = await db.execute<{ thread_id: number }>(sql`
+		update ${schema.messageParticipants} mp set cleared_at = now()
+		from ${schema.messageThreads} t
+		where t.id = mp.thread_id
+		and mp.archived_at is null
+		and mp.last_read_at is not null
+		and mp.last_read_at >= t.last_message_at
+		and mp.last_read_at < now() - make_interval(days => ${days})
+		and (mp.cleared_at is null or t.last_message_at > mp.cleared_at)
+		returning mp.thread_id
+	`);
+	return rows.length;
+}
+
+/** Pulizia del database: messaggi eliminati da tutti i partecipanti e conversazioni rimaste vuote. */
+export async function purgeMessages(): Promise<{ messages: number; threads: number }> {
+	const messages = await db.execute(sql`
+		delete from ${schema.privateMessages} pm
+		using (
+			select thread_id, min(coalesce(cleared_at, '-infinity'::timestamptz)) as upto
+			from ${schema.messageParticipants} group by thread_id
+		) c
+		where pm.thread_id = c.thread_id and pm.created_at <= c.upto
+		returning pm.id
+	`);
+	const threads = await db.execute(sql`
+		delete from ${schema.messageThreads} t
+		where not exists (select 1 from ${schema.privateMessages} pm where pm.thread_id = t.id)
+		or not exists (select 1 from ${schema.messageParticipants} mp where mp.thread_id = t.id)
+		returning t.id
+	`);
+	return { messages: messages.length, threads: threads.length };
+}
+
+/** Lavoro periodico: cancellazione automatica delle missive lette e pulizia. */
+export async function messagesMaintenance(days: number) {
+	const expired = await expireReadThreads(days);
+	const purged = await purgeMessages();
+	return { expired, ...purged };
 }

@@ -29,7 +29,9 @@ export const actions: Actions = {
 			customCss: String(form.get('customCss') ?? '').replace(/\r\n/g, '\n'),
 			portraitHosts: hostList.hosts,
 			portraitMaxWidth: Number(form.get('portraitMaxWidth')),
-			portraitMaxHeight: Number(form.get('portraitMaxHeight'))
+			portraitMaxHeight: Number(form.get('portraitMaxHeight')),
+			missiveArchiveLimit: Number(form.get('missiveArchiveLimit')),
+			missiveAutoDeleteDays: Number(form.get('missiveAutoDeleteDays'))
 		});
 		if (!parsed.success) {
 			return fail(400, { errors: fieldErrors(parsed.error) });

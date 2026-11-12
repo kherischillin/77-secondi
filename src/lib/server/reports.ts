@@ -74,10 +74,11 @@ export async function snapshotFor(type: ReportTarget, id: number, locals: App.Lo
 			if (!row) return null;
 			const mine = await characterIdsOf(user.id);
 			const participants = await db
-				.select({ id: schema.messageParticipants.characterId })
+				.select({ id: schema.messageParticipants.characterId, clearedAt: schema.messageParticipants.clearedAt })
 				.from(schema.messageParticipants)
 				.where(eq(schema.messageParticipants.threadId, row.msg.threadId));
-			if (!participants.some((p) => mine.includes(p.id))) return null;
+			// Solo chi la vede ancora (non l'ha eliminata) può segnalarla.
+			if (!participants.some((p) => mine.includes(p.id) && (!p.clearedAt || row.msg.createdAt > p.clearedAt))) return null;
 			return {
 				author: row.name ? fullName({ name: row.name, surname: row.surname }) : null,
 				authorCharacterId: row.msg.senderCharacterId,

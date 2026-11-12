@@ -1,7 +1,7 @@
-import { error, fail } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { requireCharacter } from '#lib/server/guards.ts';
-import { MessageError, openThread, reply, setArchived } from '#lib/server/messages.ts';
+import { deleteForMe, MessageError, openThread, reply, setArchived } from '#lib/server/messages.ts';
 import { replySchema } from '#lib/social.ts';
 
 export const load: PageServerLoad = async (event) => {
@@ -9,7 +9,7 @@ export const load: PageServerLoad = async (event) => {
 	const thread = await openThread(Number(event.params.id), character.id);
 	// Chi non partecipa riceve "non trovata": non si rivela nemmeno che esiste.
 	if (!thread) error(404, 'Missiva non trovata.');
-	return { ...thread, me: character.id };
+	return { ...thread, me: character.id, autoDeleteDays: event.locals.settings.missiveAutoDeleteDays };
 };
 
 export const actions: Actions = {
@@ -28,8 +28,19 @@ export const actions: Actions = {
 	},
 	archivia: async (event) => {
 		const { character } = requireCharacter(event);
-		await setArchived(Number(event.params.id), character.id, true);
+		try {
+			await setArchived(Number(event.params.id), character.id, true, event.locals.settings.missiveArchiveLimit);
+		} catch (e) {
+			if (e instanceof MessageError) return fail(400, { archiveError: e.message });
+			throw e;
+		}
 		return { archived: true };
+	},
+	/** Elimina la conversazione per sé: l'altro personaggio la conserva. */
+	elimina: async (event) => {
+		const { character } = requireCharacter(event);
+		await deleteForMe([Number(event.params.id)], character.id);
+		redirect(303, '/missive');
 	},
 	ripristina: async (event) => {
 		const { character } = requireCharacter(event);
