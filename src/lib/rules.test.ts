@@ -6,6 +6,7 @@ import {
 	pointsUsed,
 	skillRaiseCost,
 	statRaiseCost,
+	requiredPoints,
 	validateAllocation,
 	xpAvailable,
 	type SkillDef,
@@ -40,8 +41,22 @@ describe('distribuzione iniziale', () => {
 	});
 
 	it('rifiuta valori fuori dai limiti', () => {
-		expect(validateAllocation(stats, skills, { stats: { 1: 0 }, skills: {} }, rules).length).toBe(1);
+		expect(validateAllocation(stats, skills, { stats: { 1: 0 }, skills: {} }, rules).join(' ')).toMatch(/Forza: il valore deve essere tra 1 e 10/);
 		expect(validateAllocation(stats, skills, { stats: { 1: 11 }, skills: {} }, rules).length).toBeGreaterThan(0);
+	});
+
+	it('non accetta punti dimenticati', () => {
+		const errors = validateAllocation(stats, skills, { stats: { 1: 6, 2: 4 }, skills: {} }, rules);
+		expect(errors).toEqual(['Ti restano 4 ranghi di abilità da distribuire.']);
+		expect(validateAllocation(stats, skills, { stats: { 1: 8 }, skills: { 10: 3, 11: 1 } }, rules)).toEqual([
+			'Ti resta 1 punto caratteristica da distribuire.'
+		]);
+	});
+
+	it('se i massimi non lo permettono, non chiede punti impossibili', () => {
+		const tiny = [{ id: 1, name: 'Forza', minValue: 1, maxValue: 3 }];
+		expect(requiredPoints(tiny, skills, rules)).toEqual({ statPoints: 2, skillPoints: 4 });
+		expect(validateAllocation(tiny, skills, { stats: { 1: 3 }, skills: { 10: 2, 11: 2 } }, rules)).toEqual([]);
 	});
 
 	it('applica il tetto più basso tra abilità e creazione', () => {

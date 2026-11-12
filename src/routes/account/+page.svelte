@@ -81,7 +81,6 @@
 		{#each data.characters as c (c.id)}
 			<article class="card character" class:active={c.id === data.activeCharacterId}>
 				<h3>{fullName(c)}</h3>
-				{#if c.bio}<p class="bio">{c.bio}</p>{/if}
 				<p class="muted small">
 					Creato il {formatDate(c.createdAt)}
 					{#if c.lastPlayedAt}· ultima giocata {formatDateTime(c.lastPlayedAt)}{/if}
@@ -136,11 +135,7 @@
 			<input id="surname" name="surname" type="text" maxlength="30" value={createValues?.surname ?? ''} />
 			{#if createErrors.surname}<p class="field-error">{createErrors.surname}</p>{/if}
 		</div>
-		<div>
-			<label for="bio">Breve presentazione <span class="hint">facoltativa, visibile agli altri</span></label>
-			<textarea id="bio" name="bio" maxlength="2000">{createValues?.bio ?? ''}</textarea>
-			{#if createErrors.bio}<p class="field-error">{createErrors.bio}</p>{/if}
-		</div>
+		<p class="hint">Dati anagrafici, aspetto, carattere e storia si completano poi dalla scheda.</p>
 		<button type="submit">Crea personaggio</button>
 	</form>
 {/if}
@@ -212,14 +207,6 @@
 	}
 	.character.active {
 		border-color: var(--accent);
-	}
-	.bio {
-		white-space: pre-line;
-		display: -webkit-box;
-		-webkit-line-clamp: 4;
-		line-clamp: 4;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
 	}
 	.small {
 		font-size: 0.85rem;

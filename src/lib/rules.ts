@@ -51,6 +51,19 @@ export function pointsUsed(stats: StatDef[], skills: SkillDef[], alloc: Allocati
 	return { statPoints, skillPoints };
 }
 
+/**
+ * Punti da usare per forza alla creazione: tutti quelli disponibili,
+ * a meno che i massimi di caratteristiche e abilità non permettano di spenderli.
+ */
+export function requiredPoints(stats: StatDef[], skills: SkillDef[], rules: Rules) {
+	const statRoom = stats.reduce((sum, s) => sum + Math.max(0, s.maxValue - s.minValue), 0);
+	const skillRoom = skills.reduce((sum, s) => sum + Math.max(0, Math.min(s.maxRank, rules.creationSkillCap)), 0);
+	return {
+		statPoints: Math.min(rules.creationStatPoints, statRoom),
+		skillPoints: Math.min(rules.creationSkillPoints, skillRoom)
+	};
+}
+
 /** Controlla la distribuzione iniziale dei punti. Restituisce l'elenco degli errori (vuoto se va bene). */
 export function validateAllocation(stats: StatDef[], skills: SkillDef[], alloc: Allocation, rules: Rules): string[] {
 	const errors: string[] = [];
@@ -73,6 +86,16 @@ export function validateAllocation(stats: StatDef[], skills: SkillDef[], alloc: 
 	}
 	if (used.skillPoints > rules.creationSkillPoints) {
 		errors.push(`Hai usato ${used.skillPoints} ranghi di abilità su ${rules.creationSkillPoints} disponibili.`);
+	}
+	// Niente punti dimenticati: dopo la conferma non si possono più recuperare.
+	const required = requiredPoints(stats, skills, rules);
+	if (used.statPoints < required.statPoints) {
+		const left = required.statPoints - used.statPoints;
+		errors.push(`Ti ${left === 1 ? 'resta 1 punto' : `restano ${left} punti`} caratteristica da distribuire.`);
+	}
+	if (used.skillPoints < required.skillPoints) {
+		const left = required.skillPoints - used.skillPoints;
+		errors.push(`Ti ${left === 1 ? 'resta 1 rango' : `restano ${left} ranghi`} di abilità da distribuire.`);
 	}
 	return errors;
 }

@@ -67,6 +67,8 @@ export const characters = pgTable(
 		background: text('background'),
 		/** Scheda: spazio OFF GAME del giocatore (note, disponibilità, preferenze di gioco). */
 		offGame: text('off_game'),
+		/** Scheda: dati anagrafici (età, nascita, altezza...), campi definiti in src/lib/profile.ts. */
+		profile: jsonb('profile').$type<Record<string, string>>().notNull().default({}),
 		/** Immagine del presta-volto. */
 		portrait: text('portrait'),
 		/** Nome del presta-volto (attore, illustrazione...). */

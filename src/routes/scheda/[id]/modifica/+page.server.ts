@@ -5,7 +5,9 @@ import type { Actions, PageServerLoad, RequestEvent } from './$types';
 import { requireUser, clientIp } from '#lib/server/guards.ts';
 import { db, schema } from '#lib/server/db/index.ts';
 import { getCharacter } from '#lib/server/sheet.ts';
-import { deleteImage, mediaUrl, saveImage, UploadError } from '#lib/server/uploads.ts';
+import { deleteImage, mediaUrl } from '#lib/server/uploads.ts';
+import { checkPortraitUrl, isPortraitLink } from '#lib/portrait.ts';
+import { readProfile } from '#lib/profile.ts';
 import { getRules } from '#lib/server/settings.ts';
 import { audit } from '#lib/server/audit.ts';
 import { fieldErrors } from '#lib/validation.ts';
@@ -30,7 +32,6 @@ const optionalText = (max: number, label: string) =>
 		.transform((s) => (s === '' ? null : s));
 
 const sheetSchema = z.object({
-	bio: optionalText(2000, 'Presentazione'),
 	appearance: optionalText(SHEET_LIMITS.appearance, 'Aspetto'),
 	personality: optionalText(SHEET_LIMITS.personality, 'Carattere'),
 	background: optionalText(SHEET_LIMITS.background, 'Background'),
@@ -46,15 +47,22 @@ export const load: PageServerLoad = async (event) => {
 			id: character.id,
 			name: character.name,
 			surname: character.surname,
-			bio: character.bio,
+			profile: character.profile ?? {},
 			appearance: character.appearance,
 			personality: character.personality,
 			background: character.background,
 			offGame: character.offGame,
-			portraitUrl: mediaUrl(character.portrait),
+			// Un link resta modificabile; un vecchio file caricato sul sito si vede solo in anteprima.
+			portraitLink: isPortraitLink(character.portrait) ? character.portrait : '',
+			legacyPortraitUrl: isPortraitLink(character.portrait) ? null : mediaUrl(character.portrait),
 			portraitCredit: character.portraitCredit
 		},
-		backgroundPublic: rules.backgroundPublic
+		backgroundPublic: rules.backgroundPublic,
+		portrait: {
+			hosts: event.locals.settings.portraitHosts,
+			maxWidth: event.locals.settings.portraitMaxWidth,
+			maxHeight: event.locals.settings.portraitMaxHeight
+		}
 	};
 };
 
@@ -63,7 +71,6 @@ export const actions: Actions = {
 		const { user, character } = await editable(event);
 		const form = await event.request.formData();
 		const parsed = sheetSchema.safeParse({
-			bio: String(form.get('bio') ?? ''),
 			appearance: String(form.get('appearance') ?? ''),
 			personality: String(form.get('personality') ?? ''),
 			background: String(form.get('background') ?? ''),
@@ -71,19 +78,32 @@ export const actions: Actions = {
 			portraitCredit: String(form.get('portraitCredit') ?? '')
 		});
 		if (!parsed.success) return fail(400, { errors: fieldErrors(parsed.error) });
-
-		let portrait = character.portrait;
-		try {
-			const uploaded = await saveImage(form.get('portrait'));
-			if (uploaded) portrait = uploaded;
-		} catch (e) {
-			if (e instanceof UploadError) return fail(400, { errors: { portrait: e.message } as Record<string, string> });
-			throw e;
+		const profile = readProfile(form);
+		if (!profile.success) {
+			const issue = profile.error.issues[0];
+			return fail(400, { errors: { [`profile_${String(issue.path[0])}`]: issue.message } as Record<string, string> });
 		}
-		if (form.get('removePortrait') === 'on') portrait = null;
 
-		await db.update(schema.characters).set({ ...parsed.data, portrait }).where(eq(schema.characters.id, character.id));
-		if (portrait !== character.portrait) await deleteImage(character.portrait);
+		// Presta-volto: link HTTPS da un sito ammesso. Campo vuoto = nessuna immagine
+		// (un vecchio file caricato sul sito resta finché non lo si sostituisce o rimuove).
+		const link = String(form.get('portraitUrl') ?? '').trim();
+		let portrait: string | null;
+		if (link) {
+			const check = checkPortraitUrl(link, event.locals.settings.portraitHosts);
+			if (!check.ok) return fail(400, { errors: { portraitUrl: check.error } as Record<string, string> });
+			portrait = check.url;
+		} else if (character.portrait && !isPortraitLink(character.portrait) && form.get('removePortrait') !== 'on') {
+			portrait = character.portrait;
+		} else {
+			portrait = null;
+		}
+
+		await db
+			.update(schema.characters)
+			.set({ ...parsed.data, profile: profile.data, portrait })
+			.where(eq(schema.characters.id, character.id));
+		// Il vecchio file caricato sul sito non serve più.
+		if (portrait !== character.portrait && character.portrait && !isPortraitLink(character.portrait)) await deleteImage(character.portrait);
 		await audit({
 			actorUserId: user.id,
 			action: 'sheet.update',

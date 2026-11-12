@@ -43,6 +43,32 @@
 		<input id="maxGuildsPerCharacter" name="maxGuildsPerCharacter" type="number" min="1" max="10" required value={data.current.maxGuildsPerCharacter} />
 		{#if errors.maxGuildsPerCharacter}<p class="field-error">Scegli un numero tra 1 e 10.</p>{/if}
 	</div>
+	<fieldset class="portrait-settings">
+		<legend>Presta-volto dei personaggi</legend>
+		<p class="hint">
+			I giocatori collegano l'immagine con un link. Sono accettati solo link <strong>https://</strong> dai siti elencati qui
+			sotto (uno per riga; <code>*.esempio.it</code> ammette tutti i sottodomini). Se togli un sito, le immagini già
+			collegate da lì smettono di essere mostrate.
+		</p>
+		<div>
+			<label for="portraitHosts">Siti ammessi</label>
+			<textarea id="portraitHosts" name="portraitHosts" rows="6" spellcheck="false">{data.current.portraitHosts.join('\n')}</textarea>
+			{#if errors.portraitHosts}<p class="field-error">{errors.portraitHosts}</p>{/if}
+		</div>
+		<div class="sizes">
+			<div>
+				<label for="portraitMaxWidth">Larghezza massima (px)</label>
+				<input id="portraitMaxWidth" name="portraitMaxWidth" type="number" min="80" max="1000" required value={data.current.portraitMaxWidth} />
+				{#if errors.portraitMaxWidth}<p class="field-error">Scegli un numero tra 80 e 1000.</p>{/if}
+			</div>
+			<div>
+				<label for="portraitMaxHeight">Altezza massima (px)</label>
+				<input id="portraitMaxHeight" name="portraitMaxHeight" type="number" min="80" max="1500" required value={data.current.portraitMaxHeight} />
+				{#if errors.portraitMaxHeight}<p class="field-error">Scegli un numero tra 80 e 1500.</p>{/if}
+			</div>
+		</div>
+		<p class="hint">Le immagini più grandi vengono rimpicciolite (senza deformarle) per stare in questo spazio.</p>
+	</fieldset>
 	<fieldset class="themes">
 		<legend>Tema grafico del sito <span class="hint">ogni giocatore può sceglierne un altro dal proprio account</span></legend>
 		{#each THEME_IDS as id (id)}
@@ -103,5 +129,17 @@
 	.code {
 		font-family: ui-monospace, Consolas, monospace;
 		font-size: 0.85rem;
+	}
+	.portrait-settings {
+		display: grid;
+		gap: 0.75rem;
+	}
+	.portrait-settings textarea {
+		font-family: ui-monospace, Consolas, monospace;
+	}
+	.sizes {
+		display: flex;
+		gap: 1rem;
+		flex-wrap: wrap;
 	}
 </style>

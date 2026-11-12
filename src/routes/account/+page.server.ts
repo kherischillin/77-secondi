@@ -72,7 +72,7 @@ export const actions: Actions = {
 		const values = {
 			name: String(form.get('name') ?? ''),
 			surname: String(form.get('surname') ?? ''),
-			bio: String(form.get('bio') ?? '')
+			bio: ''
 		};
 
 		const parsed = characterSchema.safeParse(values);

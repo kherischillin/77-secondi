@@ -9,13 +9,16 @@ import {
 	listSkills,
 	listStats,
 	loadSheet,
+	portraitSrc,
 	raise,
+	redoOwnAllocation,
 	resetAllocation,
 	saveAllocation,
 	staffSetValues
 } from '#lib/server/sheet.ts';
 import { getRules } from '#lib/server/settings.ts';
-import { skillRaiseCost, statRaiseCost, type Allocation } from '#lib/rules.ts';
+import { requiredPoints, skillRaiseCost, statRaiseCost, type Allocation } from '#lib/rules.ts';
+import { profileRows } from '#lib/profile.ts';
 import { audit } from '#lib/server/audit.ts';
 import { listPublicForCharacter } from '#lib/server/giocate.ts';
 import { fullName } from '#lib/format.ts';
@@ -44,7 +47,8 @@ export const load: PageServerLoad = async (event) => {
 	const seesPrivate = isOwner || user.capabilities.has('characters.manage') || user.capabilities.has('xp.award');
 	const canGive = (user.capabilities.has('items.give') || user.capabilities.has('items.manage')) && !isOwner;
 	const canConfiscate = user.capabilities.has('items.manage') && !isOwner;
-	const { userId: _hidden, ...character } = sheet.character;
+	const { userId: _hidden, portrait: _stored, profile: _profile, ...character } = sheet.character;
+	const settings = event.locals.settings;
 	const names = { stats: sheet.stats.map((s) => ({ id: s.id, name: s.name })), skills: sheet.skills.map((s) => ({ id: s.id, name: s.name })) };
 	const [equipped, staffInventory, catalog] = await Promise.all([
 		equippedOf(character.id),
@@ -61,8 +65,11 @@ export const load: PageServerLoad = async (event) => {
 			// Background "in scuro": visibile solo al proprietario e allo staff.
 			background: rules.backgroundPublic || seesPrivate ? renderSheetHtml(character.background) : null,
 			backgroundHidden: !rules.backgroundPublic && !seesPrivate && !!character.background,
-			offGame: renderSheetHtml(character.offGame)
+			offGame: renderSheetHtml(character.offGame),
+			portraitUrl: portraitSrc(sheet.character.portrait, settings.portraitHosts)
 		},
+		profile: profileRows(sheet.character.profile),
+		portraitBox: { width: settings.portraitMaxWidth, height: settings.portraitMaxHeight },
 		giocate: await listPublicForCharacter(character.id),
 		// L'equipaggiamento è la parte "visibile" in gioco: lo vedono tutti.
 		equipped: equipped.map((i) => ({
@@ -84,9 +91,19 @@ export const load: PageServerLoad = async (event) => {
 			creationStatPoints: rules.creationStatPoints,
 			creationSkillPoints: rules.creationSkillPoints,
 			creationSkillCap: rules.creationSkillCap,
-			backgroundPublic: rules.backgroundPublic
+			backgroundPublic: rules.backgroundPublic,
+			required: requiredPoints(sheet.stats, sheet.skills, rules)
 		},
-		viewer: { isOwner, isStaff, canAward, canGive, canConfiscate, canEdit: isOwner || user.capabilities.has('characters.manage') }
+		viewer: {
+			// Rifare la distribuzione da soli: solo prima di ricevere o spendere PX.
+			canRedo: isOwner && character.statsAllocated && sheet.xp.spent === 0 && sheet.history.length === 0,
+			isOwner,
+			isStaff,
+			canAward,
+			canGive,
+			canConfiscate,
+			canEdit: isOwner || user.capabilities.has('characters.manage')
+		}
 	};
 };
 
@@ -141,6 +158,19 @@ export const actions: Actions = {
 		}
 		await audit({ actorUserId: user.id, action: 'sheet.allocate', targetType: 'character', targetId: character.id, details: alloc, ip: clientIp(event) });
 		return { action: 'distribuisci', success: 'Punti distribuiti. Da ora migliori il personaggio spendendo PX.' };
+	},
+
+	/** Il giocatore rifà la distribuzione finché non ha PX. */
+	rifai: async (event) => {
+		const { user, character } = await ownerOnly(event);
+		try {
+			await redoOwnAllocation(character.id);
+		} catch (e) {
+			if (e instanceof SheetError) return fail(400, { action: 'rifai', error: e.message });
+			throw e;
+		}
+		await audit({ actorUserId: user.id, action: 'sheet.redo', targetType: 'character', targetId: character.id, details: { personaggio: fullName(character) }, ip: clientIp(event) });
+		return { action: 'rifai', success: 'Distribuzione annullata: puoi rifarla qui sotto.' };
 	},
 
 	migliora: async (event) => {

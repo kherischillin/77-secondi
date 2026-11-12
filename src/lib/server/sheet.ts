@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import { equippedBonus } from '../economy.ts';
+import { hostAllowed, isPortraitLink } from '../portrait.ts';
 import { db, schema } from './db/index.ts';
 import {
 	skillRaiseCost,
@@ -9,7 +10,6 @@ import {
 	type Allocation,
 	type Rules
 } from '../rules.ts';
-import { mediaUrl } from './uploads.ts';
 
 export async function listStats() {
 	return db.select().from(schema.stats).orderBy(asc(schema.stats.sortOrder), asc(schema.stats.name));
@@ -75,7 +75,8 @@ export async function loadSheet(characterId: number) {
 			personality: character.personality,
 			background: character.background,
 			offGame: character.offGame,
-			portraitUrl: mediaUrl(character.portrait),
+			portrait: character.portrait,
+			profile: character.profile,
 			portraitCredit: character.portraitCredit,
 			statsAllocated: character.statsAllocated,
 			createdAt: character.createdAt.toISOString()
@@ -257,7 +258,33 @@ export async function resetAllocation(characterId: number) {
 	});
 }
 
-/** Valori usati in una prova: caratteristica e rango dell'abilità scelta. */
+/**
+ * Il giocatore rifà da solo la distribuzione iniziale: solo finché il personaggio
+ * non ha ricevuto né speso PX (dopo, serve lo staff con «Azzera la distribuzione»).
+ */
+export async function redoOwnAllocation(characterId: number) {
+	await db.transaction(async (tx) => {
+		const [c] = await tx
+			.select({ allocated: schema.characters.statsAllocated, spent: schema.characters.xpSpent })
+			.from(schema.characters)
+			.where(eq(schema.characters.id, characterId))
+			.for('update');
+		if (!c) throw new SheetError('Personaggio non trovato.');
+		if (!c.allocated) return;
+		const [award] = await tx
+			.select({ id: schema.xpAwards.id })
+			.from(schema.xpAwards)
+			.where(eq(schema.xpAwards.characterId, characterId))
+			.limit(1);
+		if (award || c.spent > 0) {
+			throw new SheetError('Il personaggio ha già ricevuto punti esperienza: per rifare la distribuzione chiedi allo staff.');
+		}
+		await tx.delete(schema.characterStats).where(eq(schema.characterStats.characterId, characterId));
+		await tx.delete(schema.characterSkills).where(eq(schema.characterSkills.characterId, characterId));
+		await tx.update(schema.characters).set({ statsAllocated: false }).where(eq(schema.characters.id, characterId));
+	});
+}
+
 /** Oggetti equipaggiati con i loro bonus (per le prove in quest). */
 async function equippedItems(characterId: number) {
 	return db
@@ -306,4 +333,18 @@ export async function characterNames(ids: number[]) {
 		.select({ id: schema.characters.id, name: schema.characters.name, surname: schema.characters.surname })
 		.from(schema.characters)
 		.where(inArray(schema.characters.id, ids));
+}
+
+/**
+ * Indirizzo dell'immagine del presta-volto da mostrare: un link (solo se il sito è
+ * ancora tra quelli ammessi) oppure un vecchio file caricato sul sito.
+ */
+export function portraitSrc(stored: string | null | undefined, hosts: readonly string[]): string | null {
+	if (!stored) return null;
+	if (!isPortraitLink(stored)) return `/media/${stored}`;
+	try {
+		return hostAllowed(new URL(stored).hostname, hosts) ? stored : null;
+	} catch {
+		return null;
+	}
 }

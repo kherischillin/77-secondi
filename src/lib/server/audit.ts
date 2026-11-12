@@ -56,6 +56,7 @@ export const AUDIT_LABELS: Record<string, string> = {
 	'sheet.raise': 'Avanzamento con PX',
 	'sheet.staff_set': 'Correzione valori della scheda (staff)',
 	'sheet.reset': 'Azzeramento distribuzione (staff)',
+	'sheet.redo': 'Distribuzione iniziale rifatta dal giocatore',
 	'rules.update': 'Modifica regole di gioco',
 	'stat.create': 'Creazione caratteristica',
 	'stat.update': 'Modifica caratteristica',

@@ -57,6 +57,13 @@
       "when": 1794497611806,
       "tag": "0007_scheda_off_game",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794498717988,
+      "tag": "0008_scheda_anagrafica",
+      "breakpoints": true
     }
   ]
 }

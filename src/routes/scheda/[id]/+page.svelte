@@ -22,6 +22,27 @@
 	const statUsed = $derived(data.stats.reduce((n, s) => n + ((alloc.stats[s.id] ?? s.minValue) - s.minValue), 0));
 	const skillUsed = $derived(data.skills.reduce((n, s) => n + (alloc.skills[s.id] ?? 0), 0));
 
+	// Si conferma solo quando tutti i punti sono stati usati (né di più, né di meno).
+	const req = $derived(data.rules.required);
+	const allocReady = $derived(statUsed === req.statPoints && skillUsed === req.skillPoints);
+	const allocMissing = $derived(
+		[
+			statUsed < req.statPoints ? `mancano ${req.statPoints - statUsed} punti caratteristica` : statUsed > req.statPoints ? `${statUsed - req.statPoints} punti caratteristica di troppo` : '',
+			skillUsed < req.skillPoints ? `mancano ${req.skillPoints - skillUsed} ranghi di abilità` : skillUsed > req.skillPoints ? `${skillUsed - req.skillPoints} ranghi di abilità di troppo` : ''
+		]
+			.filter(Boolean)
+			.join(' e ')
+	);
+
+	// Pannello compatto: ogni caratteristica con sotto le sue abilità.
+	const groups = $derived([
+		...data.stats.map((s) => ({ key: `s${s.id}`, stat: s, skills: data.skills.filter((k) => k.statId === s.id) })),
+		...(data.skills.some((k) => !data.stats.some((s) => s.id === k.statId))
+			? [{ key: 'other', stat: null, skills: data.skills.filter((k) => !data.stats.some((s) => s.id === k.statId)) }]
+			: [])
+	]);
+	let confirmRedo = $state(false);
+
 	let showStaff = $state(false);
 	const message = $derived(form && 'success' in form ? form.success : null);
 	const errorMsg = $derived(form && 'error' in form ? form.error : null);
@@ -30,41 +51,183 @@
 <svelte:head><title>{fullName(c)} · Scheda</title></svelte:head>
 
 <article class="sheet">
-	<header class="top">
+	<header class="top" style:--pw="{data.portraitBox.width}px" style:--ph="{data.portraitBox.height}px">
 		<div class="portrait">
 			{#if c.portraitUrl}
-				<img src={c.portraitUrl} alt="Presta-volto di {fullName(c)}" />
+				<img src={c.portraitUrl} alt="Presta-volto di {fullName(c)}" referrerpolicy="no-referrer" />
 			{:else}
 				<div class="noportrait" aria-hidden="true">{c.name.slice(0, 1)}</div>
 			{/if}
 			{#if c.portraitCredit}<p class="muted small credit">Presta-volto: {c.portraitCredit}</p>{/if}
 		</div>
-		<div class="intro">
-			<p class="label">Scheda del personaggio</p>
-			<h1>{fullName(c)}</h1>
-			{#if c.bio}<p class="bio">{c.bio}</p>{/if}
-			<p class="muted small">In gioco dal {formatDate(c.createdAt)}</p>
-			{#if data.guilds.length}
-				<ul class="guilds">
-					{#each data.guilds as g (g.id)}
-						<li>
-							<a href="/gilde/{g.id}">
-								{#if g.symbolUrl}<img src={g.symbolUrl} alt="" />{/if}
-								<span><strong>{g.name}</strong> <span class="muted">· {g.rank}</span></span>
-							</a>
-						</li>
-					{/each}
-				</ul>
-			{/if}
-			{#if data.viewer.canEdit}
-				<a class="button secondary" href="/scheda/{c.id}/modifica">Modifica descrizione</a>
-			{/if}
-			{#if !owner}<p class="report-sheet"><ReportButton targetType="character" targetId={c.id} label="Segnala questa scheda" /></p>{/if}
+
+		<div class="main">
+			<div class="title-row">
+				<div class="intro">
+					<p class="label">Scheda del personaggio</p>
+					<h1>{fullName(c)}</h1>
+					<p class="muted small">In gioco dal {formatDate(c.createdAt)}</p>
+					{#if data.guilds.length}
+						<ul class="guilds">
+							{#each data.guilds as g (g.id)}
+								<li>
+									<a href="/gilde/{g.id}">
+										{#if g.symbolUrl}<img src={g.symbolUrl} alt="" />{/if}
+										<span><strong>{g.name}</strong> <span class="muted">· {g.rank}</span></span>
+									</a>
+								</li>
+							{/each}
+						</ul>
+					{/if}
+					<div class="actions">
+						{#if data.viewer.canEdit}
+							<a class="button secondary" href="/scheda/{c.id}/modifica">Modifica scheda</a>
+						{/if}
+						{#if !owner}<ReportButton targetType="character" targetId={c.id} label="Segnala questa scheda" />{/if}
+					</div>
+				</div>
+
+				{#if data.xp}
+					<aside class="xp-box" aria-label="Punti esperienza">
+						<p class="label">Punti esperienza</p>
+						<div class="xp-numbers">
+							<div><span class="big">{data.xp.available}</span><span class="muted small">disponibili</span></div>
+							<div><span class="big muted-num">{data.xp.total}</span><span class="muted small">ricevuti</span></div>
+							<div><span class="big muted-num">{data.xp.spent}</span><span class="muted small">spesi</span></div>
+						</div>
+						{#if data.history.length}
+							<details class="xp-history">
+								<summary>Storico ({data.history.length})</summary>
+								<ul class="history">
+									{#each data.history as h (h.id)}
+										<li>
+											<span class:neg={h.amount < 0} class="amount">{h.amount > 0 ? '+' : ''}{h.amount}</span>
+											<span>{h.reason}</span>
+											<span class="muted small">{formatDateTime(h.createdAt)}</span>
+										</li>
+									{/each}
+								</ul>
+							</details>
+						{/if}
+					</aside>
+				{/if}
+			</div>
+
+			<div class="facts">
+				<section class="card fact anag">
+					<h2>Dati anagrafici</h2>
+					{#if data.profile.length}
+						<dl>
+							{#each data.profile as row (row.key)}
+								<dt>{row.label}</dt>
+								<dd>{row.value}</dd>
+							{/each}
+						</dl>
+					{:else}
+						<p class="muted small">Non ancora compilati.</p>
+					{/if}
+				</section>
+
+				<!-- Parte numerica: conta solo nelle quest. -->
+				<section class="card fact nums">
+					<div class="nums-head">
+						<h2>Caratteristiche e abilità</h2>
+						<span class="muted tiny">contano solo nelle quest</span>
+					</div>
+					{#if !c.statsAllocated}
+						<p class="muted small">
+							{owner ? 'Distribuisci i punti iniziali qui sotto.' : 'Il giocatore non ha ancora distribuito i punti iniziali.'}
+						</p>
+					{:else}
+						<div class="groups">
+							{#each groups as g (g.key)}
+								<ul class="group">
+									{#if g.stat}
+										{@render numRow(g.stat.name, g.stat.description, g.stat.value, 'stat', g.stat.id, g.stat.value < g.stat.maxValue, g.stat.raiseCost, true)}
+									{:else}
+										<li class="row head"><span class="name">Altre abilità</span></li>
+									{/if}
+									{#each g.skills as k (k.id)}
+										{@render numRow(k.name, k.description, k.rank, 'skill', k.id, k.rank < k.maxRank, k.raiseCost, false)}
+									{/each}
+								</ul>
+							{/each}
+						</div>
+						{#if data.viewer.canRedo}
+							{#if confirmRedo}
+								<form method="post" action="?/rifai" class="redo" use:enhance={() => async ({ update }) => { confirmRedo = false; await update(); }}>
+									<span class="small">Annullare la distribuzione e rifarla da capo?</span>
+									<button type="submit" class="danger small-btn">Sì, rifalla</button>
+									<button type="button" class="link" onclick={() => (confirmRedo = false)}>No</button>
+								</form>
+							{:else}
+								<p class="redo">
+									<button type="button" class="link small" onclick={() => (confirmRedo = true)}>Hai sbagliato? Rifai la distribuzione</button>
+									<span class="muted tiny">possibile finché non ricevi PX</span>
+								</p>
+							{/if}
+						{/if}
+					{/if}
+				</section>
+			</div>
 		</div>
 	</header>
 
+	{#snippet numRow(name: string, description: string | null, value: number, type: 'stat' | 'skill', id: number, canRaise: boolean, cost: number, isStat: boolean)}
+		<li class="row" class:head={isStat}>
+			<span class="name" title={description ?? undefined}>{name}</span>
+			<span class="value">{value}</span>
+			{#if owner && data.xp}
+				{#if canRaise}
+					<form method="post" action="?/migliora" use:enhance>
+						<input type="hidden" name="target" value="{type}:{id}" />
+						<button class="raise" type="submit" disabled={cost > data.xp.available} title="Migliora di 1 spendendo {cost} PX" aria-label="Migliora {name} di 1 per {cost} PX">+{cost} PX</button>
+					</form>
+				{:else}<span class="raise max">max</span>{/if}
+			{/if}
+		</li>
+	{/snippet}
+
 	{#if message}<div class="alert success">{message}</div>{/if}
 	{#if errorMsg}<div class="alert error">{errorMsg}</div>{/if}
+
+	{#if owner && !c.statsAllocated}
+		<section class="numbers">
+			<form method="post" action="?/distribuisci" class="card stack allocate" use:enhance>
+				<p>
+					<strong>Distribuisci i punti iniziali.</strong> Si fa una volta sola: dopo, il personaggio migliora con i punti esperienza.
+				</p>
+				<div class="counters">
+					<span class:over={statUsed > req.statPoints} class:done={statUsed === req.statPoints}>Caratteristiche: {statUsed}/{req.statPoints}</span>
+					<span class:over={skillUsed > req.skillPoints} class:done={skillUsed === req.skillPoints}>Abilità: {skillUsed}/{req.skillPoints}</span>
+				</div>
+				<div class="grid">
+					<div>
+						<h3>Caratteristiche</h3>
+						{#each data.stats as s (s.id)}
+							<label class="num">
+								<span>{s.name} <span class="hint">{s.minValue}–{s.maxValue}</span></span>
+								<input type="number" name="stat_{s.id}" min={s.minValue} max={s.maxValue} bind:value={alloc.stats[s.id]} />
+							</label>
+						{/each}
+					</div>
+					<div>
+						<h3>Abilità <span class="hint">massimo {data.rules.creationSkillCap} alla creazione</span></h3>
+						{#each data.skills as s (s.id)}
+							<label class="num">
+								<span>{s.name}{#if statName(s.statId)} <span class="hint">{statName(s.statId)}</span>{/if}</span>
+								<input type="number" name="skill_{s.id}" min="0" max={Math.min(s.maxRank, data.rules.creationSkillCap)} bind:value={alloc.skills[s.id]} />
+							</label>
+						{/each}
+					</div>
+				</div>
+				<div>
+					<button type="submit" disabled={!allocReady}>Conferma distribuzione</button>
+					{#if !allocReady}<span class="muted small missing">{allocMissing}</span>{/if}
+				</div>
+			</form>
+		</section>
+	{/if}
 
 	<!-- Sezioni scritte dal giocatore: HTML e CSS ammessi, mostrati in riquadri isolati senza JavaScript. -->
 	<section class="texts">
@@ -101,106 +264,6 @@
 		})}
 	</section>
 
-	<!-- Parte numerica: conta solo nelle quest. -->
-	<section class="numbers">
-		<div class="numbers-head">
-			<h2>Caratteristiche e abilità</h2>
-			<p class="muted small">Contano solo nelle quest: nel gioco libero si descrive.</p>
-		</div>
-
-		{#if owner && !c.statsAllocated}
-			<form method="post" action="?/distribuisci" class="card stack allocate" use:enhance>
-				<p>
-					<strong>Distribuisci i punti iniziali.</strong> Si fa una volta sola: dopo, il personaggio migliora con i punti esperienza.
-				</p>
-				<div class="counters">
-					<span class:over={statUsed > data.rules.creationStatPoints}>Caratteristiche: {statUsed}/{data.rules.creationStatPoints}</span>
-					<span class:over={skillUsed > data.rules.creationSkillPoints}>Abilità: {skillUsed}/{data.rules.creationSkillPoints}</span>
-				</div>
-				<div class="grid">
-					<div>
-						<h3>Caratteristiche</h3>
-						{#each data.stats as s (s.id)}
-							<label class="num">
-								<span>{s.name} <span class="hint">{s.minValue}–{s.maxValue}</span></span>
-								<input type="number" name="stat_{s.id}" min={s.minValue} max={s.maxValue} bind:value={alloc.stats[s.id]} />
-							</label>
-						{/each}
-					</div>
-					<div>
-						<h3>Abilità <span class="hint">massimo {data.rules.creationSkillCap} alla creazione</span></h3>
-						{#each data.skills as s (s.id)}
-							<label class="num">
-								<span>{s.name}{#if statName(s.statId)} <span class="hint">{statName(s.statId)}</span>{/if}</span>
-								<input type="number" name="skill_{s.id}" min="0" max={Math.min(s.maxRank, data.rules.creationSkillCap)} bind:value={alloc.skills[s.id]} />
-							</label>
-						{/each}
-					</div>
-				</div>
-				<div>
-					<button type="submit" disabled={statUsed > data.rules.creationStatPoints || skillUsed > data.rules.creationSkillPoints}>
-						Conferma distribuzione
-					</button>
-				</div>
-			</form>
-		{:else}
-			{#if !c.statsAllocated}
-				<p class="muted">Il giocatore non ha ancora distribuito i punti iniziali.</p>
-			{/if}
-			<div class="grid">
-				<div class="card">
-					<h3>Caratteristiche</h3>
-					<table>
-						<tbody>
-							{#each data.stats as s (s.id)}
-								<tr>
-									<td title={s.description}>{s.name}</td>
-									<td class="value">{s.value}</td>
-									{#if owner && c.statsAllocated && data.xp}
-										<td class="act">
-											{#if s.value < s.maxValue}
-												<form method="post" action="?/migliora" use:enhance>
-													<input type="hidden" name="target" value="stat:{s.id}" />
-													<button class="link" type="submit" disabled={s.raiseCost > data.xp.available}>+1 ({s.raiseCost} PX)</button>
-												</form>
-											{:else}<span class="muted small">max</span>{/if}
-										</td>
-									{/if}
-								</tr>
-							{/each}
-						</tbody>
-					</table>
-				</div>
-				<div class="card">
-					<h3>Abilità</h3>
-					<table>
-						<tbody>
-							{#each data.skills as s (s.id)}
-								<tr>
-									<td title={s.description}>
-										{s.name}
-										{#if statName(s.statId)}<span class="linked">{statName(s.statId)}</span>{/if}
-									</td>
-									<td class="value">{s.rank}</td>
-									{#if owner && c.statsAllocated && data.xp}
-										<td class="act">
-											{#if s.rank < s.maxRank}
-												<form method="post" action="?/migliora" use:enhance>
-													<input type="hidden" name="target" value="skill:{s.id}" />
-													<button class="link" type="submit" disabled={s.raiseCost > data.xp.available}>+1 ({s.raiseCost} PX)</button>
-												</form>
-											{:else}<span class="muted small">max</span>{/if}
-										</td>
-									{/if}
-								</tr>
-							{/each}
-						</tbody>
-					</table>
-				</div>
-			</div>
-		{/if}
-	</section>
-
 	{#if data.equipped.length}
 		<section class="card equipment">
 			<h2>Equipaggiamento</h2>
@@ -230,29 +293,6 @@
 					</li>
 				{/each}
 			</ul>
-		</section>
-	{/if}
-
-	{#if data.xp}
-		<section class="card xp">
-			<h2>Punti esperienza</h2>
-			<div class="xp-numbers">
-				<div><span class="big">{data.xp.available}</span><span class="muted">disponibili</span></div>
-				<div><span class="big muted-num">{data.xp.total}</span><span class="muted">ricevuti</span></div>
-				<div><span class="big muted-num">{data.xp.spent}</span><span class="muted">spesi</span></div>
-			</div>
-			{#if data.history.length}
-				<h3>Storico</h3>
-				<ul class="history">
-					{#each data.history as h (h.id)}
-						<li>
-							<span class:neg={h.amount < 0} class="amount">{h.amount > 0 ? '+' : ''}{h.amount}</span>
-							<span>{h.reason}</span>
-							<span class="muted small">{formatDateTime(h.createdAt)}</span>
-						</li>
-					{/each}
-				</ul>
-			{/if}
 		</section>
 	{/if}
 
@@ -373,37 +413,6 @@
 		display: grid;
 		gap: 1.5rem;
 	}
-	.top {
-		display: grid;
-		grid-template-columns: 220px 1fr;
-		gap: 1.5rem;
-		align-items: start;
-	}
-	@media (max-width: 640px) {
-		.top {
-			grid-template-columns: 1fr;
-		}
-		.portrait {
-			max-width: 220px;
-		}
-	}
-	.portrait img,
-	.noportrait {
-		width: 100%;
-		aspect-ratio: 3 / 4;
-		object-fit: cover;
-		border-radius: var(--radius);
-		border: 1px solid var(--border);
-		display: block;
-	}
-	.noportrait {
-		display: grid;
-		place-items: center;
-		font-family: var(--font-title);
-		font-size: 4rem;
-		color: var(--accent);
-		background: var(--bg-raised);
-	}
 	.guilds {
 		list-style: none;
 		padding: 0;
@@ -441,15 +450,6 @@
 		font-size: 0.75rem;
 		color: var(--text-muted);
 		margin: 0;
-	}
-	.bio {
-		white-space: pre-line;
-	}
-	.bio {
-		font-family: var(--font-title);
-		font-style: italic;
-		font-size: 1.1rem;
-		color: var(--text-muted);
 	}
 	.small {
 		font-size: 0.85rem;
@@ -527,38 +527,6 @@
 	.note {
 		margin-top: 0.75rem !important;
 	}
-	.numbers-head {
-		display: flex;
-		align-items: baseline;
-		gap: 1rem;
-		flex-wrap: wrap;
-	}
-	table td {
-		padding: 0.4rem 0.25rem;
-	}
-	.linked {
-		display: block;
-		font-size: 0.78rem;
-		color: var(--text-muted);
-	}
-	.value {
-		text-align: right;
-		font-weight: 700;
-		font-variant-numeric: tabular-nums;
-		color: var(--accent);
-		width: 3rem;
-	}
-	.act {
-		text-align: right;
-		white-space: nowrap;
-		width: 8rem;
-	}
-	.act form {
-		display: inline;
-	}
-	.act button {
-		font-size: 0.85rem;
-	}
 	.allocate {
 		max-width: none;
 	}
@@ -566,9 +534,6 @@
 		display: flex;
 		gap: 1.5rem;
 		font-weight: 600;
-	}
-	.counters .over {
-		color: var(--danger);
 	}
 	.num {
 		display: flex;
@@ -580,21 +545,6 @@
 	}
 	.num input {
 		width: 80px;
-	}
-	.xp-numbers {
-		display: flex;
-		gap: 2rem;
-		flex-wrap: wrap;
-	}
-	.xp-numbers div {
-		display: flex;
-		flex-direction: column;
-	}
-	.big {
-		font-family: var(--font-title);
-		font-size: 2rem;
-		color: var(--accent);
-		line-height: 1.1;
 	}
 	.muted-num {
 		color: var(--text-muted);
@@ -622,5 +572,216 @@
 	}
 	.staff-tools {
 		margin-top: 1rem;
+	}
+	.counters .over {
+		color: var(--danger);
+	}
+	.counters .done {
+		color: var(--success);
+	}
+	.missing {
+		margin-left: 0.75rem;
+	}
+	.top {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		gap: 1.5rem;
+		align-items: start;
+	}
+	@media (max-width: 720px) {
+		.top {
+			grid-template-columns: 1fr;
+		}
+	}
+	/* Il presta-volto non supera mai le dimensioni scelte dallo staff. */
+	.portrait {
+		max-width: var(--pw);
+	}
+	.portrait img {
+		display: block;
+		max-width: 100%;
+		max-height: var(--ph);
+		width: auto;
+		height: auto;
+		border-radius: var(--radius);
+		border: 1px solid var(--border);
+	}
+	.noportrait {
+		width: min(var(--pw), 200px);
+		aspect-ratio: 3 / 4;
+		max-height: var(--ph);
+		border-radius: var(--radius);
+		border: 1px solid var(--border);
+		display: grid;
+		place-items: center;
+		font-family: var(--font-title);
+		font-size: 4rem;
+		color: var(--accent);
+		background: var(--bg-raised);
+	}
+	.main {
+		display: grid;
+		gap: 1rem;
+		min-width: 0;
+	}
+	.title-row {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		gap: 1rem;
+		flex-wrap: wrap;
+	}
+	.intro h1 {
+		margin: 0.1rem 0 0.2rem;
+	}
+	.intro > p {
+		margin: 0 0 0.6rem;
+	}
+	.actions {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		flex-wrap: wrap;
+	}
+	.xp-box {
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		background: var(--bg-raised);
+		padding: 0.6rem 0.9rem;
+		min-width: 220px;
+	}
+	.xp-box .label {
+		margin-bottom: 0.2rem;
+	}
+	.xp-numbers {
+		display: flex;
+		gap: 1.25rem;
+	}
+	.xp-numbers div {
+		display: flex;
+		flex-direction: column;
+	}
+	.big {
+		font-family: var(--font-title);
+		font-size: 1.6rem;
+		color: var(--accent);
+		line-height: 1.1;
+	}
+	.xp-history {
+		margin-top: 0.4rem;
+		font-size: 0.85rem;
+	}
+	.xp-history summary {
+		cursor: pointer;
+		color: var(--text-muted);
+	}
+	.xp-history .history {
+		max-height: 220px;
+		overflow-y: auto;
+		max-width: 360px;
+	}
+	.facts {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr);
+		gap: 1rem;
+		align-items: start;
+	}
+	@media (max-width: 960px) {
+		.facts {
+			grid-template-columns: 1fr;
+		}
+	}
+	.fact {
+		padding: 0.9rem 1rem;
+	}
+	.fact h2 {
+		font-size: 1.05rem;
+		margin: 0 0 0.5rem;
+	}
+	.anag dl {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		gap: 0.25rem 0.9rem;
+		margin: 0;
+		font-size: 0.92rem;
+	}
+	.anag dt {
+		color: var(--text-muted);
+	}
+	.anag dd {
+		margin: 0;
+		overflow-wrap: anywhere;
+	}
+	.nums-head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+	.tiny {
+		font-size: 0.75rem;
+	}
+	/* Gruppi caratteristica + abilità, su due colonne se c'è spazio. */
+	.groups {
+		columns: 2 220px;
+		column-gap: 1.25rem;
+	}
+	.group {
+		list-style: none;
+		margin: 0 0 0.6rem;
+		padding: 0;
+		break-inside: avoid;
+	}
+	.row {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 1.8rem auto;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.12rem 0 0.12rem 0.9rem;
+		font-size: 0.9rem;
+		border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+	}
+	.row.head {
+		padding-left: 0;
+		font-weight: 700;
+		border-bottom-color: var(--border);
+	}
+	.row .name {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.value {
+		text-align: right;
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+		color: var(--accent);
+	}
+	.row form {
+		display: contents;
+	}
+	.raise {
+		font-size: 0.72rem;
+		padding: 0.05rem 0.45rem;
+		border-radius: 999px;
+		white-space: nowrap;
+		min-height: 0;
+		line-height: 1.4;
+	}
+	.raise.max {
+		color: var(--text-muted);
+		text-align: center;
+	}
+	.redo {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		flex-wrap: wrap;
+		margin: 0.5rem 0 0;
+	}
+	.small-btn {
+		font-size: 0.85rem;
+		padding: 0.25rem 0.7rem;
 	}
 </style>

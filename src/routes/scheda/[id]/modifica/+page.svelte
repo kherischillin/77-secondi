@@ -4,6 +4,8 @@
 	import { fullName } from '#lib/format.ts';
 	import SheetFrame from '#lib/components/SheetFrame.svelte';
 	import { prepareSheetText, SHEET_LIMITS, type SheetSection } from '#lib/sheet-html.ts';
+	import { PROFILE_FIELDS, PROFILE_MAX } from '#lib/profile.ts';
+	import { checkPortraitUrl } from '#lib/portrait.ts';
 
 	let { data, form }: PageProps = $props();
 	const errors = $derived<Record<string, string>>(form?.errors ?? {});
@@ -19,6 +21,20 @@
 			offGame: data.character.offGame ?? ''
 		};
 	});
+	// Presta-volto: link con anteprima e controllo immediato del sito.
+	let portraitUrl = $state('');
+	$effect.pre(() => {
+		portraitUrl = data.character.portraitLink;
+	});
+	let removeLegacy = $state(false);
+	let imgError = $state(false);
+	let natural = $state<{ w: number; h: number } | null>(null);
+	const linkCheck = $derived(portraitUrl.trim() ? checkPortraitUrl(portraitUrl, data.portrait.hosts) : null);
+	const linkProblem = $derived(linkCheck && !linkCheck.ok ? linkCheck.error : null);
+	const previewSrc = $derived(
+		linkCheck?.ok ? linkCheck.url : !portraitUrl.trim() && !removeLegacy ? data.character.legacyPortraitUrl : null
+	);
+
 	let preview = $state<Record<SheetSection, boolean>>({ appearance: false, personality: false, background: false, offGame: false });
 
 	const sections: { key: SheetSection; label: string; rows: number; hint: () => string }[] = [
@@ -48,12 +64,83 @@
 	In gioco gli altri personaggi possono cogliere solo l'aspetto.
 </p>
 
-<form method="post" enctype="multipart/form-data" class="stack card edit" use:enhance={() => async ({ update }) => update({ reset: false })}>
-	<div>
-		<label for="bio">Presentazione breve</label>
-		<textarea id="bio" name="bio" maxlength="2000" rows="3">{c.bio ?? ''}</textarea>
-		<span class="hint">Una frase o due che compaiono in cima alla scheda.</span>
-		{#if errors.bio}<p class="field-error">{errors.bio}</p>{/if}
+<form method="post" class="stack card edit" use:enhance={() => async ({ update }) => update({ reset: false })}>
+	<div class="top-fields">
+		<fieldset class="portrait-field">
+			<legend>Presta-volto</legend>
+			<div class="portrait-box" style:--pw="{data.portrait.maxWidth}px" style:--ph="{data.portrait.maxHeight}px">
+				{#if previewSrc && !imgError}
+					<img
+						src={previewSrc}
+						alt="Anteprima del presta-volto"
+						referrerpolicy="no-referrer"
+						onload={(e) => {
+							const img = e.currentTarget as HTMLImageElement;
+							natural = { w: img.naturalWidth, h: img.naturalHeight };
+						}}
+						onerror={() => (imgError = true)}
+					/>
+				{:else}
+					<span class="muted small">{imgError ? 'Immagine non raggiungibile' : 'Nessuna immagine'}</span>
+				{/if}
+			</div>
+			<div class="stack">
+				<div>
+					<label for="portraitUrl">Link all'immagine</label>
+					<input
+						id="portraitUrl"
+						name="portraitUrl"
+						type="url"
+						inputmode="url"
+						maxlength="500"
+						placeholder="https://i.imgur.com/..."
+						bind:value={portraitUrl}
+						oninput={() => {
+							imgError = false;
+							natural = null;
+						}}
+					/>
+					{#if errors.portraitUrl}<p class="field-error">{errors.portraitUrl}</p>{/if}
+					{#if linkProblem}<p class="field-error">{linkProblem}</p>{/if}
+					<span class="hint">
+						Link diretto all'immagine, che inizia con <code>https://</code>. Siti ammessi:
+						{data.portrait.hosts.join(', ') || 'nessuno (chiedi allo staff)'}.
+					</span>
+				</div>
+				<p class="hint">
+					Nella scheda l'immagine occupa al massimo <strong>{data.portrait.maxWidth} × {data.portrait.maxHeight} px</strong>:
+					se è più grande viene rimpicciolita, senza deformarla. Meglio in verticale.
+					{#if natural}<br />Questa immagine misura {natural.w} × {natural.h} px{natural.w > data.portrait.maxWidth || natural.h > data.portrait.maxHeight ? ' e sarà rimpicciolita' : ''}.{/if}
+				</p>
+				{#if c.legacyPortraitUrl && !portraitUrl}
+					<label class="checkbox"><input type="checkbox" name="removePortrait" bind:checked={removeLegacy} /><span>Rimuovi l'immagine caricata in passato</span></label>
+				{/if}
+				<div>
+					<label for="portraitCredit">Presta-volto <span class="hint">facoltativo, es. nome dell'attore o dell'artista</span></label>
+					<input id="portraitCredit" name="portraitCredit" type="text" maxlength="100" value={c.portraitCredit ?? ''} />
+				</div>
+			</div>
+		</fieldset>
+
+		<fieldset class="profile">
+			<legend>Dati anagrafici <span class="hint">compaiono accanto al nome; lascia vuoto ciò che non vuoi mostrare</span></legend>
+			<div class="profile-grid">
+				{#each PROFILE_FIELDS as f (f.key)}
+					<div>
+						<label for="profile_{f.key}">{f.label}</label>
+						<input
+							id="profile_{f.key}"
+							name="profile_{f.key}"
+							type="text"
+							maxlength={PROFILE_MAX}
+							placeholder={f.placeholder}
+							value={(c.profile as Record<string, string>)[f.key] ?? ''}
+						/>
+						{#if errors[`profile_${f.key}`]}<p class="field-error">{errors[`profile_${f.key}`]}</p>{/if}
+					</div>
+				{/each}
+			</div>
+		</fieldset>
 	</div>
 	<div class="howto">
 		<strong>Aspetto, Carattere, Background e OFF Game</strong> si possono scrivere come testo semplice oppure
@@ -88,24 +175,6 @@
 			{/if}
 		</div>
 	{/each}
-	<div class="portrait-row">
-		{#if c.portraitUrl}<img src={c.portraitUrl} alt="Presta-volto attuale" />{/if}
-		<div class="stack">
-			<div>
-				<label for="portrait">{c.portraitUrl ? 'Sostituisci il presta-volto' : 'Immagine del presta-volto'}</label>
-				<input id="portrait" name="portrait" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
-				<span class="hint">PNG, JPG, WEBP o GIF, massimo 5 MB. Meglio in verticale.</span>
-				{#if errors.portrait}<p class="field-error">{errors.portrait}</p>{/if}
-			</div>
-			{#if c.portraitUrl}
-				<label class="checkbox"><input type="checkbox" name="removePortrait" /><span>Rimuovi l'immagine</span></label>
-			{/if}
-			<div>
-				<label for="portraitCredit">Presta-volto <span class="hint">facoltativo, es. nome dell'attore o dell'artista</span></label>
-				<input id="portraitCredit" name="portraitCredit" type="text" maxlength="100" value={c.portraitCredit ?? ''} />
-			</div>
-		</div>
-	</div>
 	<div><button type="submit">Salva scheda</button></div>
 </form>
 
@@ -146,18 +215,62 @@
 		border-radius: var(--radius);
 		background: var(--bg-raised);
 	}
-	.portrait-row {
+	.top-fields {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		gap: 1rem;
+	}
+	@media (max-width: 800px) {
+		.top-fields {
+			grid-template-columns: 1fr;
+		}
+	}
+	fieldset {
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		padding: 1rem;
+		margin: 0;
+		min-width: 0;
+	}
+	legend {
+		padding: 0 0.4rem;
+		font-weight: 600;
+	}
+	.portrait-field {
 		display: flex;
 		gap: 1rem;
 		align-items: flex-start;
 	}
-	.portrait-row img {
-		width: 120px;
-		aspect-ratio: 3 / 4;
-		object-fit: cover;
-		border-radius: var(--radius);
-	}
-	.portrait-row .stack {
+	.portrait-field .stack {
 		flex: 1;
+		min-width: 0;
+	}
+	.portrait-box {
+		flex: 0 0 auto;
+		width: min(var(--pw), 40%);
+		min-height: 120px;
+		display: grid;
+		place-items: center;
+		border: 1px dashed var(--border);
+		border-radius: var(--radius);
+		background: var(--bg-sunken);
+		text-align: center;
+		padding: 0.25rem;
+	}
+	.portrait-box img {
+		display: block;
+		max-width: 100%;
+		max-height: var(--ph);
+		width: auto;
+		height: auto;
+		border-radius: calc(var(--radius) - 2px);
+	}
+	.profile-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
+		gap: 0.6rem 0.9rem;
+	}
+	.hint code {
+		font-size: 0.85em;
 	}
 </style>

@@ -4,6 +4,7 @@ import { db, schema } from './db';
 import { DEFAULT_RULES, rulesSchema, type Rules } from '../rules.ts';
 import { DEFAULT_ECONOMY, economySchema, type Economy } from '../economy.ts';
 import { THEME_IDS, type ThemeId } from '../themes.ts';
+import { DEFAULT_PORTRAIT_HOSTS, HOST_PATTERN } from '../portrait.ts';
 
 /**
  * Impostazioni del sito, con valori predefiniti e validazione.
@@ -18,7 +19,12 @@ export const settingsSchema = z.object({
 	/** Tema grafico predefinito del sito. */
 	theme: z.enum(THEME_IDS as [ThemeId, ...ThemeId[]]),
 	/** CSS aggiuntivo scritto dallo staff (servito da /tema.css). */
-	customCss: z.string().max(50_000)
+	customCss: z.string().max(50_000),
+	/** Siti da cui si possono collegare le immagini del presta-volto (solo HTTPS). */
+	portraitHosts: z.array(z.string().regex(HOST_PATTERN)).max(100),
+	/** Dimensioni massime del presta-volto nella scheda, in pixel. */
+	portraitMaxWidth: z.number().int().min(80).max(1000),
+	portraitMaxHeight: z.number().int().min(80).max(1500)
 });
 
 export type SiteSettings = z.infer<typeof settingsSchema>;
@@ -30,7 +36,10 @@ export const DEFAULT_SETTINGS: SiteSettings = {
 	maxCharactersPerUser: 3,
 	maxGuildsPerCharacter: 2,
 	theme: 'taverna',
-	customCss: ''
+	customCss: '',
+	portraitHosts: DEFAULT_PORTRAIT_HOSTS,
+	portraitMaxWidth: 240,
+	portraitMaxHeight: 320
 };
 
 let cache: SiteSettings | null = null;
