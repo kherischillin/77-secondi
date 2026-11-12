@@ -24,10 +24,21 @@
 
 	const doc = $derived(typeof document === 'undefined' ? '' : buildFrameDoc(html, themeOfPage()));
 
+	/**
+	 * Altezza del contenuto. Molti codici dei GDR mettono tutto in `position: absolute`,
+	 * che non conta nell'altezza normale della pagina: si guarda anche dove finisce
+	 * il più basso degli elementi.
+	 */
 	function measure() {
 		const d = frame?.contentDocument;
-		if (!d?.body) return;
-		const next = Math.min(MAX_HEIGHT, Math.ceil(Math.max(d.body.scrollHeight, d.documentElement.offsetHeight)));
+		const w = frame?.contentWindow;
+		if (!d?.body || !w) return;
+		let bottom = Math.max(d.body.scrollHeight, d.body.offsetHeight);
+		for (const el of d.body.querySelectorAll('*')) {
+			const r = el.getBoundingClientRect();
+			if (r.height > 0 && r.width > 0) bottom = Math.max(bottom, r.bottom + w.scrollY);
+		}
+		const next = Math.min(MAX_HEIGHT, Math.ceil(bottom));
 		if (Math.abs(next - height) > 1) height = next;
 	}
 
@@ -40,6 +51,9 @@
 		observer.observe(d.body);
 		// Le immagini e i caratteri arrivano dopo: si rimisura quando sono pronti.
 		d.addEventListener('load', measure, true);
+		// Linguette e animazioni in CSS cambiano le dimensioni: si rimisura alla fine.
+		d.addEventListener('transitionend', measure, true);
+		d.addEventListener('change', () => setTimeout(measure, 50), true);
 		d.fonts?.ready.then(measure).catch(() => {});
 	}
 

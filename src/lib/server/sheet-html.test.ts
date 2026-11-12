@@ -40,6 +40,32 @@ describe('sanitizeSheetHtml', () => {
 	});
 });
 
+describe('codici dei GDR', () => {
+	it('tiene le linguette fatte con radio, checkbox e label', () => {
+		const out = sanitizeSheetHtml('<input type="radio" name="dato" id="storia" checked><label class="tab" for="storia" title="Storia"></label>');
+		expect(out).toContain('<input type="radio" name="dato" id="storia" checked');
+		expect(out).toContain('<label class="tab" for="storia" title="Storia"></label>');
+	});
+	it('gli altri campi di input diventano testo inerte', () => {
+		const out = sanitizeSheetHtml('<input type="text" value="x"><input type="submit" formaction="https://evil"><input type="image" src="https://evil">');
+		expect(out).not.toMatch(/<input|formaction|evil/);
+	});
+	it('tiene i tag inventati da colorare con il CSS', () => {
+		const out = sanitizeSheetHtml('<style>j{color:red}</style><j>HIBIKI</j> e <x onclick="alert(1)" class="a">Okinawa</x>');
+		expect(out).toContain('<j>HIBIKI</j>');
+		expect(out).toContain('<x class="a">Okinawa</x>');
+		expect(out).not.toContain('onclick');
+	});
+	it('non ammette tag pericolosi travestiti da tag inventati', () => {
+		const out = sanitizeSheetHtml('<svg><script>alert(1)</script></svg><iframe src="https://x"></iframe><video src="https://x"></video><button>b</button><SCRIPT>alert(2)</SCRIPT>');
+		expect(out).not.toMatch(/svg|script|iframe|video|alert|<button/i);
+	});
+	it('toglie <html>, <head> e <body> lasciando il contenuto', () => {
+		const out = sanitizeSheetHtml('<html><head><style>p{}</style></head><body class="x"><p>ciao</p></body></html>');
+		expect(out).toBe('<style>p{}</style><p>ciao</p>');
+	});
+});
+
 describe('renderSheetHtml', () => {
 	it('il testo semplice resta testo, con gli a capo', () => {
 		expect(renderSheetHtml('Alto\ne magro\n\nOcchi 3 < 5 & "verdi"')).toBe('<p>Alto<br />e magro</p>\n<p>Occhi 3 &lt; 5 &amp; "verdi"</p>');
