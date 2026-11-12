@@ -723,10 +723,31 @@ export type Board = typeof boards.$inferSelect;
 export type ItemBonus = { statId?: number; skillId?: number; value: number };
 
 /** Catalogo degli oggetti, definito dallo staff. */
+/** Negozi del mercato: ognuno vende i propri oggetti (items.shopId). */
+export const shops = pgTable(
+	'shops',
+	{
+		id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+		name: text('name').notNull(),
+		/** Cosa vende, in poche parole (es. "Forniture mediche"): fa capire il negozio a colpo d'occhio. */
+		tagline: text('tagline').notNull().default(''),
+		description: text('description').notNull().default(''),
+		/** Icona (chiave di src/lib/job-icons.ts). */
+		icon: text('icon').notNull().default('stall'),
+		sortOrder: integer('sort_order').notNull().default(0),
+		/** Se falso il negozio è chiuso: non si vede e non vende. */
+		isOpen: boolean('is_open').notNull().default(true),
+		createdAt: createdAt()
+	},
+	(t) => [uniqueIndex('shops_name_lower_idx').on(sql`lower(${t.name})`)]
+);
+
 export const items = pgTable(
 	'items',
 	{
 		id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+		/** Negozio che lo vende (null = «Altri articoli»). */
+		shopId: integer('shop_id').references(() => shops.id, { onDelete: 'set null' }),
 		name: text('name').notNull(),
 		description: text('description').notNull().default(''),
 		image: text('image'),

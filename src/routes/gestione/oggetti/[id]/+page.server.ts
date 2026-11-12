@@ -7,6 +7,7 @@ import { listSkills, listStats } from '#lib/server/sheet.ts';
 import { deleteImage, saveImage, UploadError } from '#lib/server/uploads.ts';
 import { getEconomy } from '#lib/server/settings.ts';
 import { readItemForm } from '#lib/economy.ts';
+import { shopOptions } from '#lib/server/shops.ts';
 import { fieldErrors } from '#lib/validation.ts';
 import { audit } from '#lib/server/audit.ts';
 
@@ -19,8 +20,9 @@ async function itemOr404(event: RequestEvent) {
 export const load: PageServerLoad = async (event) => {
 	requireCapability(event, 'items.manage');
 	const item = await itemOr404(event);
-	const [stats, skills, owned, economy, catalog] = await Promise.all([listStats(), listSkills(), ownedCount(item.id), getEconomy(), listCatalog()]);
+	const [stats, skills, owned, economy, catalog, shops] = await Promise.all([listStats(), listSkills(), ownedCount(item.id), getEconomy(), listCatalog(), shopOptions()]);
 	return {
+		shops,
 		item: itemView(item),
 		owned,
 		currency: economy.currencyName,

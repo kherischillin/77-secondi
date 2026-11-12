@@ -10,7 +10,7 @@
 	$effect(() => {
 		if (form?.errors) creating = true;
 	});
-	const empty = { name: '', description: '', category: '', slot: 'none', price: 0, forSale: true, stock: null, sellable: true, consumable: false, bonuses: [] };
+	const empty = { name: '', description: '', category: '', slot: 'none', price: 0, forSale: true, stock: null, shopId: null, sellable: true, consumable: false, bonuses: [] };
 </script>
 
 <svelte:head><title>Oggetti · Gestione</title></svelte:head>
@@ -27,7 +27,7 @@
 {#if creating}
 	<form method="post" enctype="multipart/form-data" class="stack card new" use:enhance>
 		<h2>Nuovo oggetto</h2>
-		<ItemForm values={empty} {errors} stats={data.names.stats} skills={data.names.skills} categories={data.categories} />
+		<ItemForm values={empty} {errors} stats={data.names.stats} skills={data.names.skills} categories={data.categories} shops={data.shops} />
 		<div><button type="submit">Crea oggetto</button></div>
 	</form>
 {/if}
@@ -37,7 +37,7 @@
 {:else}
 	<div class="table-wrap card">
 		<table>
-			<thead><tr><th>Oggetto</th><th>Categoria</th><th>Posizione</th><th class="num">Prezzo</th><th>Mercato</th></tr></thead>
+			<thead><tr><th>Oggetto</th><th>Negozio</th><th>Categoria</th><th>Posizione</th><th class="num">Prezzo</th><th>Mercato</th></tr></thead>
 			<tbody>
 				{#each data.items as it (it.id)}
 					<tr class:archived={it.archived}>
@@ -46,6 +46,7 @@
 							{#if it.archived}<span class="badge">archiviato</span>{/if}
 							{#if it.bonuses.length}<span class="bonus">{describeBonuses(it.bonuses, data.names.stats, data.names.skills)}</span>{/if}
 						</td>
+						<td>{data.shops.find((s) => s.id === it.shopId)?.name ?? '—'}</td>
 						<td>{it.category || '—'}</td>
 						<td>{isSlot(it.slot) ? SLOT_LABELS[it.slot] : it.slot}</td>
 						<td class="num">{it.price.toLocaleString('it-IT', { useGrouping: 'always' })}</td>

@@ -10,6 +10,7 @@
 		price: number;
 		forSale: boolean;
 		stock: number | null;
+		shopId?: number | null;
 		sellable: boolean;
 		consumable: boolean;
 		bonuses: ItemBonus[];
@@ -21,13 +22,15 @@
 		errors = {},
 		stats,
 		skills,
-		categories = []
+		categories = [],
+		shops = []
 	}: {
 		values: Values;
 		errors?: Record<string, string>;
 		stats: { id: number; name: string }[];
 		skills: { id: number; name: string }[];
 		categories?: string[];
+		shops?: { id: number; name: string; isOpen: boolean }[];
 	} = $props();
 
 	// Bonus esistenti più due righe vuote (al massimo 6).
@@ -41,6 +44,13 @@
 	<label for="name">Nome</label>
 	<input id="name" name="name" type="text" maxlength="60" required value={values.name} />
 	{#if errors.name}<p class="field-error">{errors.name}</p>{/if}
+</div>
+<div>
+	<label for="shopId">Negozio <span class="hint">dove si compra al mercato</span></label>
+	<select id="shopId" name="shopId" value={values.shopId ?? ''}>
+		<option value="">— Nessuno (Altri articoli) —</option>
+		{#each shops as s (s.id)}<option value={s.id}>{s.name}{s.isOpen ? '' : ' (chiuso)'}</option>{/each}
+	</select>
 </div>
 <div class="two">
 	<div>

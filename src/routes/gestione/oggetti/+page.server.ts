@@ -2,6 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { requireCapability, clientIp } from '#lib/server/guards.ts';
 import { createItem, listCatalog } from '#lib/server/items.ts';
+import { shopOptions } from '#lib/server/shops.ts';
 import { listSkills, listStats } from '#lib/server/sheet.ts';
 import { saveImage, UploadError } from '#lib/server/uploads.ts';
 import { getEconomy } from '#lib/server/settings.ts';
@@ -11,9 +12,10 @@ import { audit } from '#lib/server/audit.ts';
 
 export const load: PageServerLoad = async (event) => {
 	requireCapability(event, 'items.manage');
-	const [items, stats, skills, economy] = await Promise.all([listCatalog(), listStats(), listSkills(), getEconomy()]);
+	const [items, stats, skills, economy, shops] = await Promise.all([listCatalog(), listStats(), listSkills(), getEconomy(), shopOptions()]);
 	return {
 		items,
+		shops,
 		currency: economy.currencyName,
 		categories: [...new Set(items.map((i) => i.category).filter(Boolean))],
 		names: { stats: stats.map((s) => ({ id: s.id, name: s.name })), skills: skills.map((s) => ({ id: s.id, name: s.name })) }

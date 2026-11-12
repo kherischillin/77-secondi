@@ -1,5 +1,5 @@
 /**
- * Icone dei lavori liberi: piccoli disegni a linee su una griglia 24×24, colorati con il colore
+ * Icone di lavori e negozi: piccoli disegni a linee su una griglia 24×24, colorati con il colore
  * del testo (quindi seguono il tema). Ogni icona è un elenco di forme semplici: niente HTML.
  * Per aggiungerne una basta una nuova voce qui; si sceglie poi in Gestione → Lavori.
  */
@@ -90,6 +90,22 @@ export const JOB_ICONS = {
 	pen: {
 		label: 'Penna',
 		shapes: [{ d: 'M4 20l1-4L16 5l3 3L8 19z' }, { d: 'M14 7l3 3' }]
+	},
+	pistol: {
+		label: 'Pistola',
+		shapes: [{ d: 'M3 7h16l1 3h-6l-1 2h-3l-1.5 7H4l1.5-7L3 10z' }, { d: 'M10 12l.8 3H13' }, { d: 'M19 7V5.5' }]
+	},
+	shirt: {
+		label: 'Maglia',
+		shapes: [{ d: 'M8 3l-5 3 2 4 2.5-1V21h9V9l2.5 1 2-4-5-3c-.5 1.5-2 2.5-4 2.5S8.5 4.5 8 3z' }]
+	},
+	drop: {
+		label: 'Inchiostro',
+		shapes: [{ d: 'M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z' }, { d: 'M9.5 14.5a2.5 2.5 0 0 0 2.5 2.5' }]
+	},
+	syringe: {
+		label: 'Siringa',
+		shapes: [{ d: 'M18 2l4 4' }, { d: 'M20 4l-9.5 9.5' }, { d: 'M16.5 4.5l3 3L9 18l-3-3z' }, { d: 'M6 15l-3 3-1 4 4-1 3-3' }, { d: 'M12 9.5l1.5 1.5M10 11.5l1.5 1.5' }]
 	}
 } satisfies Record<string, { label: string; shapes: IconShape[] }>;
 

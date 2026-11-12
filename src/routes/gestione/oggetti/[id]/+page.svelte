@@ -23,7 +23,7 @@
 <div class="layout">
 	<form method="post" action="?/salva" enctype="multipart/form-data" class="stack card" use:enhance={() => async ({ update }) => update({ reset: false })}>
 		{#if it.imageUrl}<img class="preview" src={it.imageUrl} alt="" />{/if}
-		<ItemForm values={it} {errors} stats={data.names.stats} skills={data.names.skills} categories={data.categories} />
+		<ItemForm values={it} {errors} stats={data.names.stats} skills={data.names.skills} categories={data.categories} shops={data.shops} />
 		{#if it.imageUrl}<label class="checkbox"><input type="checkbox" name="removeImage" /><span>Rimuovi l'immagine</span></label>{/if}
 		<div><button type="submit">Salva</button></div>
 	</form>

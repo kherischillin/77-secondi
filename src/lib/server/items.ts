@@ -1,9 +1,10 @@
-import { and, asc, eq, sql } from 'drizzle-orm';
+import { and, asc, eq, isNull, sql } from 'drizzle-orm';
 import { db, schema } from './db/index.ts';
 import { canEquip, sellPrice, stacks, type ItemForm } from '../economy.ts';
 import { mediaUrl } from './uploads.ts';
 import { move } from './money.ts';
 import { findCharacterByName } from './money.ts';
+import { validShopId } from './shops.ts';
 
 /**
  * Oggetti: catalogo, inventario dei personaggi, equipaggiamento, mercato.
@@ -18,6 +19,7 @@ type ItemRow = typeof schema.items.$inferSelect;
 export function itemView(i: ItemRow) {
 	return {
 		id: i.id,
+		shopId: i.shopId,
 		name: i.name,
 		description: i.description,
 		imageUrl: mediaUrl(i.image),
@@ -50,11 +52,12 @@ export async function getItem(id: number) {
 }
 
 export async function createItem(data: ItemForm, image: string | null) {
-	const [i] = await db.insert(schema.items).values({ ...data, image }).returning();
+	const [i] = await db.insert(schema.items).values({ ...data, shopId: await validShopId(data.shopId), image }).returning();
 	return i;
 }
 
 export async function updateItem(id: number, data: Partial<ItemForm> & { archived?: boolean }, image?: string | null) {
+	if ('shopId' in data) data = { ...data, shopId: await validShopId(data.shopId) };
 	const [i] = await db
 		.update(schema.items)
 		.set(image === undefined ? data : { ...data, image })
@@ -237,20 +240,28 @@ export async function useItem(characterId: number, characterItemId: number) {
 // Mercato
 // ---------------------------------------------------------------------------
 
-export async function listMarket() {
+/** Oggetti in vendita in un negozio (`null` = quelli senza negozio, «Altri articoli»). */
+export async function listMarket(shopId: number | null) {
 	const rows = await db
 		.select()
 		.from(schema.items)
-		.where(and(eq(schema.items.forSale, true), eq(schema.items.archived, false)))
+		.where(
+			and(
+				eq(schema.items.forSale, true),
+				eq(schema.items.archived, false),
+				shopId === null ? isNull(schema.items.shopId) : eq(schema.items.shopId, shopId)
+			)
+		)
 		.orderBy(asc(schema.items.category), asc(schema.items.price), asc(schema.items.name));
 	return rows.map(itemView);
 }
 
-export async function buyItem(characterId: number, itemId: number, quantity: number) {
+/** Compra un oggetto nel negozio `shopId` (null = «Altri articoli»): deve essere in vendita proprio lì. */
+export async function buyItem(characterId: number, itemId: number, quantity: number, shopId: number | null) {
 	return db.transaction(async (tx) => {
 		// Blocca l'oggetto: l'ultima copia disponibile non può essere venduta a due persone.
 		const [item] = await tx.select().from(schema.items).where(eq(schema.items.id, itemId)).for('update');
-		if (!item || !item.forSale || item.archived) throw new ItemError('Questo oggetto non è in vendita.');
+		if (!item || !item.forSale || item.archived || item.shopId !== shopId) throw new ItemError('Questo oggetto non è in vendita qui.');
 		if (item.stock !== null && item.stock < quantity) {
 			throw new ItemError(item.stock === 0 ? 'Esaurito.' : `Ne restano solo ${item.stock}.`);
 		}

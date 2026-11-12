@@ -62,7 +62,7 @@ export function roomCost(hourlyPrice: number, hours: number): number {
 // Oggetti
 // ---------------------------------------------------------------------------
 
-export const ITEM_SLOTS = ['none', 'head', 'body', 'hands', 'legs', 'feet', 'weapon', 'accessory'] as const;
+export const ITEM_SLOTS = ['none', 'head', 'body', 'hands', 'legs', 'feet', 'weapon', 'accessory', 'implant'] as const;
 export type ItemSlot = (typeof ITEM_SLOTS)[number];
 
 export const SLOT_LABELS: Record<ItemSlot, string> = {
@@ -73,7 +73,8 @@ export const SLOT_LABELS: Record<ItemSlot, string> = {
 	legs: 'Gambe',
 	feet: 'Piedi',
 	weapon: 'Arma',
-	accessory: 'Accessorio'
+	accessory: 'Accessorio',
+	implant: 'Impianto cibernetico'
 };
 
 /** Quanti oggetti si possono indossare insieme in ogni posizione. */
@@ -85,7 +86,8 @@ export const SLOT_LIMITS: Record<ItemSlot, number> = {
 	legs: 1,
 	feet: 1,
 	weapon: 2,
-	accessory: 3
+	accessory: 3,
+	implant: 8
 };
 
 export function isSlot(v: string): v is ItemSlot {
@@ -149,6 +151,7 @@ export const itemFormSchema = z.object({
 	price: z.coerce.number().int('Solo numeri interi.').min(0, 'Il prezzo non può essere negativo.').max(MAX_AMOUNT),
 	forSale: z.boolean(),
 	stock: optionalInt(0, 1_000_000),
+	shopId: optionalInt(1, 2_000_000_000),
 	sellable: z.boolean(),
 	consumable: z.boolean(),
 	bonuses: z
@@ -181,6 +184,7 @@ export function readItemForm(form: FormData) {
 		price: form.get('price') || 0,
 		forSale: form.get('forSale') === 'on',
 		stock: form.get('stock'),
+		shopId: form.get('shopId'),
 		sellable: form.get('sellable') === 'on',
 		consumable: form.get('consumable') === 'on',
 		bonuses: readBonuses(form.getAll('bonusTarget').map(String), form.getAll('bonusValue').map(String))

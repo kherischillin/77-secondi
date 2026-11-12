@@ -14,6 +14,7 @@
 			{ href: '/gestione/gilde', label: 'Gilde', cap: 'guilds.manage' },
 			{ href: '/gestione/bacheche', label: 'Bacheche', cap: 'boards.manage' },
 			{ href: '/gestione/oggetti', label: 'Oggetti e mercato', cap: 'items.manage' },
+			{ href: '/gestione/negozi', label: 'Negozi', cap: 'items.manage' },
 			{ href: '/gestione/economia', label: 'Economia', cap: 'economy.manage' },
 			{ href: '/gestione/lavori', label: 'Lavori', cap: 'economy.manage' },
 			{ href: '/gestione/segnalazioni', label: 'Segnalazioni', cap: 'reports.handle' },
