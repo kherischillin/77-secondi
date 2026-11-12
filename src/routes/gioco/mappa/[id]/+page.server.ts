@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { requireCharacter } from '#lib/server/guards.ts';
-import { getMap, listDistricts, listLocations, mapDisplay, toLocationView, toMapView } from '#lib/server/world.ts';
+import { getLocation, getMap, listDistricts, listLocations, mapDisplay, toLocationView, toMapView } from '#lib/server/world.ts';
 import { enterMap, getPresence, listOnline } from '#lib/server/presence.ts';
 import { broadcastPresence } from '#lib/server/realtime.ts';
 import { bookedLocationIds } from '#lib/server/rooms.ts';
@@ -26,7 +26,11 @@ export const load: PageServerLoad = async (event) => {
 		people.set(c.locationId, list);
 	}
 	const booked = await bookedLocationIds(locations.filter((l) => l.isPrivate).map((l) => l.id));
+	// Rimandati qui da una stanza privata prenotata da altri (vedi gioco/luogo/[id]).
+	const blockedId = Number(event.url.searchParams.get('stanza-occupata'));
+	const blocked = Number.isInteger(blockedId) && blockedId > 0 ? await getLocation(blockedId) : null;
 	return {
+		roomWarning: blocked?.isPrivate ? `La stanza privata «${blocked.name}» è prenotata da un altro personaggio: si entra solo su invito di chi l'ha prenotata.` : null,
 		map: { ...toMapView(map), imageUrl: display.imageUrl },
 		crop: display.crop,
 		parent: display.parent,

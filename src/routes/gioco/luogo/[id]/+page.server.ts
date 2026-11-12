@@ -3,8 +3,8 @@ import { randomInt } from 'node:crypto';
 import { z } from 'zod';
 import type { Actions, PageServerLoad, RequestEvent } from './$types';
 import { requireCharacter, clientIp } from '#lib/server/guards.ts';
-import { getLocation, getMap, toLocationView } from '#lib/server/world.ts';
-import { enterLocation, listPresentAt } from '#lib/server/presence.ts';
+import { getLocation, getMap, getStartMap, toLocationView } from '#lib/server/world.ts';
+import { enterLocation, getPresence, listPresentAt } from '#lib/server/presence.ts';
 import { ChatError, characterPostTimes, loadHistory, postCheck, postMessage, postSystem, setHidden } from '#lib/server/chat-service.ts';
 import { currentScene, LEAD_OPTIONS, leadLabel, recordWindow } from '#lib/scene.ts';
 import { parseChatInput, type ChosenKind } from '#lib/chat.ts';
@@ -73,7 +73,13 @@ export const load: PageServerLoad = async (event) => {
 			}
 		: null;
 
-	// Stanza privata prenotata da altri (o libera): si mostra solo il modulo di prenotazione.
+	// Stanza privata prenotata da altri: chi non è invitato torna alla mappa con un avviso.
+	if (!access.allowed && access.booking) {
+		const presence = await getPresence(character.id);
+		const back = presence?.mapId && presence.mapId !== location.mapId ? presence.mapId : ((await getStartMap())?.id ?? location.mapId);
+		redirect(303, `/gioco/mappa/${back}?stanza-occupata=${location.id}`);
+	}
+	// Stanza privata libera: si mostra solo il modulo di prenotazione.
 	if (!access.allowed) {
 		return { locked: true as const, location: toLocationView(location), map: map ? { id: map.id, name: map.name } : null, weather, room };
 	}

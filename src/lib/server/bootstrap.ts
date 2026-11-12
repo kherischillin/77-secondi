@@ -57,6 +57,7 @@ export async function bootstrapDatabase(): Promise<void> {
 	await seedExampleRules();
 	await seedExampleItems();
 	await seedJobs();
+	await seedPrivateRooms();
 	await seedBoards();
 	await seedPages();
 
@@ -164,4 +165,37 @@ async function seedJobs() {
 		console.log('Lavori di esempio creati.');
 	}
 	await db.insert(schema.settings).values({ key: 'jobsSeeded', value: true }).onConflictDoNothing();
+}
+
+/**
+ * Al primo avvio crea 10 stanze private (10 all'ora, al massimo 10 ore per prenotazione),
+ * raccolte in una mappa senza immagine "Stanze private". Lo staff le può modificare o cancellare
+ * da Gestione → Mappe e luoghi. Si fa una volta sola.
+ */
+async function seedPrivateRooms() {
+	const [done] = await db.select().from(schema.settings).where(eq(schema.settings.key, 'privateRoomsSeeded'));
+	if (done) return;
+	const rooms: [string, string][] = [
+		['Suite all’ultimo piano', 'Una suite d’albergo con vista sulle torri. Tappeti spessi, luci soffuse, un minibar fin troppo fornito.'],
+		['Capsula-hotel', 'Una capsula per dormire in un alveare di cubicoli. Stretta, ma con la porta che si chiude a chiave.'],
+		['Appartamento in affitto', 'Un monolocale affittato a ore: un letto, un tavolo, una finestra che dà sul neon di fronte.'],
+		['Retro di un bar', 'La stanza dietro al bancone, tra casse di liquore e un tavolo da poker. La musica arriva attutita.'],
+		['Sala karaoke', 'Una saletta insonorizzata con divanetti di finta pelle e uno schermo che nessuno guarda.'],
+		['Saletta riservata di un club', 'Un privé sopraelevato dietro un vetro oscurato: si vede la pista, ma nessuno vede dentro.'],
+		['Garage abbandonato', 'Un box auto in disuso, odore d’olio e una saracinesca che si abbassa a metà.'],
+		['Magazzino al porto', 'Container accatastati e una sola lampada. Lontano da occhi e orecchie indiscrete.'],
+		['Ufficio sul tetto', 'Un ufficio vuoto in cima a un palazzo, con l’insegna che lampeggia fuori dalla finestra.'],
+		['Rifugio nei Badlands', 'Una baracca nel deserto fuori città. Polvere, silenzio e un generatore che ronza.']
+	];
+	await db.transaction(async (tx) => {
+		const [map] = await tx
+			.insert(schema.maps)
+			.values({ name: 'Stanze private', description: 'Chat private da prenotare a ore: entrano solo chi le prenota e i suoi invitati.', sortOrder: 100 })
+			.returning({ id: schema.maps.id });
+		await tx.insert(schema.locations).values(
+			rooms.map(([name, description], i) => ({ mapId: map.id, name, description, isPrivate: true, hourlyPrice: 10, maxHours: 10, sortOrder: i + 1 }))
+		);
+	});
+	console.log('Stanze private create.');
+	await db.insert(schema.settings).values({ key: 'privateRoomsSeeded', value: true }).onConflictDoNothing();
 }

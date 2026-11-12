@@ -45,6 +45,7 @@
 		</p>
 	{/if}
 </div>
+{#if data.roomWarning}<div class="alert error" role="alert">{data.roomWarning}</div>{/if}
 {#if data.map.description}<p class="description">{data.map.description}</p>{/if}
 
 <div class="layout">

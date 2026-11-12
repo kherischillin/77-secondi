@@ -15,7 +15,7 @@ export class RoomError extends Error {}
 type Location = typeof schema.locations.$inferSelect;
 type Booking = typeof schema.roomBookings.$inferSelect;
 
-export const MAX_INVITED = 20;
+export const MAX_INVITED = 200;
 
 export async function activeBooking(locationId: number, now = new Date()) {
 	const [b] = await db
