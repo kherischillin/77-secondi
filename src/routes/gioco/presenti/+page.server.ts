@@ -3,7 +3,7 @@ import { requireCharacter } from '#lib/server/guards.ts';
 import { listOnline } from '#lib/server/presence.ts';
 
 export const load: PageServerLoad = async (event) => {
-	const { user } = requireCharacter(event);
+	const { user, character } = requireCharacter(event);
 	const online = await listOnline();
 	const canModerate = user.capabilities.has('chat.moderate');
 
@@ -23,6 +23,7 @@ export const load: PageServerLoad = async (event) => {
 		groups.get(key)!.people.push(c);
 	}
 	return {
+		me: character.id,
 		total: online.length,
 		groups: [...groups.values()].sort((a, b) => (a.href === null ? 1 : b.href === null ? -1 : a.title.localeCompare(b.title)))
 	};

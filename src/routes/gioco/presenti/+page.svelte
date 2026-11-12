@@ -22,7 +22,20 @@
 				</h2>
 				<ul>
 					{#each g.people as p (p.characterId)}
-						<li><a href="/scheda/{p.characterId}"><Avatar src={p.avatarUrl} name={p.name} size={30} /> {fullName(p)}</a>{#if p.jobName} <JobIcon icon={p.jobIcon} title={p.jobName} size={15} />{/if}</li>
+						<li>
+							{#if p.characterId !== data.me}
+								<a class="mail" href="/missive/nuova?a={encodeURIComponent(fullName(p))}" title="Scrivi una missiva a {fullName(p)}" aria-label="Scrivi una missiva a {fullName(p)}">
+									<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+										<rect x="3" y="5" width="18" height="14" rx="2" />
+										<path d="M3.5 6.5 12 13l8.5-6.5" />
+									</svg>
+								</a>
+							{:else}
+								<span class="mail-slot" aria-hidden="true"></span>
+							{/if}
+							<a class="who" href="/scheda/{p.characterId}"><Avatar src={p.avatarUrl} name={p.name} size={30} /><span>{fullName(p)}</span></a>
+							{#if p.jobName}<JobIcon icon={p.jobIcon} title={p.jobName} size={16} />{/if}
+						</li>
 					{/each}
 				</ul>
 			</section>
@@ -48,10 +61,41 @@
 		display: grid;
 		gap: 0.4rem;
 	}
-	li a {
+	/* Una riga per personaggio: missiva · avatar · nome · lavoro, tutto centrato in verticale. */
+	li {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+	.who {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.55rem;
 		text-decoration: none;
+		min-width: 0;
+	}
+	.who span {
+		line-height: 1.2;
+	}
+	.mail,
+	.mail-slot {
+		flex: 0 0 28px;
+		width: 28px;
+		height: 28px;
+	}
+	.mail {
+		display: grid;
+		place-items: center;
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		color: var(--accent);
+	}
+	.mail:hover,
+	.mail:focus-visible {
+		border-color: var(--accent);
+		background: var(--bg-sunken);
+	}
+	li > :global(.job-icon) {
+		vertical-align: middle;
 	}
 </style>
