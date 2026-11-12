@@ -1,4 +1,5 @@
 import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
+import { equippedBonus } from '../economy.ts';
 import { db, schema } from './db/index.ts';
 import {
 	skillRaiseCost,
@@ -256,7 +257,18 @@ export async function resetAllocation(characterId: number) {
 }
 
 /** Valori usati in una prova: caratteristica e rango dell'abilità scelta. */
+/** Oggetti equipaggiati con i loro bonus (per le prove in quest). */
+async function equippedItems(characterId: number) {
+	return db
+		.select({ name: schema.items.name, bonuses: schema.items.bonuses })
+		.from(schema.characterItems)
+		.innerJoin(schema.items, eq(schema.characterItems.itemId, schema.items.id))
+		.where(and(eq(schema.characterItems.characterId, characterId), eq(schema.characterItems.equipped, true)));
+}
+
+/** Valori per una prova: caratteristica, rango e bonus degli oggetti equipaggiati. */
 export async function checkValues(characterId: number, target: { skillId: number } | { statId: number }) {
+	const equipped = await equippedItems(characterId);
 	if ('skillId' in target) {
 		const [skill] = await db.select().from(schema.skills).where(eq(schema.skills.id, target.skillId));
 		if (!skill) return null;
@@ -273,7 +285,8 @@ export async function checkValues(characterId: number, target: { skillId: number
 				.where(and(eq(schema.characterStats.characterId, characterId), eq(schema.characterStats.statId, skill.statId)));
 			if (s) stat = { name: s.name, value: v?.value ?? s.minValue };
 		}
-		return { stat, skill: { name: skill.name, rank: rankRow?.rank ?? 0 } };
+		const bonus = equippedBonus(equipped, { statId: skill.statId, skillId: skill.id });
+		return { stat, skill: { name: skill.name, rank: rankRow?.rank ?? 0 }, bonus: bonus.value ? bonus : null };
 	}
 	const [s] = await db.select().from(schema.stats).where(eq(schema.stats.id, target.statId));
 	if (!s) return null;
@@ -281,7 +294,8 @@ export async function checkValues(characterId: number, target: { skillId: number
 		.select()
 		.from(schema.characterStats)
 		.where(and(eq(schema.characterStats.characterId, characterId), eq(schema.characterStats.statId, s.id)));
-	return { stat: { name: s.name, value: v?.value ?? s.minValue }, skill: null };
+	const bonus = equippedBonus(equipped, { statId: s.id, skillId: null });
+	return { stat: { name: s.name, value: v?.value ?? s.minValue }, skill: null, bonus: bonus.value ? bonus : null };
 }
 
 /** Nomi dei personaggi (per i moduli di assegnazione PX). */

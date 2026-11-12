@@ -3,17 +3,20 @@ import { requireCharacter } from '#lib/server/guards.ts';
 import { listOnline } from '#lib/server/presence.ts';
 
 export const load: PageServerLoad = async (event) => {
-	requireCharacter(event);
+	const { user } = requireCharacter(event);
 	const online = await listOnline();
+	const canModerate = user.capabilities.has('chat.moderate');
 
 	// Raggruppati per luogo; chi è sulla mappa finisce in "In giro".
 	const groups = new Map<string, { title: string; href: string | null; people: typeof online }>();
 	for (const c of online) {
-		const key = c.locationId ? `l${c.locationId}` : 'giro';
+		// Chi è in una stanza privata non si mostra dove (solo i moderatori lo vedono).
+		const hidden = c.locationPrivate && !canModerate;
+		const key = hidden ? 'privata' : c.locationId ? `l${c.locationId}` : 'giro';
 		if (!groups.has(key)) {
 			groups.set(key, {
-				title: c.locationName ? `${c.locationName}${c.mapName ? ` · ${c.mapName}` : ''}` : 'In giro per le mappe',
-				href: c.locationId ? `/gioco/luogo/${c.locationId}` : null,
+				title: hidden ? 'In una stanza privata' : c.locationName ? `${c.locationName}${c.mapName ? ` · ${c.mapName}` : ''}` : 'In giro per le mappe',
+				href: !hidden && c.locationId ? `/gioco/luogo/${c.locationId}` : null,
 				people: []
 			});
 		}

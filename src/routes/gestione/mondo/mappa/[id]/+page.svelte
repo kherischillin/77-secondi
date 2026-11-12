@@ -2,6 +2,8 @@
 	import { enhance } from '$app/forms';
 	import type { PageProps } from './$types';
 	import MapCanvas from '#lib/components/MapCanvas.svelte';
+	import { CLIMATES, CLIMATE_LABELS } from '#lib/weather.ts';
+	import { formatDateTime } from '#lib/format.ts';
 
 	let { data, form }: PageProps = $props();
 	let confirmDelete = $state(false);
@@ -97,7 +99,46 @@
 				<input type="checkbox" name="isStart" checked={data.map.isStart} disabled={data.map.isStart} />
 				<span>Mappa di partenza</span>
 			</label>
+			<div>
+				<label for="climate">Clima <span class="hint">decide il meteo automatico di questa mappa e dei suoi luoghi</span></label>
+				<select id="climate" name="climate" value={data.map.climate ?? ''}>
+					<option value="">Nessun meteo</option>
+					{#each CLIMATES as c (c)}<option value={c}>{CLIMATE_LABELS[c]}</option>{/each}
+				</select>
+			</div>
 			<div><button type="submit">Salva mappa</button></div>
+		</form>
+
+		<h2>Meteo</h2>
+		<form method="post" action="?/meteo" class="stack card" use:enhance={() => async ({ update }) => update({ reset: false })}>
+			{#if data.weather}
+				<p class="muted">
+					Adesso: <span aria-hidden="true">{data.weather.icon}</span> {data.weather.label}{#if data.weather.temperature !== null}, {data.weather.temperature}°C{/if}
+					· {data.weather.moon.name}
+					{#if data.weather.manual && data.map.weatherOverrideUntil}(deciso dallo staff fino al {formatDateTime(data.map.weatherOverrideUntil)}){/if}
+				</p>
+			{/if}
+			<div>
+				<label for="weatherText">Meteo speciale <span class="hint">es. "Tempesta di sabbia", "Pioggia acida": sostituisce quello automatico</span></label>
+				<input id="weatherText" name="text" type="text" maxlength="80" value={data.weather?.manual ? data.map.weatherOverride : ''} />
+				{#if errors.text}<p class="field-error">{errors.text}</p>{/if}
+			</div>
+			<div>
+				<label for="weatherHours">Per quante ore</label>
+				<select id="weatherHours" name="hours">
+					<option value="1">1 ora</option>
+					<option value="3" selected>3 ore</option>
+					<option value="6">6 ore</option>
+					<option value="12">12 ore</option>
+					<option value="24">1 giorno</option>
+					<option value="72">3 giorni</option>
+				</select>
+			</div>
+			<div class="row">
+				<button type="submit">Imposta</button>
+				{#if data.weather?.manual}<button type="submit" class="secondary" name="reset" value="1" formnovalidate>Torna al meteo automatico</button>{/if}
+			</div>
+			{#if form && 'action' in form && form.action === 'meteo' && 'success' in form}<p class="muted">{form.success}</p>{/if}
 		</form>
 
 		<section class="danger-zone">

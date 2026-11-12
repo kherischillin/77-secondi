@@ -1,5 +1,5 @@
 import { randomInt } from 'node:crypto';
-import { and, desc, eq, gt, isNull, lt, or, sql, type SQL } from 'drizzle-orm';
+import { and, desc, eq, gt, gte, isNull, lt, or, sql, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { db, schema } from './db/index.ts';
 import { rollDice, type ChatMessageView, type ParsedMessage } from '../chat.ts';
@@ -12,7 +12,12 @@ import { fullName } from '../format.ts';
 export const HISTORY_PAGE = 50;
 
 /** Chi sta guardando la chat: serve a decidere cosa può vedere. */
-export type Viewer = { characterId: number; canModerate: boolean };
+export type Viewer = {
+	characterId: number;
+	canModerate: boolean;
+	/** Stanze private: si leggono solo i messaggi della prenotazione in corso. */
+	since?: Date | null;
+};
 
 const sender = alias(schema.characters, 'sender');
 const recipient = alias(schema.characters, 'recipient');
@@ -59,7 +64,8 @@ function visibleTo(viewer: Viewer): SQL {
 		eq(schema.chatMessages.characterId, viewer.characterId),
 		eq(schema.chatMessages.recipientCharacterId, viewer.characterId)
 	)!;
-	return viewer.canModerate ? whisperOk : and(whisperOk, isNull(schema.chatMessages.deletedAt))!;
+	const sinceOk = viewer.since ? gte(schema.chatMessages.createdAt, viewer.since) : undefined;
+	return viewer.canModerate ? and(whisperOk, sinceOk)! : and(whisperOk, isNull(schema.chatMessages.deletedAt), sinceOk)!;
 }
 
 /** Ultimi messaggi del luogo (o quelli prima di un certo id, per "carica precedenti"). */
@@ -111,6 +117,11 @@ export type Author = {
 
 /** Contesto di gioco: quest in corso e regole (il gioco libero è descrittivo). */
 export type PlayContext = { questId: number | null; diceOutsideQuest: boolean };
+
+/** Il personaggio può scrivere adesso? (senza contare il tentativo) */
+export function canPostNow(characterId: number) {
+	return !postLimiter.isLimited(String(characterId));
+}
 
 function checkRate(characterId: number) {
 	const key = String(characterId);
@@ -188,6 +199,28 @@ export async function postCheck(locationId: number, author: Author, questId: num
 		kind: 'check',
 		body: describeCheck(check),
 		meta: { check }
+	});
+}
+
+/** Un personaggio usa o mostra un oggetto in chat (con un'azione facoltativa). */
+export async function postItemUse(
+	locationId: number,
+	author: Author,
+	questId: number | null,
+	item: { id: number; name: string; description: string; consumed: boolean },
+	text: string,
+	tag: string | null
+) {
+	checkRate(author.characterId);
+	return insertAndPublish({
+		locationId,
+		characterId: author.characterId,
+		authorUserId: author.userId,
+		questId,
+		kind: 'item',
+		tag,
+		body: text,
+		meta: { item }
 	});
 }
 

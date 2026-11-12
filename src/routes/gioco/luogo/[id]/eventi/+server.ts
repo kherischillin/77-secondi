@@ -16,7 +16,7 @@ export const GET: RequestHandler = async (event) => {
 	const ctx = await resolvePlayableLocation(event);
 	if ('error' in ctx) return new Response(null, { status: ctx.error });
 
-	const { character, location, canModerate } = ctx;
+	const { character, location, canModerate, since } = ctx;
 	const encoder = new TextEncoder();
 	let cleanup = () => {};
 
@@ -38,13 +38,25 @@ export const GET: RequestHandler = async (event) => {
 			// Il browser riprova da solo dopo 3 secondi se la connessione cade.
 			write('retry: 3000\n\n');
 
-			const unsubscribe = subscribe(location.id, { characterId: character.id, canModerate, send });
+			const unsubscribe = subscribe(location.id, {
+				characterId: character.id,
+				canModerate,
+				send,
+				close: () => {
+					cleanup();
+					try {
+						controller.close();
+					} catch {
+						// già chiuso
+					}
+				}
+			});
 			await enterLocation(character.id, location.mapId, location.id);
 
 			// Riconnessione: recupera i messaggi persi nel frattempo.
 			const lastId = Number(event.request.headers.get('last-event-id'));
 			if (Number.isInteger(lastId) && lastId > 0) {
-				for (const m of await loadSince(location.id, { characterId: character.id, canModerate }, lastId)) {
+				for (const m of await loadSince(location.id, { characterId: character.id, canModerate, since }, lastId)) {
 					send('message', m, m.id);
 				}
 			}

@@ -11,6 +11,7 @@ import { sql } from 'drizzle-orm';
 import {
 	bigint,
 	boolean,
+	check,
 	index,
 	integer,
 	jsonb,
@@ -70,6 +71,10 @@ export const characters = pgTable(
 		statsAllocated: boolean('stats_allocated').notNull().default(false),
 		/** Punti esperienza già spesi per migliorare il personaggio. */
 		xpSpent: integer('xp_spent').notNull().default(0),
+		/** Denaro in tasca (contanti). */
+		money: integer('money').notNull().default(0),
+		/** Denaro sul conto in banca. */
+		bank: integer('bank').notNull().default(0),
 		createdAt: createdAt(),
 		lastPlayedAt: timestamp('last_played_at', { withTimezone: true }),
 		/** Cancellazione "morbida": il PG sparisce dal gioco ma resta nei log e nelle giocate. */
@@ -77,7 +82,9 @@ export const characters = pgTable(
 	},
 	(t) => [
 		uniqueIndex('characters_name_lower_idx').on(sql`lower(${t.name})`),
-		index('characters_user_idx').on(t.userId)
+		index('characters_user_idx').on(t.userId),
+		// Il denaro non può mai andare sotto zero, nemmeno con due richieste simultanee.
+		check('characters_money_nonneg', sql`${t.money} >= 0 and ${t.bank} >= 0`)
 	]
 );
 
@@ -174,6 +181,11 @@ export const maps = pgTable('maps', {
 	/** La mappa su cui arrivano i personaggi al primo ingresso. */
 	isStart: boolean('is_start').notNull().default(false),
 	sortOrder: integer('sort_order').notNull().default(0),
+	/** Clima usato per il meteo automatico (vedi src/lib/weather.ts); null = nessun meteo. */
+	climate: text('climate'),
+	/** Meteo deciso a mano dallo staff (es. "Tempesta di sabbia"), valido fino a weatherOverrideUntil. */
+	weatherOverride: text('weather_override'),
+	weatherOverrideUntil: timestamp('weather_override_until', { withTimezone: true }),
 	createdAt: createdAt()
 });
 
@@ -198,6 +210,12 @@ export const locations = pgTable(
 		y: real('y'),
 		isActive: boolean('is_active').notNull().default(true),
 		sortOrder: integer('sort_order').notNull().default(0),
+		/** Stanza privata: si entra solo prenotandola (o su invito di chi l'ha prenotata). */
+		isPrivate: boolean('is_private').notNull().default(false),
+		/** Costo di un'ora di prenotazione (0 = gratis). */
+		hourlyPrice: integer('hourly_price').notNull().default(0),
+		/** Ore massime per prenotazione. */
+		maxHours: integer('max_hours').notNull().default(4),
 		createdAt: createdAt()
 	},
 	(t) => [index('locations_map_idx').on(t.mapId)]
@@ -215,7 +233,7 @@ export const chatMessages = pgTable(
 		characterId: integer('character_id').references(() => characters.id, { onDelete: 'set null' }),
 		/** Account che ha scritto: resta tracciato anche per i messaggi Master e PNG. */
 		authorUserId: integer('author_user_id').references(() => users.id, { onDelete: 'set null' }),
-		kind: text('kind', { enum: ['action', 'whisper', 'master', 'npc', 'dice', 'check', 'system'] }).notNull(),
+		kind: text('kind', { enum: ['action', 'whisper', 'master', 'npc', 'dice', 'check', 'system', 'item'] }).notNull(),
 		/** Quest in corso quando il messaggio è stato scritto (per le giocate e i PX). */
 		questId: integer('quest_id').references((): AnyPgColumn => quests.id, { onDelete: 'set null' }),
 		/** Tag di posizione dentro il luogo, es. "TAVOLO VERDE". */
@@ -425,7 +443,9 @@ export const guildRanks = pgTable(
 		name: text('name').notNull(),
 		level: integer('level').notNull(),
 		/** I membri con questo grado possono gestire la gilda (accettare, promuovere, espellere chi sta sotto). */
-		canManage: boolean('can_manage').notNull().default(false)
+		canManage: boolean('can_manage').notNull().default(false),
+		/** Stipendio versato in banca a ogni periodo (impostato dallo staff). */
+		salary: integer('salary').notNull().default(0)
 	},
 	(t) => [index('guild_ranks_guild_idx').on(t.guildId)]
 );
@@ -442,7 +462,9 @@ export const guildMembers = pgTable(
 		rankId: integer('rank_id')
 			.notNull()
 			.references(() => guildRanks.id, { onDelete: 'restrict' }),
-		joinedAt: timestamp('joined_at', { withTimezone: true }).notNull().defaultNow()
+		joinedAt: timestamp('joined_at', { withTimezone: true }).notNull().defaultNow(),
+		/** Ultimo stipendio ritirato per questa gilda. */
+		lastSalaryAt: timestamp('last_salary_at', { withTimezone: true })
 	},
 	(t) => [primaryKey({ columns: [t.guildId, t.characterId] }), index('guild_members_character_idx').on(t.characterId)]
 );
@@ -638,3 +660,106 @@ export type Quest = typeof quests.$inferSelect;
 export type Guild = typeof guilds.$inferSelect;
 export type GuildRank = typeof guildRanks.$inferSelect;
 export type Board = typeof boards.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// Economia: oggetti, inventario, denaro, stanze private
+// ---------------------------------------------------------------------------
+
+/** Bonus di un oggetto equipaggiato: si somma alle prove in quest su quella caratteristica o abilità. */
+export type ItemBonus = { statId?: number; skillId?: number; value: number };
+
+/** Catalogo degli oggetti, definito dallo staff. */
+export const items = pgTable(
+	'items',
+	{
+		id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+		name: text('name').notNull(),
+		description: text('description').notNull().default(''),
+		image: text('image'),
+		/** Categoria libera (es. "Armi", "Abiti", "Medicinali"): raggruppa il mercato. */
+		category: text('category').notNull().default(''),
+		/** Dove si indossa (vedi ITEM_SLOTS in src/lib/economy.ts); "none" = non si equipaggia. */
+		slot: text('slot').notNull().default('none'),
+		price: integer('price').notNull().default(0),
+		/** In vendita al mercato. */
+		forSale: boolean('for_sale').notNull().default(false),
+		/** Pezzi disponibili al mercato (null = illimitati). */
+		stock: integer('stock'),
+		/** Si può rivendere al mercato. */
+		sellable: boolean('sellable').notNull().default(true),
+		/** Si consuma usandolo (es. una pozione, un medikit). */
+		consumable: boolean('consumable').notNull().default(false),
+		bonuses: jsonb('bonuses').$type<ItemBonus[]>().notNull().default([]),
+		/** Archiviato: non si vende né si assegna più, ma resta a chi lo possiede. */
+		archived: boolean('archived').notNull().default(false),
+		createdAt: createdAt()
+	},
+	(t) => [check('items_stock_nonneg', sql`${t.stock} is null or ${t.stock} >= 0`)]
+);
+
+/**
+ * Oggetti posseduti. Gli oggetti da equipaggiare hanno una riga per pezzo (quantità 1);
+ * gli altri si accumulano in una sola riga con la quantità.
+ */
+export const characterItems = pgTable(
+	'character_items',
+	{
+		id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+		characterId: integer('character_id')
+			.notNull()
+			.references(() => characters.id, { onDelete: 'cascade' }),
+		itemId: integer('item_id')
+			.notNull()
+			.references(() => items.id, { onDelete: 'cascade' }),
+		quantity: integer('quantity').notNull().default(1),
+		equipped: boolean('equipped').notNull().default(false),
+		acquiredAt: timestamp('acquired_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(t) => [
+		index('character_items_character_idx').on(t.characterId),
+		check('character_items_quantity_pos', sql`${t.quantity} > 0`)
+	]
+);
+
+/** Movimenti di denaro: ogni variazione di contanti o conto lascia una riga. */
+export const moneyLog = pgTable(
+	'money_log',
+	{
+		id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+		characterId: integer('character_id')
+			.notNull()
+			.references(() => characters.id, { onDelete: 'cascade' }),
+		/** Variazione (negativa se il denaro esce). */
+		amount: integer('amount').notNull(),
+		account: text('account', { enum: ['cash', 'bank'] }).notNull(),
+		kind: text('kind', {
+			enum: ['start', 'deposit', 'withdraw', 'transfer_in', 'transfer_out', 'salary', 'purchase', 'sale', 'staff', 'room']
+		}).notNull(),
+		counterpartyCharacterId: integer('counterparty_character_id').references(() => characters.id, { onDelete: 'set null' }),
+		note: text('note').notNull().default(''),
+		createdAt: createdAt()
+	},
+	(t) => [index('money_log_character_idx').on(t.characterId, t.id)]
+);
+
+/** Prenotazioni delle stanze private. */
+export const roomBookings = pgTable(
+	'room_bookings',
+	{
+		id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+		locationId: integer('location_id')
+			.notNull()
+			.references(() => locations.id, { onDelete: 'cascade' }),
+		ownerCharacterId: integer('owner_character_id')
+			.notNull()
+			.references(() => characters.id, { onDelete: 'cascade' }),
+		invitedIds: integer('invited_ids')
+			.array()
+			.notNull()
+			.default(sql`'{}'::int[]`),
+		startsAt: timestamp('starts_at', { withTimezone: true }).notNull().defaultNow(),
+		endsAt: timestamp('ends_at', { withTimezone: true }).notNull(),
+		createdAt: createdAt()
+	},
+	(t) => [index('room_bookings_location_idx').on(t.locationId, t.endsAt)]
+);

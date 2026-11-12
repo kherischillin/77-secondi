@@ -19,10 +19,11 @@ Il proprietario del progetto non programma: tutto il codice lo scrive Claude. Sp
 - Sistema di gioco **ibrido** (scelta del proprietario): descrittivo nel gioco libero, numerico solo nelle quest. Prove e dadi liberi sono validati sul server in base alla quest attiva (`getActiveQuest`); `rules.diceOutsideQuest` decide i dadi fuori quest.
 - Regole numeriche in `src/lib/rules.ts` (pure, testate) + impostazioni sotto la chiave `rules` nella tabella settings (`getRules`/`updateRules`). Caratteristiche e abilità sono righe del DB, mai colonne fisse.
 - PX: registro `xp_awards` (anche negativi) + `characters.xp_spent`. Nessuno assegna PX ai propri personaggi; `claimXpAward` impedisce la doppia assegnazione di una quest.
-- Gli oggetti sono rimandati alla fase dell'economia (mercato, inventario).
 - Social: permessi di bacheche e gerarchia di gilda sono funzioni pure in `src/lib/social.ts` (`boardAccess`, `canActOnMember`, `canAssignRank`), usate sia dal server sia dall'interfaccia. Una bacheca/discussione/missiva non accessibile risponde 404, non 403.
 - Missive tra personaggi (non account), con `onGame` sulla conversazione. Bacheche ON GAME firmate dal personaggio attivo, OFF GAME dall'account.
 - Strumenti master: logica pura in `src/lib/master.ts` (`judgeCheck`, `giocataMessages`, `renderGiocataHtml`). Esiti (`esiti.manage`), giocate come copia JSON dei messaggi senza sussurri/nascosti (`giocate.review`, PX atomici in `reviewGiocata`), segnalazioni con copia del contenuto verificando che il segnalante lo veda (`reports.handle`). Spazio `/master`, contatori nell'intestazione da `+layout.server.ts`.
+- Economia: logica pura in `src/lib/economy.ts` (valuta, rivendita, stipendi, posizioni e bonus degli oggetti) e `src/lib/weather.ts` (meteo deterministico per mappa + fasi lunari), impostazioni sotto la chiave `economy`. Il denaro si muove solo con `move()` di `src/lib/server/money.ts` (UPDATE condizionato + riga in `money_log`, vincolo CHECK ≥ 0); oggetti in `src/lib/server/items.ts` (impilati se non si indossano). I bonus degli oggetti indossati entrano in `checkValues` (solo prove in quest/esiti).
+- Stanze private: `roomAccess()` in `src/lib/server/rooms.ts` decide accesso e `since` (si leggono solo i messaggi della prenotazione in corso); controllata in load, azioni, eventi e storico. `disconnect()` del realtime butta fuori chi perde l'accesso.
 - Gilde create dallo staff (`guilds.manage`) con gradi predefiniti e bacheca di gilda; il livello del grado decide la gerarchia.
 
 ## Verifiche prima di consegnare
@@ -34,5 +35,5 @@ Il proprietario del progetto non programma: tutto il codice lo scrive Claude. Sp
 3. ✅ Scheda e regole (sistema ibrido, caratteristiche e abilità dinamiche, quest, prove, PX). Oggetti spostati alla fase 6.
 4. ✅ Social (missive ON/OFF, bacheche con sezioni e visibilità, gilde con gradi e candidature).
 5. ✅ Strumenti master (esiti con prove, giocate registrate e revisionate, segnalazioni allo staff).
-6. Economia ed extra (oggetti e inventario, banca, mercato, stanze private, meteo).
+6. ✅ Economia ed extra (oggetti e inventario, banca, mercato, stipendi, stanze private, meteo).
 7. Importatore da GDRCD, documentazione, temi.

@@ -133,6 +133,21 @@ Invio manda il messaggio, Maiusc+Invio va a capo. Accanto alla chat c'è l'elenc
 
 > **Se avevi già avviato il gioco prima di questo aggiornamento:** i ruoli esistenti non ricevono da soli i nuovi permessi. Vai in **Gestione → Ruoli** e aggiungi al ruolo **Master** i permessi "Rispondere alle richieste di esito" e "Rivedere le giocate registrate e leggerle tutte", e al ruolo **Moderatore** "Gestire le segnalazioni dei giocatori". L'Amministratore li ha già tutti.
 
+## Cosa c'è nella fase 6 (economia ed extra)
+
+- **Denaro**: ogni personaggio ha contanti (in tasca) e un conto in banca. Nome della valuta, denaro iniziale, percentuale di rivendita e frequenza degli stipendi si scelgono in **Gestione → Economia**.
+- **Banca** (barra di gioco → Banca): deposito, prelievo, bonifici ad altri personaggi con causale, storico di tutti i movimenti.
+- **Stipendi**: lo staff assegna uno stipendio ai gradi di gilda (Gestione → Economia); i membri lo ritirano in banca una volta per periodo.
+- **Oggetti** (Gestione → Oggetti e mercato): catalogo con immagine, categoria, posizione in cui si indossano, prezzo, pezzi disponibili e **bonus nelle quest** (anche malus). Al primo avvio ci sono 5 oggetti di esempio.
+- **Inventario**: indossare e togliere, cedere oggetti ad altri personaggi. Ciò che si indossa compare nella scheda (è la parte che si vede in gioco) e i suoi bonus entrano nelle prove **solo in quest**, come vuole il sistema ibrido.
+- **Mercato**: compra (in contanti) e rivendi, con filtri per categoria e pezzi che si esauriscono.
+- **Usa un oggetto** in chat: compare come riga speciale con la tua azione; i consumabili (es. Medikit) si esauriscono.
+- **Stanze private**: in Gestione → Mappe, su un luogo spunta "Stanza privata" e scegli costo orario e ore massime. Chi la prenota invita gli altri per nome, può ritirare l'invito (chi è dentro viene fatto uscire subito), prolungare o liberare la stanza. Gli altri non entrano né leggono, nei Presenti compare solo "In una stanza privata", e chi prenota dopo non legge le giocate precedenti.
+- **Meteo**: in Gestione → Mappe scegli il clima di ogni mappa (temperato, mediterraneo, continentale, arido, tropicale, polare). Il meteo cambia da solo ogni 3 ore, segue stagioni e ora del giorno ed è uguale per tutti; c'è anche la fase lunare. Lo staff può imporre un meteo speciale per qualche ora (es. "Pioggia acida").
+- Tutti i passaggi di denaro e di oggetti sono a prova di "doppio clic": due richieste simultanee non possono spendere due volte lo stesso denaro, superare i pezzi disponibili o ritirare due volte lo stipendio. Nessuno può darsi denaro od oggetti da solo.
+
+> **Se avevi già avviato il gioco prima di questo aggiornamento:** al ruolo **Master** aggiungi da **Gestione → Ruoli** il permesso "Consegnare oggetti ai personaggi". I personaggi già esistenti partono con 0 contanti: puoi dare loro del denaro da Gestione → Economia.
+
 ---
 
 ## Per sviluppatori

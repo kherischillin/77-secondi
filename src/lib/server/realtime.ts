@@ -16,6 +16,8 @@ export type Subscriber = {
 	characterId: number;
 	canModerate: boolean;
 	send: (event: string, data: unknown, id?: number) => void;
+	/** Chiude la connessione (es. chi non può più stare in una stanza privata). */
+	close?: () => void;
 };
 
 const channels = new Map<number, Set<Subscriber>>();
@@ -70,6 +72,19 @@ export async function broadcastPresence(locationId: number) {
 /** Il luogo è stato modificato (descrizione, nome) o eliminato: i browser ricaricano i dati. */
 export function broadcastLocationChanged(locationId: number) {
 	for (const s of channels.get(locationId) ?? []) s.send('location', { id: locationId });
+}
+
+/**
+ * Chiude le connessioni di chi non deve più ricevere i messaggi del luogo
+ * (invito ritirato, nuova prenotazione di una stanza privata). Il browser ricarica e
+ * il server ricontrolla chi può entrare.
+ */
+export function disconnect(locationId: number, which: (characterId: number) => boolean = () => true) {
+	for (const s of [...(channels.get(locationId) ?? [])]) {
+		if (!which(s.characterId)) continue;
+		s.send('closed', { locationId });
+		s.close?.();
+	}
 }
 
 /** Una quest è iniziata o finita nel luogo: i browser ricaricano lo stato (avviso, strumenti numerici). */

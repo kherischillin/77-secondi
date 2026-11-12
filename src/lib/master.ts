@@ -52,7 +52,7 @@ export function giocataParticipants(messages: ChatMessageView[]) {
 	const masters = new Map<number, string>();
 	for (const m of messages) {
 		if (!m.characterId || !m.characterName) continue;
-		if (m.kind === 'action' || m.kind === 'check' || m.kind === 'dice') players.set(m.characterId, m.characterName);
+		if (m.kind === 'action' || m.kind === 'check' || m.kind === 'dice' || m.kind === 'item') players.set(m.characterId, m.characterName);
 		else if (m.kind === 'master' || m.kind === 'npc') masters.set(m.characterId, m.characterName);
 	}
 	for (const id of players.keys()) masters.delete(id);
@@ -93,6 +93,11 @@ function lineHtml(m: ChatMessageView): string {
 		case 'system':
 			who = '<strong class="system">QUEST</strong>';
 			break;
+		case 'item': {
+			const item = m.meta?.item;
+			who = `<strong>${escapeHtml(m.characterName ?? 'Qualcuno')}</strong> ${item?.consumed ? 'usa' : 'mostra'} <em>${escapeHtml(item?.name ?? 'un oggetto')}</em>`;
+			break;
+		}
 		default:
 			who = `<strong>${escapeHtml(m.characterName ?? 'Qualcuno')}</strong>`;
 	}
@@ -113,7 +118,7 @@ h1{margin-bottom:.2rem}.meta{color:#6b5f4f;margin-top:0}
 q{quotes:none;font-style:italic;color:#7a4b12}
 .master{color:#a02c2c}.line.master{border-color:#a02c2c;background:#f3e2df}
 .line.npc{border-color:#4f7a48}.line.system{border-color:#6a4c93;text-align:center;background:#ece6f3}
-.line.check,.line.dice{border-color:#b8862e}
+.line.check,.line.dice{border-color:#b8862e}.line.item{border-color:#4f8a6a}
 </style></head><body>
 <h1>${escapeHtml(g.title)}</h1>
 <p class="meta">${escapeHtml(g.locationName)} · dal ${date(g.fromAt)} al ${date(g.toAt)} · ${escapeHtml(g.siteName)}</p>

@@ -19,7 +19,9 @@ export const CAPABILITY_GROUPS = [
 			'boards.manage': 'Creare e modificare le bacheche',
 			'boards.moderate': 'Moderare le bacheche (nascondere, bloccare, fissare) e leggere quelle dello staff',
 			'guilds.manage': 'Creare le gilde e gestirle tutte',
-			'reports.handle': 'Gestire le segnalazioni dei giocatori'
+			'reports.handle': 'Gestire le segnalazioni dei giocatori',
+			'economy.manage': 'Gestire l’economia (valuta, stipendi, correzioni del denaro)',
+			'items.manage': 'Gestire il catalogo degli oggetti e il mercato'
 		}
 	},
 	{
@@ -32,7 +34,8 @@ export const CAPABILITY_GROUPS = [
 			'xp.award': 'Assegnare punti esperienza',
 			'esiti.manage': 'Rispondere alle richieste di esito',
 			'giocate.review': 'Rivedere le giocate registrate e leggerle tutte',
-			'world.manage': 'Gestire mappe e luoghi'
+			'items.give': 'Consegnare oggetti ai personaggi (es. premi di quest)',
+			'world.manage': 'Gestire mappe, luoghi, stanze private e meteo'
 		}
 	}
 ] as const;

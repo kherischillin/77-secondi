@@ -15,6 +15,8 @@ export type OnlineCharacter = PresentCharacter & {
 	mapName: string | null;
 	locationId: number | null;
 	locationName: string | null;
+	/** Il luogo è una stanza privata: chi c'è dentro non si mostra a tutti. */
+	locationPrivate: boolean;
 };
 
 function onlineSince() {
@@ -106,7 +108,8 @@ export async function listOnline(): Promise<OnlineCharacter[]> {
 			lastPostAt: schema.characterPresence.lastPostAt,
 			mapName: schema.maps.name,
 			locationId: schema.locations.id,
-			locationName: schema.locations.name
+			locationName: schema.locations.name,
+			locationPrivate: schema.locations.isPrivate
 		})
 		.from(schema.characterPresence)
 		.innerJoin(schema.characters, eq(schema.characterPresence.characterId, schema.characters.id))
@@ -114,7 +117,7 @@ export async function listOnline(): Promise<OnlineCharacter[]> {
 		.leftJoin(schema.locations, eq(schema.characterPresence.locationId, schema.locations.id))
 		.where(and(gt(schema.characterPresence.lastSeenAt, onlineSince()), isNull(schema.characters.deletedAt)))
 		.orderBy(asc(schema.characters.name));
-	return rows.map((r) => ({ ...r, lastPostAt: r.lastPostAt?.toISOString() ?? null }));
+	return rows.map((r) => ({ ...r, locationPrivate: r.locationPrivate ?? false, lastPostAt: r.lastPostAt?.toISOString() ?? null }));
 }
 
 /** Quanti personaggi ci sono in ogni luogo (per i numeri sulla mappa). */

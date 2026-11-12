@@ -88,5 +88,19 @@ export const AUDIT_LABELS: Record<string, string> = {
 	'giocata.delete': 'Cancellazione giocata',
 	'report.create': 'Segnalazione allo staff',
 	'report.take': 'Segnalazione presa in carico',
-	'report.close': 'Segnalazione chiusa'
+	'report.close': 'Segnalazione chiusa',
+	'item.create': 'Creazione oggetto',
+	'item.update': 'Modifica oggetto',
+	'item.delete': 'Cancellazione oggetto',
+	'item.give': 'Oggetto consegnato a un personaggio',
+	'item.confiscate': 'Oggetto tolto a un personaggio',
+	'item.handover': 'Oggetto ceduto tra personaggi',
+	'market.buy': 'Acquisto al mercato',
+	'market.sell': 'Vendita al mercato',
+	'money.transfer': 'Bonifico',
+	'money.staff': 'Correzione del denaro (staff)',
+	'economy.update': 'Modifica impostazioni economiche',
+	'economy.salary': 'Modifica stipendio di un grado',
+	'room.book': 'Prenotazione stanza privata',
+	'map.weather': 'Meteo impostato dallo staff'
 };

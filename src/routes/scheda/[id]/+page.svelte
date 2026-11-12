@@ -188,6 +188,24 @@
 		{/if}
 	</section>
 
+	{#if data.equipped.length}
+		<section class="card equipment">
+			<h2>Equipaggiamento</h2>
+			<ul>
+				{#each data.equipped as it (it.id)}
+					<li>
+						{#if it.imageUrl}<img src={it.imageUrl} alt="" />{/if}
+						<div>
+							<strong>{it.name}</strong> <span class="muted small">· {it.slot}</span>
+							{#if it.description}<p class="small">{it.description}</p>{/if}
+							{#if it.bonus}<p class="small bonus">In quest: {it.bonus}</p>{/if}
+						</div>
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
+
 	{#if data.giocate.length}
 		<section class="card giocate">
 			<h2>Giocate pubbliche</h2>
@@ -225,7 +243,7 @@
 		</section>
 	{/if}
 
-	{#if data.viewer.canAward || data.viewer.isStaff}
+	{#if data.viewer.canAward || data.viewer.isStaff || data.viewer.canGive || data.viewer.canConfiscate}
 		<section class="staff">
 			<button type="button" class="secondary" onclick={() => (showStaff = !showStaff)}>
 				{showStaff ? 'Nascondi strumenti dello staff' : 'Strumenti dello staff'}
@@ -245,6 +263,36 @@
 							</div>
 							<div><button type="submit">Conferma</button></div>
 						</form>
+					{/if}
+					{#if data.viewer.canGive && data.giveable.length}
+						<form method="post" action="?/consegna" class="card stack" use:enhance>
+							<h3>Consegna un oggetto</h3>
+							<select name="itemId" aria-label="Oggetto da consegnare">
+								{#each data.giveable as i (i.id)}<option value={i.id}>{i.name}</option>{/each}
+							</select>
+							<label class="num"><span>Quantità</span><input type="number" name="quantity" min="1" max="100" value="1" /></label>
+							<div><button type="submit">Consegna</button></div>
+						</form>
+					{/if}
+					{#if data.viewer.canConfiscate}
+						<div class="card stack">
+							<h3>Inventario</h3>
+							{#if data.staffInventory.length === 0}
+								<p class="muted small">Vuoto.</p>
+							{:else}
+								<ul class="staff-inv">
+									{#each data.staffInventory as i (i.id)}
+										<li>
+											<span>{i.name}{i.quantity > 1 ? ` ×${i.quantity}` : ''}{i.equipped ? ' (indossato)' : ''}</span>
+											<form method="post" action="?/confisca" use:enhance>
+												<input type="hidden" name="id" value={i.id} />
+												<button type="submit" class="link">Togli</button>
+											</form>
+										</li>
+									{/each}
+								</ul>
+							{/if}
+						</div>
 					{/if}
 					{#if data.viewer.isStaff}
 						<form method="post" action="?/correggi" class="card stack" use:enhance>
@@ -271,6 +319,43 @@
 </article>
 
 <style>
+	.equipment ul {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+		gap: 0.75rem;
+	}
+	.equipment li {
+		display: flex;
+		gap: 0.75rem;
+		align-items: flex-start;
+	}
+	.equipment img {
+		width: 48px;
+		height: 48px;
+		object-fit: cover;
+		border-radius: 6px;
+		flex: 0 0 48px;
+	}
+	.equipment p {
+		margin: 0.2rem 0 0;
+	}
+	.bonus {
+		color: #9fd3b8;
+	}
+	.staff-inv {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	.staff-inv li {
+		display: flex;
+		justify-content: space-between;
+		gap: 0.5rem;
+		padding: 0.2rem 0;
+	}
 	.sheet {
 		display: grid;
 		gap: 1.5rem;

@@ -11,6 +11,7 @@ import {
 } from '#lib/server/characters.ts';
 import { setActiveCharacter } from '#lib/server/auth/session.ts';
 import { characterSchema, fieldErrors } from '#lib/validation.ts';
+import { getEconomy } from '#lib/server/settings.ts';
 import { audit } from '#lib/server/audit.ts';
 
 type FormErrors = Record<string, string>;
@@ -55,7 +56,8 @@ export const actions: Actions = {
 			const character = await createCharacter(
 				user.id,
 				event.locals.settings.maxCharactersPerUser,
-				parsed.data
+				parsed.data,
+				(await getEconomy()).startingMoney
 			);
 			await audit({
 				actorUserId: user.id,

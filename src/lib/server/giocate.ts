@@ -13,8 +13,10 @@ export async function createGiocata(input: {
 	title: string;
 	isPublic: boolean;
 	creator: { userId: number; characterId: number; isReviewer: boolean };
+	/** Stanze private: solo i messaggi della prenotazione in corso. */
+	since?: Date | null;
 }) {
-	const all = await loadRange(input.location.id, input.range);
+	const all = (await loadRange(input.location.id, input.range)).filter((m) => !input.since || new Date(m.createdAt) >= input.since);
 	const messages = giocataMessages(all);
 	const { players, masters } = giocataParticipants(messages);
 	const participantIds = [...players, ...masters].map((p) => p.id);

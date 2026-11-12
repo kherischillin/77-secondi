@@ -11,7 +11,7 @@ export const GET: RequestHandler = async (event) => {
 	const before = Number(event.url.searchParams.get('prima'));
 	const history = await loadHistory(
 		ctx.location.id,
-		{ characterId: ctx.character.id, canModerate: ctx.canModerate },
+		{ characterId: ctx.character.id, canModerate: ctx.canModerate, since: ctx.since },
 		Number.isInteger(before) && before > 0 ? before : undefined
 	);
 	return json(history);

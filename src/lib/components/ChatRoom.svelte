@@ -116,6 +116,11 @@
 		source.addEventListener('presence', (e) => (present = JSON.parse(e.data)));
 		source.addEventListener('location', () => invalidateAll());
 		source.addEventListener('quest', () => invalidateAll());
+		// Stanza privata: l'accesso è cambiato, si ricontrolla chi può restare.
+		source.addEventListener('closed', () => {
+			source.close();
+			invalidateAll();
+		});
 
 		const clock = setInterval(() => (now = Date.now()), 30_000);
 		return () => {

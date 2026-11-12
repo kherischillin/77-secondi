@@ -16,8 +16,16 @@ import { computeCheck } from '#lib/rules.ts';
 import { fullName } from '#lib/format.ts';
 import { createGiocata, GiocataError, recentQuest } from '#lib/server/giocate.ts';
 import { giocataSchema } from '#lib/master.ts';
+import { activeBooking, bookingView, bookRoom, extendBooking, invite, releaseBooking, roomAccess, RoomError, uninvite } from '#lib/server/rooms.ts';
+import { disconnect } from '#lib/server/realtime.ts';
+import { balances } from '#lib/server/money.ts';
+import { getEconomy } from '#lib/server/settings.ts';
+import { inventory, ItemError, useItem } from '#lib/server/items.ts';
+import { canPostNow, postItemUse } from '#lib/server/chat-service.ts';
+import { weatherFor } from '#lib/weather.ts';
+import { MAX_TAG_LENGTH } from '#lib/chat.ts';
 
-async function loadPlayable(idParam: string) {
+async function findPlayable(idParam: string) {
 	const location = await getLocation(Number(idParam));
 	if (!location || !location.isActive) error(404, 'Luogo non trovato.');
 	if (location.kind === 'map_link') {
@@ -26,26 +34,68 @@ async function loadPlayable(idParam: string) {
 	return location;
 }
 
+/** Luogo in cui il personaggio può giocare adesso (stanze private: solo con la prenotazione). */
+async function loadPlayable(idParam: string, event?: RequestEvent) {
+	const location = await findPlayable(idParam);
+	if (event && location.isPrivate) {
+		const { user, character } = requireCharacter(event);
+		const access = await roomAccess(location, character.id, user.capabilities.has('chat.moderate'));
+		if (!access.allowed) error(403, 'Questa stanza privata è prenotata da altri.');
+	}
+	return location;
+}
+
+/** La prenotazione in corso, solo per chi l'ha fatta. */
+async function ownBooking(event: RequestEvent) {
+	const { character } = requireCharacter(event);
+	const location = await findPlayable(event.params.id);
+	const booking = await activeBooking(location.id);
+	if (!booking || booking.ownerCharacterId !== character.id) error(403, 'Solo chi ha prenotato la stanza può farlo.');
+	return { location, booking, character };
+}
+
 export const load: PageServerLoad = async (event) => {
 	const { user, character } = requireCharacter(event);
-	const location = await loadPlayable(event.params.id);
+	const location = await findPlayable(event.params.id);
 	const map = await getMap(location.mapId);
+	const canModerate = user.capabilities.has('chat.moderate');
+	const access = await roomAccess(location, character.id, canModerate);
+	const weather = map ? weatherFor(map, new Date()) : null;
+	const room = location.isPrivate
+		? {
+				hourlyPrice: location.hourlyPrice,
+				maxHours: location.maxHours,
+				booking: access.booking ? await bookingView(access.booking) : null,
+				isOwner: access.isOwner,
+				currency: (await getEconomy()).currencyName,
+				cash: (await balances(character.id)).money
+			}
+		: null;
+
+	// Stanza privata prenotata da altri (o libera): si mostra solo il modulo di prenotazione.
+	if (!access.allowed) {
+		return { locked: true as const, location: toLocationView(location), map: map ? { id: map.id, name: map.name } : null, weather, room };
+	}
 
 	await enterLocation(character.id, location.mapId, location.id);
 
-	const canModerate = user.capabilities.has('chat.moderate');
-	const [history, present, quest, rules, stats, skills, me, lastQuest] = await Promise.all([
-		loadHistory(location.id, { characterId: character.id, canModerate }),
+	const [history, present, quest, rules, stats, skills, me, lastQuest, items] = await Promise.all([
+		loadHistory(location.id, { characterId: character.id, canModerate, since: access.since }),
 		listPresentAt(location.id),
 		getActiveQuest(location.id),
 		getRules(),
 		listStats(),
 		listSkills(),
 		getCharacter(character.id),
-		recentQuest(location.id)
+		recentQuest(location.id),
+		inventory(character.id)
 	]);
 
 	return {
+		locked: false as const,
+		weather,
+		room,
+		usableItems: items.map((i) => ({ id: i.id, name: i.item.name, quantity: i.quantity, consumable: i.item.consumable, equipped: i.equipped })),
 		location: toLocationView(location),
 		map: map ? { id: map.id, name: map.name } : null,
 		history,
@@ -74,7 +124,7 @@ const CHOSEN: ChosenKind[] = ['action', 'whisper', 'master', 'npc'];
 export const actions: Actions = {
 	invia: async (event) => {
 		const { user, character } = requireCharacter(event);
-		const location = await loadPlayable(event.params.id);
+		const location = await loadPlayable(event.params.id, event);
 		const form = await event.request.formData();
 		const kindRaw = String(form.get('kind') ?? 'action');
 		const kind = (CHOSEN.includes(kindRaw as ChosenKind) ? kindRaw : 'action') as ChosenKind;
@@ -106,7 +156,7 @@ export const actions: Actions = {
 	/** Prova di abilità o caratteristica: disponibile solo durante una quest. */
 	prova: async (event) => {
 		const { user, character } = requireCharacter(event);
-		const location = await loadPlayable(event.params.id);
+		const location = await loadPlayable(event.params.id, event);
 		const quest = await getActiveQuest(location.id);
 		if (!quest) return fail(400, { error: 'Le prove si fanno solo durante una quest: nel gioco libero si descrive.' });
 
@@ -138,7 +188,7 @@ export const actions: Actions = {
 	avviaQuest: async (event) => {
 		const { user, character } = requireCharacter(event);
 		if (!user.capabilities.has('chat.master')) error(403, 'Solo un Master può avviare una quest.');
-		const location = await loadPlayable(event.params.id);
+		const location = await loadPlayable(event.params.id, event);
 		const form = await event.request.formData();
 		const parsed = z.string().trim().min(3, 'Dai un titolo alla quest (almeno 3 caratteri).').max(100).safeParse(form.get('title'));
 		if (!parsed.success) return fail(400, { questError: parsed.error.issues[0].message });
@@ -165,7 +215,7 @@ export const actions: Actions = {
 	terminaQuest: async (event) => {
 		const { user } = requireCharacter(event);
 		if (!user.capabilities.has('chat.master')) error(403, 'Solo un Master può chiudere una quest.');
-		const location = await loadPlayable(event.params.id);
+		const location = await loadPlayable(event.params.id, event);
 		const active = await getActiveQuest(location.id);
 		if (!active) return fail(400, { questError: 'Non c’è nessuna quest in corso.' });
 
@@ -188,7 +238,7 @@ export const actions: Actions = {
 	/** Registra la giocata: copia permanente di un tratto di chat. */
 	registra: async (event) => {
 		const { user, character } = requireCharacter(event);
-		const location = await loadPlayable(event.params.id);
+		const location = await loadPlayable(event.params.id, event);
 		const form = await event.request.formData();
 		const parsed = giocataSchema.safeParse({ title: String(form.get('title') ?? ''), isPublic: form.get('isPublic') === 'on' });
 		if (!parsed.success) return fail(400, { recordError: parsed.error.issues[0].message });
@@ -212,7 +262,8 @@ export const actions: Actions = {
 				range,
 				title: parsed.data.title,
 				isPublic: parsed.data.isPublic,
-				creator: { userId: user.id, characterId: character.id, isReviewer: user.capabilities.has('giocate.review') }
+				creator: { userId: user.id, characterId: character.id, isReviewer: user.capabilities.has('giocate.review') },
+				since: location.isPrivate ? (await roomAccess(location, character.id, true)).since : null
 			});
 		} catch (e) {
 			if (e instanceof GiocataError) return fail(400, { recordError: e.message });
@@ -220,6 +271,91 @@ export const actions: Actions = {
 		}
 		await audit({ actorUserId: user.id, action: 'giocata.create', targetType: 'giocata', targetId: giocata.id, details: { titolo: giocata.title, luogo: location.name }, ip: clientIp(event) });
 		redirect(303, `/giocate/${giocata.id}`);
+	},
+
+	/** Usa (o mostra) un oggetto dell'inventario: compare in chat; i consumabili si esauriscono. */
+	usa: async (event) => {
+		const { user, character } = requireCharacter(event);
+		const location = await loadPlayable(event.params.id, event);
+		const form = await event.request.formData();
+		const id = Number(form.get('itemId'));
+		const text = String(form.get('text') ?? '').trim().slice(0, 2000);
+		const tag = String(form.get('tag') ?? '').trim().slice(0, MAX_TAG_LENGTH) || null;
+		if (!Number.isInteger(id) || id <= 0) return fail(400, { itemError: 'Scegli un oggetto.' });
+		if (!canPostNow(character.id)) return fail(400, { itemError: 'Stai scrivendo troppo in fretta: aspetta qualche secondo.' });
+		try {
+			const { item, consumed } = await useItem(character.id, id);
+			const quest = await getActiveQuest(location.id);
+			await postItemUse(
+				location.id,
+				{ userId: user.id, characterId: character.id, capabilities: user.capabilities },
+				quest?.id ?? null,
+				{ id: item.id, name: item.name, description: item.description, consumed },
+				text,
+				tag
+			);
+		} catch (e) {
+			if (e instanceof ItemError || e instanceof ChatError) return fail(400, { itemError: e.message });
+			throw e;
+		}
+		return { itemUsed: true };
+	},
+
+	// --- Stanze private ---------------------------------------------------
+
+	prenota: async (event) => {
+		const { user, character } = requireCharacter(event);
+		const location = await findPlayable(event.params.id);
+		const hours = Number((await event.request.formData()).get('hours'));
+		try {
+			const { cost } = await bookRoom(location, character.id, hours);
+			// Chi era rimasto collegato alla stanza (moderatori, vecchi invitati) ricontrolla l'accesso.
+			disconnect(location.id, (id) => id !== character.id);
+			await audit({ actorUserId: user.id, action: 'room.book', targetType: 'location', targetId: location.id, details: { luogo: location.name, ore: hours, costo: cost, personaggio: character.name }, ip: clientIp(event) });
+		} catch (e) {
+			if (e instanceof RoomError) return fail(400, { roomError: e.message });
+			throw e;
+		}
+		return { roomSuccess: 'Stanza prenotata. Puoi invitare altri personaggi.' };
+	},
+
+	prolunga: async (event) => {
+		const { location, booking } = await ownBooking(event);
+		const hours = Number((await event.request.formData()).get('hours'));
+		try {
+			await extendBooking(location, booking, hours);
+		} catch (e) {
+			if (e instanceof RoomError) return fail(400, { roomError: e.message });
+			throw e;
+		}
+		return { roomSuccess: 'Prenotazione prolungata.' };
+	},
+
+	invita: async (event) => {
+		const { booking, location } = await ownBooking(event);
+		const name = String((await event.request.formData()).get('name') ?? '');
+		try {
+			const c = await invite(booking, name);
+			return { roomSuccess: `${c.name} può entrare nella stanza.`, location: location.id };
+		} catch (e) {
+			if (e instanceof RoomError) return fail(400, { roomError: e.message });
+			throw e;
+		}
+	},
+
+	rimuovi: async (event) => {
+		const { booking, location } = await ownBooking(event);
+		const id = Number((await event.request.formData()).get('characterId'));
+		await uninvite(booking, id);
+		disconnect(location.id, (c) => c === id);
+		return { roomSuccess: 'Invito ritirato.' };
+	},
+
+	libera: async (event) => {
+		const { booking, location } = await ownBooking(event);
+		await releaseBooking(booking);
+		disconnect(location.id);
+		redirect(303, `/gioco/mappa/${location.mapId}`);
 	},
 
 	nascondi: async (event) => moderate(event, true),

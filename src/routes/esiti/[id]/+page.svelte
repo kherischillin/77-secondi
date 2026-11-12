@@ -63,7 +63,7 @@
 				<div class="check" class:success={m.check.outcome === 'success'} class:failure={m.check.outcome === 'failure'}>
 					<strong>Prova: {m.check.skill?.name ?? m.check.stat?.name}</strong>
 					<span>
-						d{m.check.die}: {m.check.roll}{#if m.check.stat}{' + '}{m.check.stat.name} {m.check.stat.value}{/if}{#if m.check.skill}{' + '}rango {m.check.skill.rank}{/if}
+						d{m.check.die}: {m.check.roll}{#if m.check.stat}{' + '}{m.check.stat.name} {m.check.stat.value}{/if}{#if m.check.skill}{' + '}rango {m.check.skill.rank}{/if}{#if m.check.bonus?.value}<span title={m.check.bonus.sources.join(', ')}>{m.check.bonus.value > 0 ? ' + ' : ' − '}oggetti {Math.abs(m.check.bonus.value)}</span>{/if}
 						= <strong>{m.check.total}</strong>
 					</span>
 					{#if m.check.difficulty !== null}

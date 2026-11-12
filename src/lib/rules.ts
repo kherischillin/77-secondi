@@ -102,6 +102,8 @@ export type CheckInput = {
 	roll: number;
 	stat: { name: string; value: number } | null;
 	skill: { name: string; rank: number } | null;
+	/** Bonus degli oggetti equipaggiati (solo in quest). */
+	bonus?: { value: number; sources: string[] } | null;
 };
 
 export type CheckResult = {
@@ -109,13 +111,14 @@ export type CheckResult = {
 	roll: number;
 	stat: { name: string; value: number } | null;
 	skill: { name: string; rank: number } | null;
+	bonus?: { value: number; sources: string[] } | null;
 	total: number;
 	/** Esito naturale del dado: massimo o minimo possibile. */
 	natural: 'max' | 'min' | null;
 };
 
 export function computeCheck(input: CheckInput): CheckResult {
-	const total = input.roll + (input.stat?.value ?? 0) + (input.skill?.rank ?? 0);
+	const total = input.roll + (input.stat?.value ?? 0) + (input.skill?.rank ?? 0) + (input.bonus?.value ?? 0);
 	return {
 		...input,
 		total,
@@ -130,5 +133,6 @@ export function describeCheck(c: CheckResult): string {
 	if (c.skill && c.stat) parts.push(`${c.stat.name} ${c.stat.value}`);
 	if (!c.skill && c.stat) parts.push(`valore ${c.stat.value}`);
 	if (c.skill) parts.push(`rango ${c.skill.rank}`);
+	if (c.bonus && c.bonus.value !== 0) parts.push(`oggetti ${c.bonus.value > 0 ? '' : '−'}${Math.abs(c.bonus.value)}`);
 	return `${label} (${parts.join(' + ')}) d${c.die}: ${c.roll} = ${c.total}`;
 }

@@ -9,12 +9,14 @@ import {
 	listMaps,
 	readMapForm,
 	setStartMap,
+	weatherOverrideSchema,
 	toLocationView,
 	toMapView
 } from '#lib/server/world.ts';
 import { deleteImage, saveImage, UploadError } from '#lib/server/uploads.ts';
 import { fieldErrors } from '#lib/validation.ts';
 import { audit } from '#lib/server/audit.ts';
+import { weatherFor } from '#lib/weather.ts';
 
 type Errors = Record<string, string>;
 
@@ -33,6 +35,7 @@ export const load: PageServerLoad = async (event) => {
 	]);
 	return {
 		map: { ...toMapView(map), sortOrder: map.sortOrder },
+		weather: weatherFor(map, new Date()),
 		locations: locations.map(toLocationView),
 		otherMaps: maps.filter((m) => m.id !== map.id).map((m) => ({ id: m.id, name: m.name }))
 	};
@@ -69,6 +72,24 @@ export const actions: Actions = {
 			ip: clientIp(event)
 		});
 		return { action: 'salva', success: 'Mappa salvata.' };
+	},
+
+	/** Meteo deciso dallo staff per qualche ora (0 ore = torna automatico). */
+	meteo: async (event) => {
+		const { user } = requireCapability(event, 'world.manage');
+		const map = await loadMapOr404(event.params.id);
+		const form = await event.request.formData();
+		const parsed = weatherOverrideSchema.safeParse({ text: String(form.get('text') ?? ''), hours: form.get('hours') ?? 0 });
+		if (!parsed.success) return fail(400, { action: 'meteo', errors: fieldErrors(parsed.error) });
+		const { text, hours } = parsed.data;
+		const reset = form.get('reset') === '1' || hours === 0;
+		if (!reset && !text) return fail(400, { action: 'meteo', errors: { text: 'Scrivi che tempo fa.' } as Errors });
+		await db
+			.update(schema.maps)
+			.set(reset ? { weatherOverride: null, weatherOverrideUntil: null } : { weatherOverride: text, weatherOverrideUntil: new Date(Date.now() + hours * 3_600_000) })
+			.where(eq(schema.maps.id, map.id));
+		await audit({ actorUserId: user.id, action: 'map.weather', targetType: 'map', targetId: map.id, details: reset ? { mappa: map.name, meteo: 'automatico' } : { mappa: map.name, meteo: text, ore: hours }, ip: clientIp(event) });
+		return { action: 'meteo', success: reset ? 'Torna il meteo automatico.' : 'Meteo impostato.' };
 	},
 
 	nuovoLuogo: async (event) => {

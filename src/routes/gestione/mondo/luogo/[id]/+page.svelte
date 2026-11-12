@@ -117,6 +117,25 @@
 			<label for="sortOrder">Ordine nell'elenco</label>
 			<input id="sortOrder" name="sortOrder" type="number" min="-1000" max="1000" value={data.location.sortOrder} />
 		</div>
+		<fieldset class="private">
+			<legend>Stanza privata</legend>
+			<label class="checkbox">
+				<input type="checkbox" name="isPrivate" checked={data.location.isPrivate} />
+				<span>Si entra solo prenotandola<span class="hint">Chi prenota sceglie chi invitare; gli altri non possono entrare né leggere. Chi prenota dopo non legge le giocate precedenti.</span></span>
+			</label>
+			<div class="row">
+				<div>
+					<label for="hourlyPrice">Costo all'ora <span class="hint">0 = gratis</span></label>
+					<input id="hourlyPrice" name="hourlyPrice" type="number" min="0" max="1000000" value={data.location.hourlyPrice} />
+					{#if errors.hourlyPrice}<p class="field-error">{errors.hourlyPrice}</p>{/if}
+				</div>
+				<div>
+					<label for="maxHours">Ore massime</label>
+					<input id="maxHours" name="maxHours" type="number" min="1" max="48" value={data.location.maxHours} />
+					{#if errors.maxHours}<p class="field-error">{errors.maxHours}</p>{/if}
+				</div>
+			</div>
+		</fieldset>
 		<label class="checkbox">
 			<input type="checkbox" name="isActive" checked={data.location.isActive} />
 			<span>Visibile ai giocatori<span class="hint">Togli la spunta per preparare un luogo senza mostrarlo.</span></span>
@@ -164,6 +183,21 @@
 		margin-top: 3rem;
 		padding-top: 1rem;
 		border-top: 1px solid var(--border);
+	}
+	.private {
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		padding: 0.75rem 1rem;
+		margin: 0;
+		display: grid;
+		gap: 0.75rem;
+	}
+	.private legend {
+		padding: 0 0.4rem;
+		font-weight: 600;
+	}
+	.private .row > div {
+		flex: 1 1 140px;
 	}
 	.row {
 		display: flex;

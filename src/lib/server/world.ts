@@ -2,6 +2,7 @@ import { and, asc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { db, schema } from './db/index.ts';
 import { mediaUrl } from './uploads.ts';
+import { CLIMATES } from '../weather.ts';
 
 export type MapView = {
 	id: number;
@@ -9,6 +10,9 @@ export type MapView = {
 	description: string;
 	imageUrl: string | null;
 	isStart: boolean;
+	climate: string | null;
+	weatherOverride: string | null;
+	weatherOverrideUntil: string | null;
 };
 
 export type LocationView = {
@@ -22,6 +26,9 @@ export type LocationView = {
 	x: number | null;
 	y: number | null;
 	isActive: boolean;
+	isPrivate: boolean;
+	hourlyPrice: number;
+	maxHours: number;
 };
 
 export function toMapView(m: typeof schema.maps.$inferSelect): MapView {
@@ -30,7 +37,10 @@ export function toMapView(m: typeof schema.maps.$inferSelect): MapView {
 		name: m.name,
 		description: m.description,
 		imageUrl: mediaUrl(m.image),
-		isStart: m.isStart
+		isStart: m.isStart,
+		climate: m.climate,
+		weatherOverride: m.weatherOverride,
+		weatherOverrideUntil: m.weatherOverrideUntil?.toISOString() ?? null
 	};
 }
 
@@ -45,7 +55,10 @@ export function toLocationView(l: typeof schema.locations.$inferSelect): Locatio
 		linkedMapId: l.linkedMapId,
 		x: l.x,
 		y: l.y,
-		isActive: l.isActive
+		isActive: l.isActive,
+		isPrivate: l.isPrivate,
+		hourlyPrice: l.hourlyPrice,
+		maxHours: l.maxHours
 	};
 }
 
@@ -107,7 +120,14 @@ const position = z.preprocess(
 export const mapFormSchema = z.object({
 	name: z.string().trim().min(2, 'Il nome deve avere almeno 2 caratteri.').max(60, 'Nome troppo lungo.'),
 	description: z.string().trim().max(5000, 'Descrizione troppo lunga.'),
-	sortOrder: z.coerce.number().int().min(-1000).max(1000).default(0)
+	sortOrder: z.coerce.number().int().min(-1000).max(1000).default(0),
+	climate: z.preprocess((v) => (v === '' || v === null || v === undefined ? null : v), z.enum(CLIMATES).nullable())
+});
+
+/** Meteo deciso dallo staff: testo e durata in ore (0 = torna automatico). */
+export const weatherOverrideSchema = z.object({
+	text: z.string().trim().max(80, 'Testo troppo lungo.'),
+	hours: z.coerce.number().int().min(0).max(24 * 7)
 });
 
 export const locationFormSchema = z
@@ -122,7 +142,10 @@ export const locationFormSchema = z
 		x: position,
 		y: position,
 		isActive: z.boolean(),
-		sortOrder: z.coerce.number().int().min(-1000).max(1000).default(0)
+		sortOrder: z.coerce.number().int().min(-1000).max(1000).default(0),
+		isPrivate: z.boolean(),
+		hourlyPrice: z.coerce.number().int('Solo numeri interi.').min(0, 'Il prezzo non può essere negativo.').max(1_000_000),
+		maxHours: z.coerce.number().int('Solo numeri interi.').min(1, 'Almeno 1 ora.').max(48, 'Al massimo 48 ore.')
 	})
 	.refine((d) => d.kind !== 'map_link' || d.linkedMapId !== null, {
 		message: 'Scegli la mappa verso cui porta il collegamento.',
@@ -133,7 +156,8 @@ export function readMapForm(form: FormData) {
 	return mapFormSchema.safeParse({
 		name: String(form.get('name') ?? ''),
 		description: String(form.get('description') ?? ''),
-		sortOrder: form.get('sortOrder') || 0
+		sortOrder: form.get('sortOrder') || 0,
+		climate: form.get('climate')
 	});
 }
 
@@ -146,6 +170,9 @@ export function readLocationForm(form: FormData) {
 		x: form.get('x'),
 		y: form.get('y'),
 		isActive: form.get('isActive') === 'on',
-		sortOrder: form.get('sortOrder') || 0
+		sortOrder: form.get('sortOrder') || 0,
+		isPrivate: form.get('isPrivate') === 'on',
+		hourlyPrice: form.get('hourlyPrice') || 0,
+		maxHours: form.get('maxHours') || 4
 	});
 }

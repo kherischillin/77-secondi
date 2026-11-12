@@ -20,6 +20,8 @@ import { audit } from '#lib/server/audit.ts';
 import { listPublicForCharacter } from '#lib/server/giocate.ts';
 import { fullName } from '#lib/format.ts';
 import { membershipsOf } from '#lib/server/guilds.ts';
+import { confiscate, equippedOf, giveItem, inventory, ItemError, listCatalog } from '#lib/server/items.ts';
+import { describeBonuses, isSlot, SLOT_LABELS } from '#lib/economy.ts';
 
 async function sheetOr404(id: string) {
 	const sheet = await loadSheet(Number(id));
@@ -39,7 +41,15 @@ export const load: PageServerLoad = async (event) => {
 	const isStaff = user.capabilities.has('characters.manage') && !isOwner;
 	const canAward = user.capabilities.has('xp.award') && !isOwner;
 	const seesPrivate = isOwner || user.capabilities.has('characters.manage') || user.capabilities.has('xp.award');
+	const canGive = (user.capabilities.has('items.give') || user.capabilities.has('items.manage')) && !isOwner;
+	const canConfiscate = user.capabilities.has('items.manage') && !isOwner;
 	const { userId: _hidden, ...character } = sheet.character;
+	const names = { stats: sheet.stats.map((s) => ({ id: s.id, name: s.name })), skills: sheet.skills.map((s) => ({ id: s.id, name: s.name })) };
+	const [equipped, staffInventory, catalog] = await Promise.all([
+		equippedOf(character.id),
+		canConfiscate ? inventory(character.id) : Promise.resolve([]),
+		canGive ? listCatalog() : Promise.resolve([])
+	]);
 
 	return {
 		character: {
@@ -49,6 +59,17 @@ export const load: PageServerLoad = async (event) => {
 			backgroundHidden: !rules.backgroundPublic && !seesPrivate && !!character.background
 		},
 		giocate: await listPublicForCharacter(character.id),
+		// L'equipaggiamento è la parte "visibile" in gioco: lo vedono tutti.
+		equipped: equipped.map((i) => ({
+			id: i.id,
+			name: i.name,
+			description: i.description,
+			imageUrl: i.imageUrl,
+			slot: isSlot(i.slot) ? SLOT_LABELS[i.slot] : i.slot,
+			bonus: describeBonuses(i.bonuses, names.stats, names.skills)
+		})),
+		staffInventory: staffInventory.map((i) => ({ id: i.id, name: i.item.name, quantity: i.quantity, equipped: i.equipped })),
+		giveable: catalog.filter((i) => !i.archived).map((i) => ({ id: i.id, name: i.name })),
 		guilds: guilds.map((g) => ({ id: g.guildId, name: g.guildName, rank: g.rankName, symbolUrl: g.symbolUrl })),
 		stats: sheet.stats.map((s) => ({ ...s, raiseCost: statRaiseCost(s.value, rules) })),
 		skills: sheet.skills.map((s) => ({ ...s, raiseCost: skillRaiseCost(s.rank, rules) })),
@@ -60,7 +81,7 @@ export const load: PageServerLoad = async (event) => {
 			creationSkillCap: rules.creationSkillCap,
 			backgroundPublic: rules.backgroundPublic
 		},
-		viewer: { isOwner, isStaff, canAward, canEdit: isOwner || user.capabilities.has('characters.manage') }
+		viewer: { isOwner, isStaff, canAward, canGive, canConfiscate, canEdit: isOwner || user.capabilities.has('characters.manage') }
 	};
 };
 
@@ -91,9 +112,10 @@ async function ownerOnly(event: RequestEvent) {
 	return { user, character };
 }
 
-async function staffOn(event: RequestEvent, capability: 'characters.manage' | 'xp.award') {
+async function staffOn(event: RequestEvent, capability: 'characters.manage' | 'xp.award' | 'items.give' | 'items.manage') {
 	const { user } = requireUser(event);
-	if (!user.capabilities.has(capability)) error(403, 'Non hai i permessi per questa azione.');
+	const allowed = user.capabilities.has(capability) || (capability === 'items.give' && user.capabilities.has('items.manage'));
+	if (!allowed) error(403, 'Non hai i permessi per questa azione.');
 	const character = await getCharacter(Number(event.params.id));
 	if (!character || character.deletedAt) error(404, 'Personaggio non trovato.');
 	// Nessuno si assegna PX o si corregge i valori da solo.
@@ -173,5 +195,34 @@ export const actions: Actions = {
 		await resetAllocation(character.id);
 		await audit({ actorUserId: user.id, action: 'sheet.reset', targetType: 'character', targetId: character.id, details: { personaggio: fullName(character) }, ip: clientIp(event) });
 		return { action: 'azzera', success: 'Distribuzione azzerata: il giocatore può rifarla e i PX spesi gli sono stati restituiti.' };
+	},
+
+	/** Consegna di un oggetto (premio di quest, ritrovamento). */
+	consegna: async (event) => {
+		const { user, character } = await staffOn(event, 'items.give');
+		if (character.userId === user.id) error(403, 'Non puoi consegnare oggetti ai tuoi personaggi.');
+		const form = await event.request.formData();
+		const quantity = Number(form.get('quantity') ?? 1);
+		if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) return fail(400, { action: 'consegna', error: 'Quantità non valida (da 1 a 100).' });
+		try {
+			const item = await giveItem(character.id, Number(form.get('itemId')), quantity);
+			await audit({ actorUserId: user.id, action: 'item.give', targetType: 'character', targetId: character.id, details: { personaggio: character.name, oggetto: item.name, quantita: quantity }, ip: clientIp(event) });
+			return { action: 'consegna', success: `${item.name} consegnato a ${character.name}.` };
+		} catch (e) {
+			if (e instanceof ItemError) return fail(400, { action: 'consegna', error: e.message });
+			throw e;
+		}
+	},
+
+	/** Lo staff toglie un oggetto (es. ottenuto in modo scorretto). */
+	confisca: async (event) => {
+		const { user, character } = await staffOn(event, 'items.manage');
+		const form = await event.request.formData();
+		const id = Number(form.get('id'));
+		const own = (await inventory(character.id)).some((i) => i.id === id);
+		if (!own) return fail(404, { action: 'confisca', error: 'Oggetto non trovato.' });
+		const removed = await confiscate(id);
+		await audit({ actorUserId: user.id, action: 'item.confiscate', targetType: 'character', targetId: character.id, details: { personaggio: character.name, oggetto: removed?.item?.name, quantita: removed?.row.quantity }, ip: clientIp(event) });
+		return { action: 'confisca', success: 'Oggetto tolto.' };
 	}
 };

@@ -1,4 +1,5 @@
 import { and, asc, eq, isNull, sql } from 'drizzle-orm';
+import { move } from './money.ts';
 import { db, schema } from './db/index.ts';
 
 export class CharacterError extends Error {
@@ -27,7 +28,8 @@ export async function listUserCharacters(userId: number) {
 export async function createCharacter(
 	userId: number,
 	maxPerUser: number,
-	input: { name: string; surname: string | null; bio: string | null }
+	input: { name: string; surname: string | null; bio: string | null },
+	startingMoney = 0
 ) {
 	return db.transaction(async (tx) => {
 		// Blocca le righe dell'utente: due richieste simultanee non possono superare il limite.
@@ -56,6 +58,8 @@ export async function createCharacter(
 			.insert(schema.characters)
 			.values({ userId, name: input.name, surname: input.surname, bio: input.bio })
 			.returning();
+		// Denaro iniziale, registrato nei movimenti come tutto il resto.
+		await move(tx, character.id, 'cash', startingMoney, 'start');
 		return character;
 	});
 }

@@ -9,7 +9,7 @@ export const MAX_MESSAGE_LENGTH = 4000;
 export const MAX_TAG_LENGTH = 40;
 export const MAX_NPC_NAME_LENGTH = 40;
 
-export type MessageKind = 'action' | 'whisper' | 'master' | 'npc' | 'dice' | 'check' | 'system';
+export type MessageKind = 'action' | 'whisper' | 'master' | 'npc' | 'dice' | 'check' | 'system' | 'item';
 
 /** Tipi che il giocatore può scegliere dal menu. */
 export type ChosenKind = 'action' | 'whisper' | 'master' | 'npc';
@@ -21,7 +21,8 @@ export const KIND_LABELS: Record<MessageKind, string> = {
 	npc: 'PNG',
 	dice: 'Dado',
 	check: 'Prova',
-	system: 'Sistema'
+	system: 'Sistema',
+	item: 'Oggetto'
 };
 
 /** Messaggio così come arriva al browser. */
@@ -35,7 +36,12 @@ export type ChatMessageView = {
 	npcName: string | null;
 	tag: string | null;
 	body: string;
-	meta: { dice?: DiceResult; check?: CheckResult } | null;
+	meta: {
+		dice?: DiceResult;
+		check?: CheckResult;
+		/** Oggetto usato o mostrato in chat. */
+		item?: { id: number; name: string; description: string; consumed: boolean };
+	} | null;
 	questId: number | null;
 	createdAt: string;
 	hidden: boolean;

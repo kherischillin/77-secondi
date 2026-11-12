@@ -29,7 +29,7 @@ const DEFAULT_ROLES: {
 	{
 		name: 'Master',
 		description: 'Narra le giocate, guida le quest e assegna i PX.',
-		capabilities: ['chat.master', 'chat.npc', 'xp.award', 'esiti.manage', 'giocate.review']
+		capabilities: ['chat.master', 'chat.npc', 'xp.award', 'esiti.manage', 'giocate.review', 'items.give']
 	},
 	{
 		name: 'Giocatore',
@@ -54,6 +54,7 @@ export async function bootstrapDatabase(): Promise<void> {
 	}
 
 	await seedExampleRules();
+	await seedExampleItems();
 	await seedBoards();
 
 	// L'Amministratore deve sempre avere tutte le capacità, anche quelle aggiunte in versioni future.
@@ -99,4 +100,35 @@ async function seedExampleRules() {
 		console.log('Regole di esempio create.');
 	}
 	await db.insert(schema.settings).values({ key: 'rulesSeeded', value: true }).onConflictDoNothing();
+}
+
+/**
+ * Al primo avvio con l'economia crea qualche oggetto di esempio in vendita al mercato.
+ * Lo staff li può modificare, archiviare o cancellare. Si fa una volta sola.
+ */
+async function seedExampleItems() {
+	const [done] = await db.select().from(schema.settings).where(eq(schema.settings.key, 'itemsSeeded'));
+	if (done) return;
+	const [{ total }] = await db.select({ total: count() }).from(schema.items);
+	if (total === 0) {
+		const stats = await db.select({ id: schema.stats.id, name: schema.stats.name }).from(schema.stats);
+		const skills = await db.select({ id: schema.skills.id, name: schema.skills.name }).from(schema.skills);
+		const stat = (name: string, value: number) => {
+			const s = stats.find((x) => x.name === name);
+			return s ? [{ statId: s.id, value }] : [];
+		};
+		const skill = (name: string, value: number) => {
+			const s = skills.find((x) => x.name === name);
+			return s ? [{ skillId: s.id, value }] : [];
+		};
+		await db.insert(schema.items).values([
+			{ name: 'Coltello', category: 'Armi', slot: 'weapon', price: 25, forSale: true, description: 'Lama corta e robusta, buona per tutto.', bonuses: skill('Armi da mischia', 1) },
+			{ name: 'Giacca di pelle', category: 'Abiti', slot: 'body', price: 60, forSale: true, description: 'Pelle spessa e consumata, con tasche interne.', bonuses: stat('Costituzione', 1) },
+			{ name: 'Guanti leggeri', category: 'Abiti', slot: 'hands', price: 35, forSale: true, description: 'Guanti sottili che non fanno rumore.', bonuses: skill('Furtività', 1) },
+			{ name: 'Medikit', category: 'Medicinali', slot: 'none', price: 30, forSale: true, consumable: true, description: 'Bende, disinfettante e il necessario per una medicazione.' },
+			{ name: 'Torcia', category: 'Attrezzi', slot: 'none', price: 5, forSale: true, description: 'Fa luce dove serve.' }
+		]);
+		console.log('Oggetti di esempio creati.');
+	}
+	await db.insert(schema.settings).values({ key: 'itemsSeeded', value: true }).onConflictDoNothing();
 }

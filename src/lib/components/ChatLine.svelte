@@ -37,6 +37,10 @@
 			<span class="who">{message.characterName ?? 'Qualcuno'}</span><span class="muted">tira i dadi</span>
 		{:else if message.kind === 'check'}
 			<span class="who">{message.characterName ?? 'Qualcuno'}</span><span class="muted">fa una prova</span>
+		{:else if message.kind === 'item'}
+			<a class="who" href="/scheda/{message.characterId}" target="_blank">{message.characterName ?? 'Qualcuno'}</a>
+			<span class="muted">{message.meta?.item?.consumed ? 'usa' : 'mostra'}</span>
+			<span class="item-name">{message.meta?.item?.name ?? 'un oggetto'}</span>
 		{:else if message.kind === 'system'}
 			<span class="system-label">Quest</span>
 		{:else if message.characterId}
@@ -63,7 +67,7 @@
 		<p class="body roll">
 			<span class="expr">{c.skill?.name ?? c.stat?.name}</span>
 			<span class="rolls">
-				d{c.die}: {c.roll}{#if c.stat}{' + '}{c.stat.name} {c.stat.value}{/if}{#if c.skill}{' + '}rango {c.skill.rank}{/if}
+				d{c.die}: {c.roll}{#if c.stat}{' + '}{c.stat.name} {c.stat.value}{/if}{#if c.skill}{' + '}rango {c.skill.rank}{/if}{#if c.bonus?.value}<span title={c.bonus.sources.join(', ')}>{c.bonus.value > 0 ? ' + ' : ' − '}oggetti {Math.abs(c.bonus.value)}</span>{/if}
 			</span>
 			<span class="total">= {c.total}</span>
 			{#if c.natural === 'max'}<span class="badge accent">massimo naturale</span>{/if}
@@ -75,6 +79,13 @@
 			<span class="rolls">{message.meta.dice.rolls.join(' + ')}{#if message.meta.dice.modifier}{' '}({message.meta.dice.modifier > 0 ? '+' : ''}{message.meta.dice.modifier}){/if}</span>
 			<span class="total">= {message.meta.dice.total}</span>
 		</p>
+	{:else if message.kind === 'item'}
+		{#if message.body}
+			<p class="body">
+				{#each segments as s, i (i)}{#if s.speech}<q>{s.text}</q>{:else}{s.text}{/if}{/each}
+			</p>
+		{/if}
+		{#if message.meta?.item?.description}<p class="item-desc">{message.meta.item.description}</p>{/if}
 	{:else}
 		<p class="body">
 			{#each segments as s, i (i)}{#if s.speech}<q>{s.text}</q>{:else}{s.text}{/if}{/each}
@@ -188,6 +199,20 @@
 	.check {
 		border-left-color: var(--accent);
 		background: rgba(212, 162, 76, 0.07);
+	}
+	.item {
+		border-left-color: #6fa58a;
+		background: rgba(111, 165, 138, 0.08);
+	}
+	.item-name {
+		font-weight: 700;
+		color: #9fd3b8;
+	}
+	.item-desc {
+		margin: 0.2rem 0 0;
+		font-size: 0.85rem;
+		color: var(--text-muted);
+		font-style: italic;
 	}
 	.system {
 		border-left-color: #8a7bb0;

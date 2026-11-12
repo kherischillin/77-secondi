@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { db, schema } from './db';
 import { DEFAULT_RULES, rulesSchema, type Rules } from '../rules.ts';
+import { DEFAULT_ECONOMY, economySchema, type Economy } from '../economy.ts';
 
 /**
  * Impostazioni del sito, con valori predefiniti e validazione.
@@ -30,7 +31,8 @@ let cache: SiteSettings | null = null;
 export async function getSettings(): Promise<SiteSettings> {
 	if (cache) return cache;
 	const rows = await db.select().from(schema.settings);
-	const stored = Object.fromEntries(rows.filter((r) => r.key !== 'rules').map((r) => [r.key, r.value]));
+	const own = Object.keys(DEFAULT_SETTINGS);
+	const stored = Object.fromEntries(rows.filter((r) => own.includes(r.key)).map((r) => [r.key, r.value]));
 	const merged = { ...DEFAULT_SETTINGS, ...stored };
 	const parsed = settingsSchema.safeParse(merged);
 	cache = parsed.success ? parsed.data : DEFAULT_SETTINGS;
@@ -75,4 +77,27 @@ export async function updateRules(values: Rules): Promise<void> {
 		.values({ key: 'rules', value: parsed })
 		.onConflictDoUpdate({ target: schema.settings.key, set: { value: parsed, updatedAt: new Date() } });
 	rulesCache = parsed;
+}
+
+// ---------------------------------------------------------------------------
+// Economia (chiave "economy")
+// ---------------------------------------------------------------------------
+
+let economyCache: Economy | null = null;
+
+export async function getEconomy(): Promise<Economy> {
+	if (economyCache) return economyCache;
+	const [row] = await db.select().from(schema.settings).where(eq(schema.settings.key, 'economy'));
+	const parsed = economySchema.safeParse({ ...DEFAULT_ECONOMY, ...((row?.value as object) ?? {}) });
+	economyCache = parsed.success ? parsed.data : DEFAULT_ECONOMY;
+	return economyCache;
+}
+
+export async function updateEconomy(values: Economy): Promise<void> {
+	const parsed = economySchema.parse(values);
+	await db
+		.insert(schema.settings)
+		.values({ key: 'economy', value: parsed })
+		.onConflictDoUpdate({ target: schema.settings.key, set: { value: parsed, updatedAt: new Date() } });
+	economyCache = parsed;
 }
