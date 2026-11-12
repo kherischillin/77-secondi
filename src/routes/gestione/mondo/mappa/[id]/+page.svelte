@@ -165,8 +165,8 @@
 			<form method="post" action="?/preparaNightCity" class="stack card" use:enhance={() => async ({ update }) => update({ reset: false })}>
 				<p class="muted small">
 					Crea in un colpo i {data.nightCity.districts} distretti con la loro forma sulla mappa e i {data.nightCity.locations} luoghi della
-					legenda (ogni luogo è una chat, già posizionata). Se un distretto esiste già con lo stesso nome viene aggiornato; i luoghi già
-					presenti non vengono duplicati, quindi si può rilanciare senza problemi.
+					legenda (ogni luogo è una chat, già posizionata), ognuno con una breve descrizione. Se un distretto esiste già con lo stesso nome viene
+					aggiornato; i luoghi già presenti non vengono duplicati e le descrizioni scritte da voi non vengono toccate, quindi si può rilanciare.
 				</p>
 				{#if !data.nightCity.imageOk}
 					<p class="hint">Prima carica qui sopra, come immagine della mappa, il file <strong>night-city.webp</strong>.</p>

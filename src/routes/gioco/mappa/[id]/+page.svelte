@@ -5,6 +5,10 @@
 
 	let { data }: PageProps = $props();
 
+	// Descrizione breve (primo paragrafo) per il suggerimento al passaggio del mouse, e riga "Tipo:" sotto il nome.
+	const summary = (text: string | null | undefined) => (text ?? '').split(/\n\s*\n/)[0].trim() || undefined;
+	const kindOf = (text: string | null | undefined) => /^Tipo:\s*(.+)$/m.exec(text ?? '')?.[1] ?? null;
+
 	function hrefOf(l: (typeof data.locations)[number]) {
 		return l.kind === 'map_link' && l.linkedMapId ? `/gioco/mappa/${l.linkedMapId}` : `/gioco/luogo/${l.id}`;
 	}
@@ -54,7 +58,7 @@
 			<ul class="places districts">
 				{#each data.districts as d (d.id)}
 					<li>
-						<a href="/gioco/mappa/{d.id}">
+						<a href="/gioco/mappa/{d.id}" title={summary(d.description)}>
 							<span class="name">{d.name}</span>
 							{#if d.present > 0}<span class="badge accent">{d.present} present{d.present === 1 ? 'e' : 'i'}</span>{/if}
 						</a>
@@ -69,8 +73,11 @@
 			<ul class="places">
 				{#each data.locations as l (l.id)}
 					<li>
-						<a href={hrefOf(l)}>
-							<span class="name">{l.name}</span>
+						<a href={hrefOf(l)} title={summary(l.description)}>
+							<span class="name-box">
+								<span class="name">{l.name}</span>
+								{#if kindOf(l.description)}<span class="kind">{kindOf(l.description)}</span>{/if}
+							</span>
 							{#if l.kind === 'map_link'}
 								<span class="muted small">→ altra mappa</span>
 							{:else if l.isPrivate}
@@ -171,5 +178,14 @@
 	}
 	h2.spaced {
 		margin-top: 1.5rem;
+	}
+	.name-box {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+	}
+	.kind {
+		font-size: 0.78rem;
+		color: var(--text-muted);
 	}
 </style>

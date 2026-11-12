@@ -198,7 +198,7 @@ export const actions: Actions = {
 		await audit({ actorUserId: user.id, action: 'world.seed', targetType: 'map', targetId: map.id, details: { mappa: map.name, ...r }, ip: clientIp(event) });
 		return {
 			action: 'preparaNightCity',
-			success: `Night City pronta: ${r.created} distretti nuovi, ${r.updated} aggiornati, ${r.locations} luoghi aggiunti.${r.skipped.length ? ' Saltati: ' + r.skipped.join(', ') + '.' : ''}`
+			success: `Night City pronta: ${r.created} distretti nuovi, ${r.updated} aggiornati, ${r.locations} luoghi aggiunti, ${r.descriptions} descrizioni aggiornate.${r.skipped.length ? ' Saltati: ' + r.skipped.join(', ') + '.' : ''}`
 		};
 	},
 

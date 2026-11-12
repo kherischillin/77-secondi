@@ -4,19 +4,31 @@
  * Forme e posizioni sono in percentuale dell'immagine `night-city.webp` (3240×3690 px), ricavate dai confini
  * tratteggiati e dai riquadri numerati disegnati sulla mappa. `area` è il riquadro mostrato quando si apre
  * il distretto; le coordinate dei luoghi sono relative a quel riquadro.
+ * Le descrizioni sono testi originali scritti per 77 Secondi; `previous` è la descrizione messa da una versione
+ * precedente di questi dati, che viene sostituita (le descrizioni scritte dallo staff no).
  * Mappa: Night City circa 2045, © 2025 R. Talsorian Games.
  */
 import type { Area, Shape } from '../../districts.ts';
 
-export type SeedLocation = { name: string; description: string; x: number; y: number };
-export type SeedDistrict = { name: string; aliases?: string[]; description: string; area: Area; shape: Shape; locations: SeedLocation[] };
+export type SeedLocation = { name: string; description: string; previous?: string; x: number; y: number };
+export type SeedDistrict = {
+	name: string;
+	aliases?: string[];
+	description: string;
+	previous?: string;
+	area: Area;
+	shape: Shape;
+	locations: SeedLocation[];
+};
 
 export const NIGHT_CITY_IMAGE = { width: 3240, height: 3690 };
 
 export const NIGHT_CITY_DISTRICTS: SeedDistrict[] = [
 	{
 		name: 'Little Europe',
-		description: 'Night City · The Island',
+		description:
+			"Caffè, gallerie e palazzi restaurati affacciati sulla baia: qui l'élite della Ricostruzione ama sentirsi cosmopolita. Di giorno si passeggia, di notte si tratta nei retrobottega.\n\nNight City · The Island",
+		previous: 'Night City · The Island',
 		area: { x: 25.63, y: 38.07, w: 18.55, h: 13.9 },
 		shape: {
 			points: [
@@ -54,24 +66,109 @@ export const NIGHT_CITY_DISTRICTS: SeedDistrict[] = [
 			label: [38.4, 42.06]
 		},
 		locations: [
-			{ name: 'Camden Court', description: 'Abitazioni · Sorvegliato', x: 54.7, y: 18.8 },
-			{ name: "Chopper's", description: 'Bar', x: 65.4, y: 61.3 },
-			{ name: 'Continental Brands Vertical Neighborhood', description: 'Alloggi corporativi', x: 49.2, y: 52.1 },
-			{ name: 'Cube-A-Rama', description: 'Cube hotel', x: 71.4, y: 44.9 },
-			{ name: 'Danger Gal Housing Facility', description: 'Alloggi corporativi', x: 22.1, y: 32.0 },
-			{ name: 'Danger Gal Offices', description: 'Uffici', x: 26.1, y: 35.9 },
-			{ name: "Fiddler's Green", description: 'Bar', x: 52.0, y: 30.1 },
-			{ name: "Greta's", description: 'Intrattenimento', x: 89.4, y: 32.4 },
-			{ name: 'Holy Angels Church', description: 'Ritrovo', x: 40.1, y: 31.9 },
-			{ name: 'Paradiso Terrestre', description: 'Ristorante', x: 53.3, y: 58.3 },
-			{ name: 'Short Circuit', description: 'Bar · Tecnologia', x: 78.0, y: 61.3 },
-			{ name: "Soprano's", description: 'Ristorante', x: 49.8, y: 76.3 },
-			{ name: "Torrell and Chiang's", description: 'Negozio', x: 57.0, y: 82.7 }
+			{
+				name: 'Camden Court',
+				description:
+					'Complesso residenziale sorvegliato, con portineria armata e ascensori a badge. Chi abita qui paga cara la tranquillità.\n\nTipo: Abitazioni · Sorvegliato',
+				previous: 'Abitazioni · Sorvegliato',
+				x: 54.7,
+				y: 18.8
+			},
+			{
+				name: "Chopper's",
+				description: 'Bar di motociclisti dal bancone graffiato, birra sintetica e musica alta. Le moto parcheggiate fuori dicono chi comanda.\n\nTipo: Bar',
+				previous: 'Bar',
+				x: 65.4,
+				y: 61.3
+			},
+			{
+				name: 'Continental Brands Vertical Neighborhood',
+				description:
+					'Torre-quartiere per i dipendenti della Continental Brands: case, mensa e negozi nello stesso edificio. Si può vivere anni senza uscirne.\n\nTipo: Alloggi corporativi',
+				previous: 'Alloggi corporativi',
+				x: 49.2,
+				y: 52.1
+			},
+			{
+				name: 'Cube-A-Rama',
+				description: 'Cube hotel economico, celle impilate a ore o a settimana. Pareti sottili e nessuna domanda.\n\nTipo: Cube hotel',
+				previous: 'Cube hotel',
+				x: 71.4,
+				y: 44.9
+			},
+			{
+				name: 'Danger Gal Housing Facility',
+				description:
+					'Alloggi per il personale di Danger Gal, agenzia di indagini e sicurezza. Ingressi discreti e vicini che non fanno domande.\n\nTipo: Alloggi corporativi',
+				previous: 'Alloggi corporativi',
+				x: 22.1,
+				y: 32.0
+			},
+			{
+				name: 'Danger Gal Offices',
+				description: 'Uffici di Danger Gal: indagini, sorveglianza e recupero di informazioni, rigorosamente su commissione.\n\nTipo: Uffici',
+				previous: 'Uffici',
+				x: 26.1,
+				y: 35.9
+			},
+			{
+				name: "Fiddler's Green",
+				description: "Pub dall'aria irlandese con musica dal vivo e whisky di dubbia provenienza. Il posto giusto per un brindisi ai caduti.\n\nTipo: Bar",
+				previous: 'Bar',
+				x: 52.0,
+				y: 30.1
+			},
+			{
+				name: "Greta's",
+				description: 'Locale con spettacoli serali, luci soffuse e un palco sempre occupato.\n\nTipo: Intrattenimento',
+				previous: 'Intrattenimento',
+				x: 89.4,
+				y: 32.4
+			},
+			{
+				name: 'Holy Angels Church',
+				description:
+					"Chiesa sopravvissuta alla guerra, oggi rifugio, mensa e luogo d'incontro. Il prete ascolta tutti, anche chi non viene per pregare.\n\nTipo: Ritrovo",
+				previous: 'Ritrovo',
+				x: 40.1,
+				y: 31.9
+			},
+			{
+				name: 'Paradiso Terrestre',
+				description: "Ristorante italiano elegante, tovaglie bianche e prezzi da dirigente. Ideale per una cena d'affari.\n\nTipo: Ristorante",
+				previous: 'Ristorante',
+				x: 53.3,
+				y: 58.3
+			},
+			{
+				name: 'Short Circuit',
+				description:
+					'Bar per tecnici e netrunner, con componenti usati in vendita e partite in rete fino a tardi. Se serve un pezzo raro, si chiede al bancone.\n\nTipo: Bar · Tecnologia',
+				previous: 'Bar · Tecnologia',
+				x: 78.0,
+				y: 61.3
+			},
+			{
+				name: "Soprano's",
+				description: 'Trattoria a conduzione familiare, piatti abbondanti e una saletta sul retro per chi deve parlare in privato.\n\nTipo: Ristorante',
+				previous: 'Ristorante',
+				x: 49.8,
+				y: 76.3
+			},
+			{
+				name: "Torrell and Chiang's",
+				description: "Negozio di elettronica e articoli di lusso, dove si trova un po' di tutto, anche ciò che non è in vetrina.\n\nTipo: Negozio",
+				previous: 'Negozio',
+				x: 57.0,
+				y: 82.7
+			}
 		]
 	},
 	{
 		name: 'Upper Marina',
-		description: 'Night City · The Island',
+		description:
+			'Il lungobaia rimesso a nuovo, tra moli, locali alla moda e uffici con vista sul cratere. Ci girano soldi, fixer e mercenari in cerca di ingaggi.\n\nNight City · The Island',
+		previous: 'Night City · The Island',
 		area: { x: 41.2, y: 36.28, w: 25.57, h: 13.67 },
 		shape: {
 			points: [
@@ -116,24 +213,108 @@ export const NIGHT_CITY_DISTRICTS: SeedDistrict[] = [
 			label: [54.07, 41.84]
 		},
 		locations: [
-			{ name: 'The Afterlife', description: 'Bar', x: 38.7, y: 56.9 },
-			{ name: "Buffalo's", description: 'Ristorante', x: 11.7, y: 40.3 },
-			{ name: 'City Medical Center', description: 'Ospedale', x: 59.0, y: 77.0 },
-			{ name: 'The Garden of Earthly Delights', description: 'Ristorante · Bordello', x: 49.8, y: 2 },
-			{ name: 'Graffitix', description: 'Arte', x: 61.7, y: 61.1 },
-			{ name: 'La Lune Blue', description: 'Ristorante', x: 66.6, y: 60.1 },
-			{ name: 'Marina FloatHomes', description: 'Abitazioni', x: 16.4, y: 24.4 },
-			{ name: 'McCartney Cubes', description: 'Cube hotel', x: 36.6, y: 34.7 },
-			{ name: 'McCartney Field Stadium', description: 'Intrattenimento', x: 27.5, y: 39.5 },
-			{ name: 'Night City Bubbles', description: 'Intrattenimento · Bordello', x: 59.0, y: 66.5 },
-			{ name: 'REO Meatwagon Offices', description: 'Uffici', x: 76.7, y: 66.5 },
-			{ name: 'TravlStay CityCenter', description: 'Cube hotel', x: 8.2, y: 45.1 },
-			{ name: 'Ziggurat Offices', description: 'Uffici', x: 68.5, y: 49.8 }
+			{
+				name: 'The Afterlife',
+				description: "Il bar dei mercenari per eccellenza: qui si trovano fixer, ingaggi e leggende. I drink portano il nome di chi non c'è più.\n\nTipo: Bar",
+				previous: 'Bar',
+				x: 38.7,
+				y: 56.9
+			},
+			{
+				name: "Buffalo's",
+				description: 'Steakhouse rumorosa con carne vera (dicono) e porzioni enormi, frequentata da camionisti e portuali.\n\nTipo: Ristorante',
+				previous: 'Ristorante',
+				x: 11.7,
+				y: 40.3
+			},
+			{
+				name: 'City Medical Center',
+				description: 'Il grande ospedale pubblico della zona: pronto soccorso sempre pieno, attese lunghe e medici stanchi.\n\nTipo: Ospedale',
+				previous: 'Ospedale',
+				x: 59.0,
+				y: 77.0
+			},
+			{
+				name: 'The Garden of Earthly Delights',
+				description:
+					'Ristorante raffinato al piano terra, piaceri di altro genere ai piani di sopra. Discrezione assoluta, per chi può pagarla.\n\nTipo: Ristorante · Bordello',
+				previous: 'Ristorante · Bordello',
+				x: 49.8,
+				y: 2
+			},
+			{
+				name: 'Graffitix',
+				description: 'Galleria e laboratorio di street art: bombolette, muri dipinti e artisti che lasciano il segno in tutta la città.\n\nTipo: Arte',
+				previous: 'Arte',
+				x: 61.7,
+				y: 61.1
+			},
+			{
+				name: 'La Lune Blue',
+				description:
+					'Bistrot francese sul lungobaia, con terrazza e vini importati. Romantico, se si ignorano le guardie del corpo ai tavoli vicini.\n\nTipo: Ristorante',
+				previous: 'Ristorante',
+				x: 66.6,
+				y: 60.1
+			},
+			{
+				name: 'Marina FloatHomes',
+				description: 'Case galleggianti ormeggiate lungo la marina: una comunità tranquilla, finché la marea non porta guai.\n\nTipo: Abitazioni',
+				previous: 'Abitazioni',
+				x: 16.4,
+				y: 24.4
+			},
+			{
+				name: 'McCartney Cubes',
+				description: 'Cube hotel vicino allo stadio, pieno nei giorni di partita e di concerto.\n\nTipo: Cube hotel',
+				previous: 'Cube hotel',
+				x: 36.6,
+				y: 34.7
+			},
+			{
+				name: 'McCartney Field Stadium',
+				description:
+					'Lo stadio della zona, tra partite, concerti e grandi eventi. Nei giorni di festa le strade intorno diventano un fiume di gente.\n\nTipo: Intrattenimento',
+				previous: 'Intrattenimento',
+				x: 27.5,
+				y: 39.5
+			},
+			{
+				name: 'Night City Bubbles',
+				description: 'Locale per adulti tra bolle di luce, schiuma e privé. Si entra per curiosità, si esce più poveri.\n\nTipo: Intrattenimento · Bordello',
+				previous: 'Intrattenimento · Bordello',
+				x: 59.0,
+				y: 66.5
+			},
+			{
+				name: 'REO Meatwagon Offices',
+				description: 'Sede di REO Meatwagon, le ambulanze a basso costo che fanno concorrenza a Trauma Team. Arrivano tardi, ma arrivano.\n\nTipo: Uffici',
+				previous: 'Uffici',
+				x: 76.7,
+				y: 66.5
+			},
+			{
+				name: 'TravlStay CityCenter',
+				description: 'Cube hotel di catena per chi viaggia per lavoro. Pulito, anonimo, tutto uguale.\n\nTipo: Cube hotel',
+				previous: 'Cube hotel',
+				x: 8.2,
+				y: 45.1
+			},
+			{
+				name: 'Ziggurat Offices',
+				description:
+					'Uffici di Ziggurat, corporazione dei media digitali e delle infrastrutture di rete. Ascensori silenziosi e sorrisi di plastica.\n\nTipo: Uffici',
+				previous: 'Uffici',
+				x: 68.5,
+				y: 49.8
+			}
 		]
 	},
 	{
 		name: 'Downtown',
-		description: 'Night City · The Island',
+		description:
+			'Il vecchio cuore commerciale, ricostruito a pezzi accanto al cratere. Uffici corporativi, condomini e vie dello shopping convivono con cantieri che non finiscono mai.\n\nNight City · The Island',
+		previous: 'Night City · The Island',
 		area: { x: 26.24, y: 43.64, w: 8.26, h: 7.74 },
 		shape: {
 			points: [
@@ -163,16 +344,50 @@ export const NIGHT_CITY_DISTRICTS: SeedDistrict[] = [
 			label: [30.0, 46.61]
 		},
 		locations: [
-			{ name: 'Acadia Way', description: 'Abitazioni', x: 79.3, y: 55.4 },
-			{ name: 'Continental Brands Offices', description: 'Uffici · Negozio', x: 76.3, y: 22.3 },
-			{ name: 'Cortex Complex', description: 'Uffici', x: 55.4, y: 55.9 },
-			{ name: 'Delirium', description: 'Club', x: 62.9, y: 83.9 },
-			{ name: 'Night City Firestation #2', description: 'Vigili del fuoco · Cyberware', x: 45.0, y: 55.9 }
+			{
+				name: 'Acadia Way',
+				description: "Via di palazzine ristrutturate, dove abita chi lavora in centro ma non guadagna abbastanza per l'Exec Zone.\n\nTipo: Abitazioni",
+				previous: 'Abitazioni',
+				x: 79.3,
+				y: 55.4
+			},
+			{
+				name: 'Continental Brands Offices',
+				description:
+					'Uffici e showroom della Continental Brands, il colosso dei prodotti di consumo. Alla reception regalano campioni.\n\nTipo: Uffici · Negozio',
+				previous: 'Uffici · Negozio',
+				x: 76.3,
+				y: 22.3
+			},
+			{
+				name: 'Cortex Complex',
+				description: 'Complesso di uffici in affitto per piccole corporazioni e startup, che cambiano insegna ogni mese.\n\nTipo: Uffici',
+				previous: 'Uffici',
+				x: 55.4,
+				y: 55.9
+			},
+			{
+				name: 'Delirium',
+				description: "Club notturno di luci stroboscopiche e musica assordante. Si balla fino all'alba, poi non si ricorda nulla.\n\nTipo: Club",
+				previous: 'Club',
+				x: 62.9,
+				y: 83.9
+			},
+			{
+				name: 'Night City Firestation #2',
+				description:
+					"Caserma dei vigili del fuoco con un piccolo ambulatorio per il cyberware d'emergenza. In città gli incendi non mancano mai.\n\nTipo: Vigili del fuoco · Cyberware",
+				previous: 'Vigili del fuoco · Cyberware',
+				x: 45.0,
+				y: 55.9
+			}
 		]
 	},
 	{
 		name: 'The Hot Zone',
-		description: 'Night City · The Island',
+		description:
+			'Il cratere lasciato dalla bomba del 2023 nel vecchio centro corporativo. Rovine, radiazioni residue e chi non ha altro posto dove andare: la città ci gira intorno senza guardarlo.\n\nNight City · The Island',
+		previous: 'Night City · The Island',
 		area: { x: 39.21, y: 41.42, w: 17.62, h: 13.24 },
 		shape: {
 			points: [
@@ -202,15 +417,45 @@ export const NIGHT_CITY_DISTRICTS: SeedDistrict[] = [
 			label: [46.91, 47.91]
 		},
 		locations: [
-			{ name: 'The Ashcroft Hotel', description: 'Hotel · Abbandonato / distrutto', x: 69.6, y: 56.2 },
-			{ name: 'The N54', description: 'Media · Abbandonato / distrutto', x: 33.8, y: 72.6 },
-			{ name: "Toggle's Temple", description: 'Negozio', x: 12.4, y: 33.3 },
-			{ name: 'Totentanz', description: 'Club · Covo di gang', x: 35.5, y: 17.7 }
+			{
+				name: 'The Ashcroft Hotel',
+				description:
+					"Ex albergo di lusso sventrato dall'esplosione, oggi rifugio di abusivi e affari poco puliti. Le stanze migliori hanno ancora il pavimento.\n\nTipo: Hotel · Abbandonato / distrutto",
+				previous: 'Hotel · Abbandonato / distrutto',
+				x: 69.6,
+				y: 56.2
+			},
+			{
+				name: 'The N54',
+				description:
+					'Ciò che resta di una sede di Network 54, tra antenne piegate e archivi abbandonati. Si dice che qualcuno trasmetta ancora da qui.\n\nTipo: Media · Abbandonato / distrutto',
+				previous: 'Media · Abbandonato / distrutto',
+				x: 33.8,
+				y: 72.6
+			},
+			{
+				name: "Toggle's Temple",
+				description:
+					'Bazar improvvisato tra le macerie, dove si vende tutto ciò che si recupera nel cratere. Prezzi trattabili, provenienza no.\n\nTipo: Negozio',
+				previous: 'Negozio',
+				x: 12.4,
+				y: 33.3
+			},
+			{
+				name: 'Totentanz',
+				description:
+					'Club sotterraneo frequentato dalle gang, musica martellante e regole proprie. Si entra con il permesso giusto, si esce se va bene.\n\nTipo: Club · Covo di gang',
+				previous: 'Club · Covo di gang',
+				x: 35.5,
+				y: 17.7
+			}
 		]
 	},
 	{
 		name: 'Little China',
-		description: 'Night City · The Island',
+		description:
+			'Mercati affollati, insegne in hanzi e torri residenziali strette tra il canale e il centro. Un quartiere che si regge sulle proprie famiglie, sui propri affari e sulle proprie regole.\n\nNight City · The Island',
+		previous: 'Night City · The Island',
 		area: { x: 53.87, y: 47.25, w: 11.89, h: 8.27 },
 		shape: {
 			points: [
@@ -232,16 +477,51 @@ export const NIGHT_CITY_DISTRICTS: SeedDistrict[] = [
 			label: [60.12, 51.38]
 		},
 		locations: [
-			{ name: 'Bridgetown', description: 'Container abitativi', x: 82.6, y: 29.8 },
-			{ name: 'Chrome Cross', description: 'Bar', x: 27.0, y: 62.6 },
-			{ name: 'Forlorn Hope', description: 'Bar', x: 50.8, y: 75.7 },
-			{ name: 'Guǎngbō Tower', description: 'Uffici · Istruzione', x: 52.9, y: 20.5 },
-			{ name: 'Prosperity Gardens Tenements', description: 'Abitazioni · Sorvegliato', x: 44.5, y: 32.6 }
+			{
+				name: 'Bridgetown',
+				description:
+					"Baraccopoli di container sotto le rampe del ponte: famiglie, ambulanti e un'organizzazione di quartiere sorprendentemente efficiente.\n\nTipo: Container abitativi",
+				previous: 'Container abitativi',
+				x: 82.6,
+				y: 29.8
+			},
+			{
+				name: 'Chrome Cross',
+				description: 'Bar di quartiere frequentato da gente con molto metallo addosso. Le risse finiscono presto, i debiti no.\n\nTipo: Bar',
+				previous: 'Bar',
+				x: 27.0,
+				y: 62.6
+			},
+			{
+				name: 'Forlorn Hope',
+				description: 'Bar di veterani e mercenari, con le foto dei caduti appese alle pareti. Qui si ricorda chi non è tornato.\n\nTipo: Bar',
+				previous: 'Bar',
+				x: 50.8,
+				y: 75.7
+			},
+			{
+				name: 'Guǎngbō Tower',
+				description:
+					'Torre di uffici e redazioni, con una biblioteca pubblica ai piani bassi. Notizie in cinque lingue, verità in nessuna.\n\nTipo: Uffici · Istruzione',
+				previous: 'Uffici · Istruzione',
+				x: 52.9,
+				y: 20.5
+			},
+			{
+				name: 'Prosperity Gardens Tenements',
+				description:
+					'Caseggiati popolari con cortili interni e cancelli sorvegliati. Il nome promette giardini che nessuno ha mai visto.\n\nTipo: Abitazioni · Sorvegliato',
+				previous: 'Abitazioni · Sorvegliato',
+				x: 44.5,
+				y: 32.6
+			}
 		]
 	},
 	{
 		name: 'University District',
-		description: 'Night City · The Island',
+		description:
+			'Campus, laboratori corporativi e affitti per studenti, con la sala concerti a fare da vetrina. Sotto la superficie colta, quei laboratori fanno gola a molti.\n\nNight City · The Island',
+		previous: 'Night City · The Island',
 		area: { x: 24.26, y: 48.35, w: 18.88, h: 7.43 },
 		shape: {
 			points: [
@@ -284,20 +564,74 @@ export const NIGHT_CITY_DISTRICTS: SeedDistrict[] = [
 			label: [30.25, 52.25]
 		},
 		locations: [
-			{ name: 'Biotechnica Campus', description: 'Uffici', x: 81.8, y: 52.5 },
-			{ name: 'Biotechnica Habitation Sphere Alpha', description: 'Alloggi corporativi', x: 76.1, y: 39.4 },
-			{ name: 'Night City Symphony Hall', description: 'Teatro / locale a tema · Covo di gang', x: 48.6, y: 67.1 },
-			{ name: 'Night City University', description: 'Istruzione', x: 16.0, y: 48.8 },
-			{ name: 'Parkside Living', description: 'Abitazioni', x: 93.1, y: 65.6 },
-			{ name: 'Princessland!', description: 'Teatro / locale a tema · Abbandonato / distrutto · Covo di gang', x: 57.8, y: 56.9 },
-			{ name: 'Stems & Seeds', description: 'Orto di guerriglia', x: 16.5, y: 70.4 },
-			{ name: 'University Cubes', description: 'Cube hotel', x: 30.4, y: 63.4 },
-			{ name: 'Yewtree', description: 'Bar', x: 55.2, y: 73.5 }
+			{
+				name: 'Biotechnica Campus',
+				description: 'Sede di ricerca di Biotechnica: serre, laboratori genetici e badge che si aprono solo per chi deve.\n\nTipo: Uffici',
+				previous: 'Uffici',
+				x: 81.8,
+				y: 52.5
+			},
+			{
+				name: 'Biotechnica Habitation Sphere Alpha',
+				description:
+					'Cupola residenziale sperimentale per i ricercatori di Biotechnica, con aria e clima controllati. Un mondo a parte, letteralmente.\n\nTipo: Alloggi corporativi',
+				previous: 'Alloggi corporativi',
+				x: 76.1,
+				y: 39.4
+			},
+			{
+				name: 'Night City Symphony Hall',
+				description:
+					'La sala concerti della città, rimasta in piedi per miracolo. Di sera orchestre, di notte qualcuno usa le cantine per altri scopi.\n\nTipo: Teatro / locale a tema · Covo di gang',
+				previous: 'Teatro / locale a tema · Covo di gang',
+				x: 48.6,
+				y: 67.1
+			},
+			{
+				name: 'Night City University',
+				description:
+					"L'università della città, con aule, biblioteche e progetti finanziati dalle corporazioni. Laurearsi è difficile, essere reclutati facile.\n\nTipo: Istruzione",
+				previous: 'Istruzione',
+				x: 16.0,
+				y: 48.8
+			},
+			{
+				name: 'Parkside Living',
+				description: 'Appartamenti affacciati sul parco, amati da docenti e giovani coppie.\n\nTipo: Abitazioni',
+				previous: 'Abitazioni',
+				x: 93.1,
+				y: 65.6
+			},
+			{
+				name: 'Princessland!',
+				description:
+					'Ex parco a tema per bambini, chiuso e mezzo distrutto, oggi territorio di una gang. Le mascotte sorridono ancora dai muri.\n\nTipo: Teatro / locale a tema · Abbandonato / distrutto · Covo di gang',
+				previous: 'Teatro / locale a tema · Abbandonato / distrutto · Covo di gang',
+				x: 57.8,
+				y: 56.9
+			},
+			{
+				name: 'Stems & Seeds',
+				description: 'Orto comunitario nato tra le macerie, dove si coltiva cibo vero. Prezioso, e per questo difeso.\n\nTipo: Orto di guerriglia',
+				previous: 'Orto di guerriglia',
+				x: 16.5,
+				y: 70.4
+			},
+			{
+				name: 'University Cubes',
+				description: 'Cube hotel per studenti fuorisede e ricercatori di passaggio.\n\nTipo: Cube hotel',
+				previous: 'Cube hotel',
+				x: 30.4,
+				y: 63.4
+			},
+			{ name: 'Yewtree', description: 'Pub di studenti e professori, tra dibattiti accesi e birra annacquata.\n\nTipo: Bar', previous: 'Bar', x: 55.2, y: 73.5 }
 		]
 	},
 	{
 		name: 'The Glen',
-		description: 'Night City · The Island',
+		description:
+			'Il nuovo centro amministrativo: municipio, tribunale, banca e la piazza principale. È il volto ordinato di Night City, e il più sorvegliato.\n\nNight City · The Island',
+		previous: 'Night City · The Island',
 		area: { x: 36.46, y: 52.23, w: 14.67, h: 12.13 },
 		shape: {
 			points: [
@@ -332,24 +666,106 @@ export const NIGHT_CITY_DISTRICTS: SeedDistrict[] = [
 			label: [44.07, 57.99]
 		},
 		locations: [
-			{ name: '1st Night City Bank', description: 'Sorvegliato', x: 33.6, y: 66.3 },
-			{ name: 'Air', description: 'Bar', x: 63.4, y: 29.0 },
-			{ name: "Bear's", description: 'Bar', x: 24.4, y: 22.3 },
-			{ name: 'City Hall', description: 'Uffici', x: 42.5, y: 79.5 },
-			{ name: 'City Police Precinct #1', description: 'Polizia', x: 79.4, y: 36.6 },
-			{ name: 'Club Atlantis', description: 'Club', x: 73.7, y: 26.1 },
-			{ name: 'Glenlife Perfected', description: 'Abitazioni', x: 14.8, y: 56.2 },
-			{ name: 'Hall of Justice', description: 'Uffici · Polizia', x: 58.5, y: 77.7 },
-			{ name: "Kasim's", description: 'Bar', x: 28.2, y: 56.6 },
-			{ name: 'Merrill, Asukaga & Finch Offices', description: 'Uffici', x: 53.1, y: 64.7 },
-			{ name: 'Night City Plaza', description: 'Parco', x: 24.3, y: 37.9 },
-			{ name: 'Raven Microcybernetics', description: 'Uffici', x: 38.5, y: 25.0 },
-			{ name: 'Seafoam', description: 'Cube hotel', x: 62.1, y: 16.0 }
+			{
+				name: '1st Night City Bank',
+				description:
+					"La banca principale della città, caveau blindato e guardie armate. Rapinarla è un'idea che viene a molti e riesce a pochi.\n\nTipo: Sorvegliato",
+				previous: 'Sorvegliato',
+				x: 33.6,
+				y: 66.3
+			},
+			{
+				name: 'Air',
+				description: 'Lounge bar sopraelevato con vista sulla piazza: cocktail costosi e pareti di vetro.\n\nTipo: Bar',
+				previous: 'Bar',
+				x: 63.4,
+				y: 29.0
+			},
+			{
+				name: "Bear's",
+				description: 'Bar frequentato dagli impiegati comunali dopo il turno. Si parla di politica a voce bassa.\n\nTipo: Bar',
+				previous: 'Bar',
+				x: 24.4,
+				y: 22.3
+			},
+			{
+				name: 'City Hall',
+				description: 'Il municipio, simbolo della nuova Night City: uffici pubblici, permessi e lunghe code sotto lo sguardo delle telecamere.\n\nTipo: Uffici',
+				previous: 'Uffici',
+				x: 42.5,
+				y: 79.5
+			},
+			{
+				name: 'City Police Precinct #1',
+				description: 'Distretto centrale del NCPD. Celle sempre piene e agenti che hanno visto troppo.\n\nTipo: Polizia',
+				previous: 'Polizia',
+				x: 79.4,
+				y: 36.6
+			},
+			{
+				name: 'Club Atlantis',
+				description:
+					'Club elegante a tema subacqueo, con acquari luminosi e musica soffusa. Ci si incontra per affari che non stanno bene in ufficio.\n\nTipo: Club',
+				previous: 'Club',
+				x: 73.7,
+				y: 26.1
+			},
+			{
+				name: 'Glenlife Perfected',
+				description: 'Complesso residenziale curato e sorvegliato, per funzionari e impiegati modello.\n\nTipo: Abitazioni',
+				previous: 'Abitazioni',
+				x: 14.8,
+				y: 56.2
+			},
+			{
+				name: 'Hall of Justice',
+				description: 'Tribunale e uffici della procura, con celle di custodia nei sotterranei. Qui la legge si applica, a volte.\n\nTipo: Uffici · Polizia',
+				previous: 'Uffici · Polizia',
+				x: 58.5,
+				y: 77.7
+			},
+			{
+				name: "Kasim's",
+				description: 'Bar-caffè dove si fuma il narghilè e si gioca a carte fino a tardi. Il proprietario sa sempre chi sta cercando chi.\n\nTipo: Bar',
+				previous: 'Bar',
+				x: 28.2,
+				y: 56.6
+			},
+			{
+				name: 'Merrill, Asukaga & Finch Offices',
+				description: 'Uffici di Merrill, Asukaga & Finch, corporazione di finanza e ricerca: contratti, investimenti e segreti.\n\nTipo: Uffici',
+				previous: 'Uffici',
+				x: 53.1,
+				y: 64.7
+			},
+			{
+				name: 'Night City Plaza',
+				description: 'La grande piazza alberata del centro, cuore delle feste e delle proteste. Di giorno famiglie, di notte pattuglie.\n\nTipo: Parco',
+				previous: 'Parco',
+				x: 24.3,
+				y: 37.9
+			},
+			{
+				name: 'Raven Microcybernetics',
+				description: 'Uffici e laboratori di Raven Microcybernetics, produttori di impianti e componenti cyberware.\n\nTipo: Uffici',
+				previous: 'Uffici',
+				x: 38.5,
+				y: 25.0
+			},
+			{
+				name: 'Seafoam',
+				description: 'Cube hotel economico dalle pareti color acqua marina. Economico, appunto.\n\nTipo: Cube hotel',
+				previous: 'Cube hotel',
+				x: 62.1,
+				y: 16.0
+			}
 		]
 	},
 	{
 		name: 'Old Japantown',
-		description: 'Night City · The Island',
+		description:
+			'Vicoli stretti, cube hotel e botteghe aperte giorno e notte, sopravvissuti alla guerra per pura ostinazione. Si trova di tutto, purché si sappia a chi chiedere.\n\nNight City · The Island',
+		previous: 'Night City · The Island',
 		area: { x: 47.4, y: 49.91, w: 11.74, h: 9.99 },
 		shape: {
 			points: [
@@ -380,17 +796,55 @@ export const NIGHT_CITY_DISTRICTS: SeedDistrict[] = [
 			label: [52.22, 55.5]
 		},
 		locations: [
-			{ name: 'Crisis Medical Center', description: 'Ospedale', x: 43.2, y: 69.3 },
-			{ name: 'Highcourt Plaza Hotel', description: 'Hotel · Sorvegliato', x: 48.7, y: 30.7 },
-			{ name: "Honest Hiro's Used Cars", description: 'Negozio', x: 55.8, y: 60.0 },
-			{ name: "Mrs. Suzuki's Bodega", description: 'Negozio', x: 56.3, y: 47.0 },
-			{ name: 'The Precipice', description: 'Container abitativi', x: 34.0, y: 26.4 },
-			{ name: 'Unnamed Cube Hotel', description: 'Cube hotel', x: 65.5, y: 60.6 }
+			{
+				name: 'Crisis Medical Center',
+				description: 'Pronto soccorso di quartiere che non chiude mai. Si cura chiunque, ma si paga prima.\n\nTipo: Ospedale',
+				previous: 'Ospedale',
+				x: 43.2,
+				y: 69.3
+			},
+			{
+				name: 'Highcourt Plaza Hotel',
+				description: 'Albergo elegante e sorvegliato, preferito da chi viene in città per affari riservati.\n\nTipo: Hotel · Sorvegliato',
+				previous: 'Hotel · Sorvegliato',
+				x: 48.7,
+				y: 30.7
+			},
+			{
+				name: "Honest Hiro's Used Cars",
+				description: "Autosalone di veicoli usati: il nome è una promessa, i chilometri un'opinione.\n\nTipo: Negozio",
+				previous: 'Negozio',
+				x: 55.8,
+				y: 60.0
+			},
+			{
+				name: "Mrs. Suzuki's Bodega",
+				description: 'Piccolo emporio aperto giorno e notte. La signora Suzuki vende di tutto e ricorda ogni faccia.\n\nTipo: Negozio',
+				previous: 'Negozio',
+				x: 56.3,
+				y: 47.0
+			},
+			{
+				name: 'The Precipice',
+				description: 'Comunità di container impilati sul ciglio di un vecchio cantiere. Le scale sono ripide, i vicini solidali.\n\nTipo: Container abitativi',
+				previous: 'Container abitativi',
+				x: 34.0,
+				y: 26.4
+			},
+			{
+				name: 'Unnamed Cube Hotel',
+				description: 'Cube hotel senza insegna e senza registro, ideale per sparire per qualche notte.\n\nTipo: Cube hotel',
+				previous: 'Cube hotel',
+				x: 65.5,
+				y: 60.6
+			}
 		]
 	},
 	{
 		name: 'South Night City',
-		description: 'Night City · The Island',
+		description:
+			'Un mosaico di container abitativi, studi di musica e locali dove la Ricostruzione è arrivata solo a metà. Rumoroso, creativo e pericoloso dopo il tramonto.\n\nNight City · The Island',
+		previous: 'Night City · The Island',
 		area: { x: 28.41, y: 53.07, w: 19.41, h: 16.01 },
 		shape: {
 			points: [
@@ -443,19 +897,71 @@ export const NIGHT_CITY_DISTRICTS: SeedDistrict[] = [
 			label: [33.46, 57.45]
 		},
 		locations: [
-			{ name: 'The Boneyard', description: 'Covo di gang · Cimitero', x: 46.0, y: 12.1 },
-			{ name: 'MindNutz Lover', description: 'Braindance', x: 38.1, y: 10.0 },
-			{ name: 'Savage Docs', description: 'Ripperdoc / clinica', x: 43.8, y: 25.3 },
-			{ name: 'Silverhand Studios', description: 'Abitazioni', x: 55.3, y: 79.8 },
-			{ name: 'The Slammer', description: 'Bar · Arena', x: 37.5, y: 90.0 },
-			{ name: 'South Cargo Village', description: 'Container abitativi', x: 78.2, y: 71.0 },
-			{ name: 'Union Chapel Building', description: 'Covo di gang · Abbandonato / distrutto', x: 31.1, y: 15.9 },
-			{ name: 'University Cargo Bay', description: 'Container abitativi', x: 8.1, y: 15.4 }
+			{
+				name: 'The Boneyard',
+				description:
+					'Cimitero di auto e macerie usato come covo da una gang. Non tutto quello che è sepolto qui è di metallo.\n\nTipo: Covo di gang · Cimitero',
+				previous: 'Covo di gang · Cimitero',
+				x: 46.0,
+				y: 12.1
+			},
+			{
+				name: 'MindNutz Lover',
+				description: 'Negozio e saletta di braindance con registrazioni di ogni genere. Alcune non sono legali.\n\nTipo: Braindance',
+				previous: 'Braindance',
+				x: 38.1,
+				y: 10.0
+			},
+			{
+				name: 'Savage Docs',
+				description: 'Ripperdoc senza troppe licenze: prezzi bassi, mani ferme, domande poche.\n\nTipo: Ripperdoc / clinica',
+				previous: 'Ripperdoc / clinica',
+				x: 43.8,
+				y: 25.3
+			},
+			{
+				name: 'Silverhand Studios',
+				description: 'Palazzina di studi e alloggi per musicisti, dove le prove durano tutta la notte.\n\nTipo: Abitazioni',
+				previous: 'Abitazioni',
+				x: 55.3,
+				y: 79.8
+			},
+			{
+				name: 'The Slammer',
+				description: "Bar con un'arena per incontri di lotta clandestini. Si scommette, si urla, si sanguina.\n\nTipo: Bar · Arena",
+				previous: 'Bar · Arena',
+				x: 37.5,
+				y: 90.0
+			},
+			{
+				name: 'South Cargo Village',
+				description: 'Villaggio di container abitativi con orti sui tetti e un mercato improvvisato.\n\nTipo: Container abitativi',
+				previous: 'Container abitativi',
+				x: 78.2,
+				y: 71.0
+			},
+			{
+				name: 'Union Chapel Building',
+				description:
+					'Ex cappella sindacale semidistrutta, oggi covo di una gang. Le panche sono ancora lì, le preghiere meno.\n\nTipo: Covo di gang · Abbandonato / distrutto',
+				previous: 'Covo di gang · Abbandonato / distrutto',
+				x: 31.1,
+				y: 15.9
+			},
+			{
+				name: 'University Cargo Bay',
+				description: "Container trasformati in alloggi per studenti senza soldi, vicino all'università.\n\nTipo: Container abitativi",
+				previous: 'Container abitativi',
+				x: 8.1,
+				y: 15.4
+			}
 		]
 	},
 	{
 		name: 'Port of Night City',
-		description: 'Night City · The Island',
+		description:
+			'Moli, gru e magazzini: da qui entra ed esce quasi tutto quello che la città consuma. Le dogane sono una formalità, per chi conosce le persone giuste.\n\nNight City · The Island',
+		previous: 'Night City · The Island',
 		area: { x: 25.03, y: 56.58, w: 9.86, h: 9.61 },
 		shape: {
 			points: [
@@ -491,18 +997,64 @@ export const NIGHT_CITY_DISTRICTS: SeedDistrict[] = [
 			label: [29.88, 61.57]
 		},
 		locations: [
-			{ name: 'Dock 13', description: 'Fixer', x: 49.0, y: 77.0 },
-			{ name: 'Dock 14 Studio Apartments', description: 'Abitazioni', x: 54.0, y: 84.9 },
-			{ name: 'Dock Cargo Community', description: 'Container abitativi', x: 54.0, y: 93.1 },
-			{ name: 'Flotsam', description: 'Bar', x: 7.7, y: 19.5 },
-			{ name: 'Medical Technologies', description: 'Cyberware', x: 45.2, y: 27.6 },
-			{ name: "Rusty's Dive Shack", description: 'Bar', x: 43.5, y: 54.5 },
-			{ name: 'South Night City Reclaimed Studio', description: 'Abitazioni', x: 40.2, y: 35.4 }
+			{
+				name: 'Dock 13',
+				description:
+					'Banchina dove lavora un fixer che procura merci e contatti a chi sa chiedere. Si arriva con un appuntamento, si riparte con un incarico.\n\nTipo: Fixer',
+				previous: 'Fixer',
+				x: 49.0,
+				y: 77.0
+			},
+			{
+				name: 'Dock 14 Studio Apartments',
+				description: "Ex magazzini portuali riconvertiti in monolocali. Umidi, ma con vista sull'acqua.\n\nTipo: Abitazioni",
+				previous: 'Abitazioni',
+				x: 54.0,
+				y: 84.9
+			},
+			{
+				name: 'Dock Cargo Community',
+				description:
+					'Comunità di portuali che vive in container impilati sulle banchine. Si lavora insieme, si mangia insieme, si tace insieme.\n\nTipo: Container abitativi',
+				previous: 'Container abitativi',
+				x: 54.0,
+				y: 93.1
+			},
+			{
+				name: 'Flotsam',
+				description: "Bar ricavato da un vecchio barcone ormeggiato. Ondeggia un po', soprattutto dopo il terzo bicchiere.\n\nTipo: Bar",
+				previous: 'Bar',
+				x: 7.7,
+				y: 19.5
+			},
+			{
+				name: 'Medical Technologies',
+				description: 'Clinica di cyberware vicino al porto, rifornita di pezzi che arrivano via mare.\n\nTipo: Cyberware',
+				previous: 'Cyberware',
+				x: 45.2,
+				y: 27.6
+			},
+			{
+				name: "Rusty's Dive Shack",
+				description: 'Bettola per marinai e scaricatori, con birra tiepida e storie di mare.\n\nTipo: Bar',
+				previous: 'Bar',
+				x: 43.5,
+				y: 54.5
+			},
+			{
+				name: 'South Night City Reclaimed Studio',
+				description: 'Capannone recuperato e trasformato in alloggi e spazi per artisti.\n\nTipo: Abitazioni',
+				previous: 'Abitazioni',
+				x: 40.2,
+				y: 35.4
+			}
 		]
 	},
 	{
 		name: 'Reclamation Zone',
-		description: 'Night City · The Island',
+		description:
+			'Una fascia di macerie che la città si sta riprendendo un isolato alla volta. Pochi edifici in piedi, molti silenzi.\n\nNight City · The Island',
+		previous: 'Night City · The Island',
 		area: { x: 31.86, y: 59.89, w: 6.35, h: 7.04 },
 		shape: {
 			points: [
@@ -522,11 +1074,21 @@ export const NIGHT_CITY_DISTRICTS: SeedDistrict[] = [
 			],
 			label: [35.19, 64.5]
 		},
-		locations: [{ name: "Herschel's Crematorium", description: 'Cimitero', x: 50.9, y: 65.8 }]
+		locations: [
+			{
+				name: "Herschel's Crematorium",
+				description: 'Crematorio a gestione familiare, uno dei pochi edifici integri della zona. Il lavoro non manca mai.\n\nTipo: Cimitero',
+				previous: 'Cimitero',
+				x: 50.9,
+				y: 65.8
+			}
+		]
 	},
 	{
 		name: 'Old Combat Zone',
-		description: 'Night City · The Island',
+		description:
+			'Un tempo terra di nessuno, oggi quartiere di confine dove gang, ripperdoc e piccoli commerci si spartiscono le strade. Nessuno ci passa per caso.\n\nNight City · The Island',
+		previous: 'Night City · The Island',
 		area: { x: 45.03, y: 57.21, w: 10.61, h: 10.57 },
 		shape: {
 			points: [
@@ -550,15 +1112,43 @@ export const NIGHT_CITY_DISTRICTS: SeedDistrict[] = [
 			label: [50.62, 61.25]
 		},
 		locations: [
-			{ name: 'From the Ashes', description: 'Ripperdoc / clinica', x: 54.0, y: 13.3 },
-			{ name: "Jesse James' Kosher Deli", description: 'Ristorante', x: 32.0, y: 73.8 },
-			{ name: 'NC Ionic Semiconductor Building', description: 'Container abitativi', x: 86.7, y: 23.6 },
-			{ name: 'The Underground', description: 'Covo di gang', x: 71.4, y: 13.3 }
+			{
+				name: 'From the Ashes',
+				description:
+					'Ripperdoc e clinica di fortuna, rinata dalle ceneri di un vecchio ambulatorio. Accetta anche pagamenti in natura.\n\nTipo: Ripperdoc / clinica',
+				previous: 'Ripperdoc / clinica',
+				x: 54.0,
+				y: 13.3
+			},
+			{
+				name: "Jesse James' Kosher Deli",
+				description: 'Gastronomia kosher con panini leggendari e un proprietario dal passato da fuorilegge, dicono.\n\nTipo: Ristorante',
+				previous: 'Ristorante',
+				x: 32.0,
+				y: 73.8
+			},
+			{
+				name: 'NC Ionic Semiconductor Building',
+				description:
+					'Ex fabbrica di semiconduttori trasformata in alloggi in container: tra i macchinari dismessi vive un quartiere intero.\n\nTipo: Container abitativi',
+				previous: 'Container abitativi',
+				x: 86.7,
+				y: 23.6
+			},
+			{
+				name: 'The Underground',
+				description: 'Rete di locali e tunnel sotterranei controllata dalle gang. Si entra solo accompagnati.\n\nTipo: Covo di gang',
+				previous: 'Covo di gang',
+				x: 71.4,
+				y: 13.3
+			}
 		]
 	},
 	{
 		name: 'NorCal Military Base',
-		description: 'Night City · Northside',
+		description:
+			'La grande base sul promontorio nord, oggi in mano a Militech. Recinzioni, checkpoint e un via vai continuo di uniformi e mezzi blindati.\n\nNight City · Northside',
+		previous: 'Night City · Northside',
 		area: { x: 29.73, y: 12.02, w: 20.85, h: 13.47 },
 		shape: {
 			points: [
@@ -600,13 +1190,27 @@ export const NIGHT_CITY_DISTRICTS: SeedDistrict[] = [
 			label: [40.12, 19.3]
 		},
 		locations: [
-			{ name: 'Militech Corporate Operatives Housing', description: 'Alloggi corporativi', x: 68.1, y: 79.6 },
-			{ name: 'Militech Offices', description: 'Uffici', x: 44.4, y: 85.8 }
+			{
+				name: 'Militech Corporate Operatives Housing',
+				description: 'Alloggi per gli operativi di Militech: dormitori in ordine, mensa e addestramento ogni mattina.\n\nTipo: Alloggi corporativi',
+				previous: 'Alloggi corporativi',
+				x: 68.1,
+				y: 79.6
+			},
+			{
+				name: 'Militech Offices',
+				description: 'Comando e uffici di Militech nella base. Ingresso solo con autorizzazione, e nemmeno sempre.\n\nTipo: Uffici',
+				previous: 'Uffici',
+				x: 44.4,
+				y: 85.8
+			}
 		]
 	},
 	{
 		name: 'Watson Development',
-		description: 'Night City · Northside',
+		description:
+			"Distretto industriale e di alloggi corporativi, rinato con i soldi di Petrochem, SovOil e Trauma Team. Il lavoro c'è, la libertà un po' meno.\n\nNight City · Northside",
+		previous: 'Night City · Northside',
 		area: { x: 25.99, y: 5.09, w: 30.98, h: 35.33 },
 		shape: {
 			points: [
@@ -660,25 +1264,100 @@ export const NIGHT_CITY_DISTRICTS: SeedDistrict[] = [
 			label: [43.21, 29.05]
 		},
 		locations: [
-			{ name: 'City Police Precinct #3', description: 'Polizia', x: 55.6, y: 68.2 },
-			{ name: 'HTown', description: 'Arena', x: 64.3, y: 22.0 },
-			{ name: 'Petrochem & SovOil Joint Temporary Housing', description: 'Alloggi corporativi', x: 74.6, y: 51.8 },
-			{ name: 'Petrochem Offices', description: 'Uffici', x: 77.3, y: 55.5 },
-			{ name: 'Red Oktober', description: 'Bar', x: 57.8, y: 83.1 },
-			{ name: 'Redline', description: 'Arena · Covo di gang', x: 65.3, y: 88.4 },
-			{ name: "Sakura's", description: 'Bar', x: 69.3, y: 72.7 },
-			{ name: 'Smash/Cut', description: 'Club · Bordello', x: 74.5, y: 45.7 },
-			{ name: 'SovOil Offices', description: 'Uffici', x: 73.3, y: 55.9 },
-			{ name: 'Trauma Team Corporate Living Center', description: 'Alloggi corporativi', x: 62.8, y: 63.7 },
-			{ name: 'Trauma Team Tower', description: 'Ospedale · Uffici', x: 66.8, y: 58.8 },
-			{ name: 'Vargtimmen', description: 'Bar', x: 33.3, y: 58.2 },
-			{ name: 'Watson Central Cubelife', description: 'Cube hotel', x: 61.2, y: 61.1 }
+			{
+				name: 'City Police Precinct #3',
+				description: 'Distretto del NCPD per la zona di Watson: poche risorse, molto lavoro.\n\nTipo: Polizia',
+				previous: 'Polizia',
+				x: 55.6,
+				y: 68.2
+			},
+			{
+				name: 'HTown',
+				description: 'Arena ricavata da un ex deposito, dove si combatte per soldi davanti a un pubblico che vuole sangue.\n\nTipo: Arena',
+				previous: 'Arena',
+				x: 64.3,
+				y: 22.0
+			},
+			{
+				name: 'Petrochem & SovOil Joint Temporary Housing',
+				description: 'Alloggi temporanei condivisi dai lavoratori di Petrochem e SovOil. Temporanei da anni.\n\nTipo: Alloggi corporativi',
+				previous: 'Alloggi corporativi',
+				x: 74.6,
+				y: 51.8
+			},
+			{
+				name: 'Petrochem Offices',
+				description: 'Uffici di Petrochem, il gigante dei carburanti e della chimica agricola.\n\nTipo: Uffici',
+				previous: 'Uffici',
+				x: 77.3,
+				y: 55.5
+			},
+			{
+				name: 'Red Oktober',
+				description: "Bar dall'arredamento sovietico, vodka ghiacciata e clienti dagli accenti dell'Est.\n\nTipo: Bar",
+				previous: 'Bar',
+				x: 57.8,
+				y: 83.1
+			},
+			{
+				name: 'Redline',
+				description: 'Arena di corse e combattimenti gestita da una gang. Si corre, si scommette, si perde.\n\nTipo: Arena · Covo di gang',
+				previous: 'Arena · Covo di gang',
+				x: 65.3,
+				y: 88.4
+			},
+			{ name: "Sakura's", description: 'Piccolo bar giapponese con karaoke nel retro e sake caldo.\n\nTipo: Bar', previous: 'Bar', x: 69.3, y: 72.7 },
+			{
+				name: 'Smash/Cut',
+				description: 'Club di musica estrema con privé dove si paga per compagnia. Le luci rosse non sono solo decorative.\n\nTipo: Club · Bordello',
+				previous: 'Club · Bordello',
+				x: 74.5,
+				y: 45.7
+			},
+			{
+				name: 'SovOil Offices',
+				description: 'Uffici di SovOil, la compagnia petrolifera rivale di Petrochem.\n\nTipo: Uffici',
+				previous: 'Uffici',
+				x: 73.3,
+				y: 55.9
+			},
+			{
+				name: 'Trauma Team Corporate Living Center',
+				description: 'Complesso residenziale per il personale di Trauma Team, sempre pronto a ripartire.\n\nTipo: Alloggi corporativi',
+				previous: 'Alloggi corporativi',
+				x: 62.8,
+				y: 63.7
+			},
+			{
+				name: 'Trauma Team Tower',
+				description:
+					"Quartier generale di Trauma Team, con pista per i velivoli d'emergenza e terapia intensiva. Chi ha l'abbonamento giusto viene salvato.\n\nTipo: Ospedale · Uffici",
+				previous: 'Ospedale · Uffici',
+				x: 66.8,
+				y: 58.8
+			},
+			{
+				name: 'Vargtimmen',
+				description: "Bar nordico aperto fino all'alba: l'ora del lupo, per chi non riesce a dormire.\n\nTipo: Bar",
+				previous: 'Bar',
+				x: 33.3,
+				y: 58.2
+			},
+			{
+				name: 'Watson Central Cubelife',
+				description: 'Grande cube hotel per i lavoratori dei turni di notte.\n\nTipo: Cube hotel',
+				previous: 'Cube hotel',
+				x: 61.2,
+				y: 61.1
+			}
 		],
 		aliases: ['Watson']
 	},
 	{
 		name: 'Kabuki',
-		description: 'Night City · Northside',
+		description:
+			'Pochi isolati tra Watson e New Westbrook, famosi per il teatro e i locali notturni. Lanterne, neon e affari conclusi a bassa voce.\n\nNight City · Northside',
+		previous: 'Night City · Northside',
 		area: { x: 46.43, y: 24.67, w: 8.49, h: 13.2 },
 		shape: {
 			points: [
@@ -707,13 +1386,28 @@ export const NIGHT_CITY_DISTRICTS: SeedDistrict[] = [
 			label: [51.23, 29.59]
 		},
 		locations: [
-			{ name: 'Nakagawa Kabuki Theater', description: 'Teatro / locale a tema · Covo di gang', x: 29.3, y: 69.3 },
-			{ name: 'Yum Seng', description: 'Bar', x: 33.0, y: 35.2 }
+			{
+				name: 'Nakagawa Kabuki Theater',
+				description:
+					'Teatro kabuki dalle lanterne rosse: spettacoli tradizionali in sala e incontri tra gang nei camerini.\n\nTipo: Teatro / locale a tema · Covo di gang',
+				previous: 'Teatro / locale a tema · Covo di gang',
+				x: 29.3,
+				y: 69.3
+			},
+			{
+				name: 'Yum Seng',
+				description: 'Bar rumoroso dove si brinda ad alta voce e si gioca a dadi sul bancone.\n\nTipo: Bar',
+				previous: 'Bar',
+				x: 33.0,
+				y: 35.2
+			}
 		]
 	},
 	{
 		name: 'New Westbrook',
-		description: 'Night City · Mainland',
+		description:
+			'Quartiere ricco e verde, con centri commerciali, campus tecnologici e residenze sorvegliate. Qui la Ricostruzione è riuscita, per chi può permettersela.\n\nNight City · Mainland',
+		previous: 'Night City · Mainland',
 		area: { x: 47.12, y: 13.02, w: 30.27, h: 42.19 },
 		shape: {
 			points: [
@@ -762,22 +1456,90 @@ export const NIGHT_CITY_DISTRICTS: SeedDistrict[] = [
 			label: [59.63, 27.1]
 		},
 		locations: [
-			{ name: 'Canalside Plaza', description: 'Uffici · Ristorante · Negozio', x: 77.2, y: 89.8 },
-			{ name: "Chatelaine's", description: 'Bar · Teatro / locale a tema', x: 55.0, y: 50.0 },
-			{ name: "Dilly's", description: 'Hotel · Bordello', x: 47.2, y: 39.7 },
-			{ name: 'Evergreen Apartments', description: 'Cube hotel', x: 39.1, y: 45.4 },
-			{ name: 'Network 54 Office', description: 'Media · Uffici', x: 55.7, y: 43.8 },
-			{ name: 'Network 54 Westbrook Private Acres', description: 'Alloggi corporativi', x: 62.6, y: 47.7 },
-			{ name: 'Night City Firestation #1', description: 'Vigili del fuoco', x: 76.5, y: 85.1 },
-			{ name: 'North Cargo Village', description: 'Container abitativi', x: 27.5, y: 41.2 },
-			{ name: 'Rocklin Augmentics Campus', description: 'Uffici', x: 67.1, y: 84.7 },
-			{ name: 'Rocklin Augmentics Innovation Hub', description: 'Alloggi corporativi', x: 72.8, y: 87.3 },
-			{ name: 'WorldSat Offices', description: 'Uffici · Sorvegliato', x: 56.1, y: 26.6 }
+			{
+				name: 'Canalside Plaza',
+				description: 'Galleria affacciata sul canale, tra uffici, ristoranti e negozi di marca.\n\nTipo: Uffici · Ristorante · Negozio',
+				previous: 'Uffici · Ristorante · Negozio',
+				x: 77.2,
+				y: 89.8
+			},
+			{
+				name: "Chatelaine's",
+				description: "Cabaret raffinato con bar e spettacoli dal vivo, frequentato dall'alta società di Westbrook.\n\nTipo: Bar · Teatro / locale a tema",
+				previous: 'Bar · Teatro / locale a tema',
+				x: 55.0,
+				y: 50.0
+			},
+			{
+				name: "Dilly's",
+				description: 'Albergo a ore con servizi per adulti, discreto e ben protetto.\n\nTipo: Hotel · Bordello',
+				previous: 'Hotel · Bordello',
+				x: 47.2,
+				y: 39.7
+			},
+			{
+				name: 'Evergreen Apartments',
+				description: 'Complesso di micro-appartamenti per impiegati: tutto uguale, tranne il panorama.\n\nTipo: Cube hotel',
+				previous: 'Cube hotel',
+				x: 39.1,
+				y: 45.4
+			},
+			{
+				name: 'Network 54 Office',
+				description: 'Studi e redazione di Network 54, la rete televisiva più seguita della città.\n\nTipo: Media · Uffici',
+				previous: 'Media · Uffici',
+				x: 55.7,
+				y: 43.8
+			},
+			{
+				name: 'Network 54 Westbrook Private Acres',
+				description: 'Residenze private per i volti e i dirigenti di Network 54, recintate e sorvegliate.\n\nTipo: Alloggi corporativi',
+				previous: 'Alloggi corporativi',
+				x: 62.6,
+				y: 47.7
+			},
+			{
+				name: 'Night City Firestation #1',
+				description: 'La caserma principale dei vigili del fuoco della città.\n\nTipo: Vigili del fuoco',
+				previous: 'Vigili del fuoco',
+				x: 76.5,
+				y: 85.1
+			},
+			{
+				name: 'North Cargo Village',
+				description: 'Villaggio di container per chi lavora a Westbrook ma non può permettersi di viverci.\n\nTipo: Container abitativi',
+				previous: 'Container abitativi',
+				x: 27.5,
+				y: 41.2
+			},
+			{
+				name: 'Rocklin Augmentics Campus',
+				description: 'Campus di Rocklin Augmentics, produttori di protesi e cyberware di fascia alta.\n\nTipo: Uffici',
+				previous: 'Uffici',
+				x: 67.1,
+				y: 84.7
+			},
+			{
+				name: 'Rocklin Augmentics Innovation Hub',
+				description: 'Residenze e laboratori per i talenti di Rocklin Augmentics, coccolati e sorvegliati.\n\nTipo: Alloggi corporativi',
+				previous: 'Alloggi corporativi',
+				x: 72.8,
+				y: 87.3
+			},
+			{
+				name: 'WorldSat Offices',
+				description: 'Uffici blindati di WorldSat, la corporazione delle comunicazioni satellitari.\n\nTipo: Uffici · Sorvegliato',
+				previous: 'Uffici · Sorvegliato',
+				x: 56.1,
+				y: 26.6
+			}
 		]
 	},
 	{
 		name: 'Charter Hill',
-		description: 'Night City · Mainland',
+		description:
+			'Colline di ville, club esclusivi e giardini curati, lontane dal rumore della città. La sicurezza privata conosce tutti per nome.\n\nNight City · Mainland',
+		previous: 'Night City · Mainland',
 		area: { x: 65.2, y: 31.13, w: 11.56, h: 12.29 },
 		shape: {
 			points: [
@@ -812,15 +1574,35 @@ export const NIGHT_CITY_DISTRICTS: SeedDistrict[] = [
 			label: [70.74, 34.69]
 		},
 		locations: [
-			{ name: "Anjelika's", description: 'Bar · Cyberware', x: 22.3, y: 71.0 },
-			{ name: 'Bella Mia', description: 'Club', x: 25.8, y: 60.4 },
-			{ name: "L'Ermitage", description: 'Abitazioni', x: 28.7, y: 93.1 },
-			{ name: 'Seral Grove', description: 'Cimitero · Arte', x: 63.9, y: 15.4 }
+			{
+				name: "Anjelika's",
+				description: 'Bar elegante con un ripperdoc di fiducia nel retro, per ritocchi discreti.\n\nTipo: Bar · Cyberware',
+				previous: 'Bar · Cyberware',
+				x: 22.3,
+				y: 71.0
+			},
+			{ name: 'Bella Mia', description: "Club esclusivo con musica dal vivo e una lista d'ingresso severa.\n\nTipo: Club", previous: 'Club', x: 25.8, y: 60.4 },
+			{
+				name: "L'Ermitage",
+				description: 'Residenza di lusso immersa nel verde, con sicurezza privata.\n\nTipo: Abitazioni',
+				previous: 'Abitazioni',
+				x: 28.7,
+				y: 93.1
+			},
+			{
+				name: 'Seral Grove',
+				description: 'Cimitero monumentale e giardino di sculture, silenzioso e curatissimo.\n\nTipo: Cimitero · Arte',
+				previous: 'Cimitero · Arte',
+				x: 63.9,
+				y: 15.4
+			}
 		]
 	},
 	{
 		name: 'Exec Zone',
-		description: 'Night City · Mainland',
+		description:
+			"Enclave recintata per i dirigenti delle corporazioni, con ingressi controllati e servizi esclusivi. Senza invito non si entra, e con l'invito si viene osservati.\n\nNight City · Mainland",
+		previous: 'Night City · Mainland',
 		area: { x: 68.18, y: 37.42, w: 8.76, h: 8.24 },
 		shape: {
 			points: [
@@ -845,7 +1627,9 @@ export const NIGHT_CITY_DISTRICTS: SeedDistrict[] = [
 	},
 	{
 		name: 'Heywood Docks',
-		description: 'Night City · Mainland',
+		description:
+			"Banchine e depositi lungo il canale, all'ombra del San Morro Bridge. Container, magazzini a noleggio e traffici che preferiscono non lasciare tracce.\n\nNight City · Mainland",
+		previous: 'Night City · Mainland',
 		area: { x: 61.18, y: 51.65, w: 10.99, h: 10.24 },
 		shape: {
 			points: [
@@ -868,11 +1652,21 @@ export const NIGHT_CITY_DISTRICTS: SeedDistrict[] = [
 			],
 			label: [69.01, 57.13]
 		},
-		locations: [{ name: 'Greenbox Storage Units', description: 'Sorvegliato', x: 32.0, y: 83.9 }]
+		locations: [
+			{
+				name: 'Greenbox Storage Units',
+				description: "Depositi a noleggio sorvegliati, aperti giorno e notte. Quello che c'è dentro resta affare di chi paga.\n\nTipo: Sorvegliato",
+				previous: 'Sorvegliato',
+				x: 32.0,
+				y: 83.9
+			}
+		]
 	},
 	{
 		name: 'North Heywood',
-		description: 'Night City · Mainland',
+		description:
+			'Condomini, parchi e uffici dove famiglie, corporativi e gang convivono a pochi isolati di distanza. Tranquillo, finché non lo è più.\n\nNight City · Mainland',
+		previous: 'Night City · Mainland',
 		area: { x: 65.26, y: 50.47, w: 19.66, h: 17.91 },
 		shape: {
 			points: [
@@ -910,21 +1704,83 @@ export const NIGHT_CITY_DISTRICTS: SeedDistrict[] = [
 			label: [74.2, 60.6]
 		},
 		locations: [
-			{ name: 'Acorn Towers', description: 'Alloggi corporativi', x: 50.2, y: 21.3 },
-			{ name: 'The Armory', description: 'Covo di gang', x: 14.9, y: 59.4 },
-			{ name: 'Biotechnica Palm Grove', description: 'Orto di guerriglia', x: 45.3, y: 14.6 },
-			{ name: 'Converted Motel Studio Apartments', description: 'Abitazioni', x: 89.9, y: 46.1 },
-			{ name: 'Dynalar Campus', description: 'Uffici', x: 35.9, y: 18.3 },
-			{ name: 'Forlorn Hope', description: 'Bar', x: 35.6, y: 11.9 },
-			{ name: "Nana Meow's Nursery", description: 'Negozio · Orto di guerriglia', x: 25.5, y: 43.7 },
-			{ name: 'Night City Animal Shelter', description: 'Ripperdoc / clinica', x: 52.2, y: 38.8 },
-			{ name: 'Woodland Park', description: 'Negozio · Container abitativi · Abitazioni · Cube hotel', x: 39.7, y: 13.4 },
-			{ name: 'Xanadu', description: 'Intrattenimento · Covo di gang', x: 44.4, y: 20.7 }
+			{
+				name: 'Acorn Towers',
+				description: 'Torri residenziali per dipendenti corporativi, con negozi e palestra al piano terra.\n\nTipo: Alloggi corporativi',
+				previous: 'Alloggi corporativi',
+				x: 50.2,
+				y: 21.3
+			},
+			{
+				name: 'The Armory',
+				description: 'Ex armeria della guardia nazionale, oggi fortezza di una gang.\n\nTipo: Covo di gang',
+				previous: 'Covo di gang',
+				x: 14.9,
+				y: 59.4
+			},
+			{
+				name: 'Biotechnica Palm Grove',
+				description: 'Serra e frutteto sperimentale di Biotechnica, dove le palme crescono più in fretta del normale.\n\nTipo: Orto di guerriglia',
+				previous: 'Orto di guerriglia',
+				x: 45.3,
+				y: 14.6
+			},
+			{
+				name: 'Converted Motel Studio Apartments',
+				description: 'Vecchio motel convertito in monolocali, con piscina vuota e insegna accesa a metà.\n\nTipo: Abitazioni',
+				previous: 'Abitazioni',
+				x: 89.9,
+				y: 46.1
+			},
+			{
+				name: 'Dynalar Campus',
+				description: 'Sede di Dynalar, produttori di impianti e tecnologie cibernetiche.\n\nTipo: Uffici',
+				previous: 'Uffici',
+				x: 35.9,
+				y: 18.3
+			},
+			{
+				name: 'Forlorn Hope',
+				description: 'Bar di quartiere con lo stesso nome di quello di Little China, e un pubblico altrettanto duro.\n\nTipo: Bar',
+				previous: 'Bar',
+				x: 35.6,
+				y: 11.9
+			},
+			{
+				name: "Nana Meow's Nursery",
+				description: 'Vivaio e negozio di piante, con gatti ovunque e una vecchietta che sa più di quanto dica.\n\nTipo: Negozio · Orto di guerriglia',
+				previous: 'Negozio · Orto di guerriglia',
+				x: 25.5,
+				y: 43.7
+			},
+			{
+				name: 'Night City Animal Shelter',
+				description: "Rifugio per animali che, all'occorrenza, ricuce anche le persone senza fare domande.\n\nTipo: Ripperdoc / clinica",
+				previous: 'Ripperdoc / clinica',
+				x: 52.2,
+				y: 38.8
+			},
+			{
+				name: 'Woodland Park',
+				description: 'Parco residenziale con case, container e bancarelle sotto gli alberi.\n\nTipo: Negozio · Container abitativi · Abitazioni · Cube hotel',
+				previous: 'Negozio · Container abitativi · Abitazioni · Cube hotel',
+				x: 39.7,
+				y: 13.4
+			},
+			{
+				name: 'Xanadu',
+				description: "Locale sfarzoso controllato da una gang, tra gioco d'azzardo e spettacoli.\n\nTipo: Intrattenimento · Covo di gang",
+				previous: 'Intrattenimento · Covo di gang',
+				x: 44.4,
+				y: 20.7
+			}
 		]
 	},
 	{
 		name: 'Heywood Industrial Zone',
-		description: 'Night City · Mainland',
+		description:
+			'Fabbriche, officine e parchi uffici a buon mercato tra il canale e Santo Domingo. Si lavora sodo, si ricicla tutto, si chiede poco.\n\nNight City · Mainland',
+		previous: 'Night City · Mainland',
 		area: { x: 53.0, y: 59.38, w: 13.63, h: 14.52 },
 		shape: {
 			points: [
@@ -951,16 +1807,48 @@ export const NIGHT_CITY_DISTRICTS: SeedDistrict[] = [
 			label: [60.49, 65.04]
 		},
 		locations: [
-			{ name: 'D.V. Rambling Rose', description: 'Fixer', x: 45.0, y: 65.7 },
-			{ name: 'Old Ironworks Building', description: 'Abitazioni · Container abitativi', x: 54.9, y: 68.7 },
-			{ name: "Yang's Wheels", description: 'Uffici', x: 75.4, y: 35.1 },
-			{ name: 'Zhirafa Office Park', description: 'Uffici', x: 63.0, y: 20.9 },
-			{ name: 'Zhirafa Office Park MicroVillage', description: 'Alloggi corporativi', x: 83.9, y: 29.8 }
+			{
+				name: 'D.V. Rambling Rose',
+				description: 'Il fixer della zona lavora da un vecchio rimorchio: lavori, pezzi e contatti, a prezzo da concordare.\n\nTipo: Fixer',
+				previous: 'Fixer',
+				x: 45.0,
+				y: 65.7
+			},
+			{
+				name: 'Old Ironworks Building',
+				description: 'Ex fonderia trasformata in alloggi e container, ancora piena di fuliggine.\n\nTipo: Abitazioni · Container abitativi',
+				previous: 'Abitazioni · Container abitativi',
+				x: 54.9,
+				y: 68.7
+			},
+			{
+				name: "Yang's Wheels",
+				description: 'Ufficio e officina di un noleggiatore di veicoli, con mezzi per ogni tasca.\n\nTipo: Uffici',
+				previous: 'Uffici',
+				x: 75.4,
+				y: 35.1
+			},
+			{
+				name: 'Zhirafa Office Park',
+				description: 'Parco uffici di Zhirafa, la corporazione dei trasporti e della logistica.\n\nTipo: Uffici',
+				previous: 'Uffici',
+				x: 63.0,
+				y: 20.9
+			},
+			{
+				name: 'Zhirafa Office Park MicroVillage',
+				description: 'Piccolo quartiere di alloggi corporativi accanto agli uffici di Zhirafa.\n\nTipo: Alloggi corporativi',
+				previous: 'Alloggi corporativi',
+				x: 83.9,
+				y: 29.8
+			}
 		]
 	},
 	{
 		name: 'Santo Domingo',
-		description: 'Night City · Mainland',
+		description:
+			'Periferia operaia di centrali, villaggi di container e garage, dove i nomadi Aldecaldo hanno piantato le tende. Gente dura, che non aspetta aiuto da nessuno.\n\nNight City · Mainland',
+		previous: 'Night City · Mainland',
 		area: { x: 41.15, y: 59.63, w: 40.99, h: 25.45 },
 		shape: {
 			points: [
@@ -998,18 +1886,63 @@ export const NIGHT_CITY_DISTRICTS: SeedDistrict[] = [
 			label: [70.12, 70.24]
 		},
 		locations: [
-			{ name: 'Aldecaldo Camp', description: 'Ritrovo', x: 84.5, y: 65.0 },
-			{ name: 'City Police Precinct #2', description: 'Polizia', x: 36.9, y: 59.9 },
-			{ name: 'East Cargo Village', description: 'Container abitativi', x: 69.4, y: 62.0 },
-			{ name: 'Heywood Suites', description: 'Abitazioni', x: 59.2, y: 46.7 },
-			{ name: "María's", description: 'Bar', x: 61.0, y: 82.9 },
-			{ name: 'MetalStorm', description: 'Bar · Cyberware', x: 6.9, y: 49.3 },
-			{ name: "Woodchipper's Garage", description: 'Fixer', x: 67.4, y: 33.1 }
+			{
+				name: 'Aldecaldo Camp',
+				description:
+					'Accampamento dei nomadi Aldecaldo: roulotte, fuochi e un consiglio che decide per tutti. Gli ospiti sono rispettati, i nemici ricordati.\n\nTipo: Ritrovo',
+				previous: 'Ritrovo',
+				x: 84.5,
+				y: 65.0
+			},
+			{
+				name: 'City Police Precinct #2',
+				description: 'Distretto del NCPD per la periferia sud-est, più fortino che commissariato.\n\nTipo: Polizia',
+				previous: 'Polizia',
+				x: 36.9,
+				y: 59.9
+			},
+			{
+				name: 'East Cargo Village',
+				description: 'Villaggio di container dove vivono lavoratori, nomadi e famiglie arrivate da poco.\n\nTipo: Container abitativi',
+				previous: 'Container abitativi',
+				x: 69.4,
+				y: 62.0
+			},
+			{
+				name: 'Heywood Suites',
+				description: 'Palazzina di appartamenti in affitto, decorosa per gli standard della zona.\n\nTipo: Abitazioni',
+				previous: 'Abitazioni',
+				x: 59.2,
+				y: 46.7
+			},
+			{
+				name: "María's",
+				description: "Cantina messicana con tequila e musica dal vivo, punto d'incontro della comunità.\n\nTipo: Bar",
+				previous: 'Bar',
+				x: 61.0,
+				y: 82.9
+			},
+			{
+				name: 'MetalStorm',
+				description: 'Bar metal con un ripperdoc nel seminterrato: si beve, si poga, ci si fa installare qualcosa.\n\nTipo: Bar · Cyberware',
+				previous: 'Bar · Cyberware',
+				x: 6.9,
+				y: 49.3
+			},
+			{
+				name: "Woodchipper's Garage",
+				description: 'Officina di un fixer che procura veicoli, armi e lavori sporchi. Il nome dice tutto.\n\nTipo: Fixer',
+				previous: 'Fixer',
+				x: 67.4,
+				y: 33.1
+			}
 		]
 	},
 	{
 		name: 'Pacifica Playground',
-		description: 'Night City · Southside',
+		description:
+			'La costa sud, con il vecchio luna park e quartieri lasciati a sé stessi. Da quando i turisti non vengono più, comandano le gang.\n\nNight City · Southside',
+		previous: 'Night City · Southside',
 		area: { x: 22.92, y: 69.05, w: 22.21, h: 21.19 },
 		shape: {
 			points: [
@@ -1051,19 +1984,70 @@ export const NIGHT_CITY_DISTRICTS: SeedDistrict[] = [
 			label: [33.58, 76.1]
 		},
 		locations: [
-			{ name: "Bits'n'Bolts", description: 'Negozio · Tecnologia', x: 80.2, y: 23.8 },
-			{ name: 'Cubeland by the Sea', description: 'Cube hotel', x: 54.7, y: 18.2 },
-			{ name: 'Mister Rice Guy', description: 'Ristorante', x: 35.8, y: 56.0 },
-			{ name: 'Playhouse', description: 'Abitazioni', x: 63.1, y: 31.5 },
-			{ name: 'Playland by the Sea', description: 'Covo di gang · Intrattenimento', x: 7.5, y: 38.1 },
-			{ name: 'Pleasant Valley Apartments', description: 'Abitazioni', x: 40.8, y: 54.5 },
-			{ name: 'Scenic Cubes', description: 'Cube hotel · Arte', x: 24.7, y: 32.0 },
-			{ name: 'The XX (The Twenty)', description: 'Bar', x: 83.1, y: 28.9 }
+			{
+				name: "Bits'n'Bolts",
+				description: 'Bottega di elettronica e riparazioni, tra pezzi recuperati e hardware modificato.\n\nTipo: Negozio · Tecnologia',
+				previous: 'Negozio · Tecnologia',
+				x: 80.2,
+				y: 23.8
+			},
+			{
+				name: 'Cubeland by the Sea',
+				description: 'Cube hotel sul lungomare, mezzo vuoto da quando i turisti non vengono più.\n\nTipo: Cube hotel',
+				previous: 'Cube hotel',
+				x: 54.7,
+				y: 18.2
+			},
+			{
+				name: 'Mister Rice Guy',
+				description: 'Chiosco di riso e noodles famoso in tutta la costa sud. Economico e sempre aperto.\n\nTipo: Ristorante',
+				previous: 'Ristorante',
+				x: 35.8,
+				y: 56.0
+			},
+			{
+				name: 'Playhouse',
+				description: 'Palazzina ricavata da un ex teatro, con le vecchie decorazioni ancora sui muri.\n\nTipo: Abitazioni',
+				previous: 'Abitazioni',
+				x: 63.1,
+				y: 31.5
+			},
+			{
+				name: 'Playland by the Sea',
+				description:
+					'Il vecchio luna park sul mare, abbandonato e diventato territorio di una gang. Le giostre arrugginite, a volte, girano ancora.\n\nTipo: Covo di gang · Intrattenimento',
+				previous: 'Covo di gang · Intrattenimento',
+				x: 7.5,
+				y: 38.1
+			},
+			{
+				name: 'Pleasant Valley Apartments',
+				description: 'Complesso di appartamenti dal nome rassicurante e dalla realtà meno.\n\nTipo: Abitazioni',
+				previous: 'Abitazioni',
+				x: 40.8,
+				y: 54.5
+			},
+			{
+				name: 'Scenic Cubes',
+				description: 'Cube hotel con murales sulle pareti esterne, dipinti dagli artisti del quartiere.\n\nTipo: Cube hotel · Arte',
+				previous: 'Cube hotel · Arte',
+				x: 24.7,
+				y: 32.0
+			},
+			{
+				name: 'The XX (The Twenty)',
+				description: 'Bar di quartiere dalle insegne al neon, frequentato da chi vive a Pacifica da sempre.\n\nTipo: Bar',
+				previous: 'Bar',
+				x: 83.1,
+				y: 28.9
+			}
 		]
 	},
 	{
 		name: 'Rancho Coronado',
-		description: 'Night City · Southside',
+		description:
+			'Sobborghi di villette, centri commerciali e un vecchio stadio: un sogno suburbano mai finito davvero. Dietro le siepi ordinate, la vita è meno ordinata di quanto sembri.\n\nNight City · Southside',
+		previous: 'Night City · Southside',
 		area: { x: 35.04, y: 72.23, w: 28.06, h: 22.91 },
 		shape: {
 			points: [
@@ -1098,11 +2082,41 @@ export const NIGHT_CITY_DISTRICTS: SeedDistrict[] = [
 			label: [49.75, 80.22]
 		},
 		locations: [
-			{ name: 'Albino Alligator Carwash', description: 'Covo di gang', x: 16.9, y: 55.4 },
-			{ name: 'Coronado Heights', description: 'Abitazioni', x: 16.4, y: 31.8 },
-			{ name: 'Eagle Rock Stadium', description: 'Container abitativi', x: 50.7, y: 11.4 },
-			{ name: "Jack 'N' the Green", description: 'Orto di guerriglia', x: 71.4, y: 21.8 },
-			{ name: 'Minimallism', description: 'Covo di gang · Fixer', x: 29.2, y: 19.5 }
+			{
+				name: 'Albino Alligator Carwash',
+				description: 'Autolavaggio usato come copertura da una gang. Le macchine escono pulite, i soldi anche.\n\nTipo: Covo di gang',
+				previous: 'Covo di gang',
+				x: 16.9,
+				y: 55.4
+			},
+			{
+				name: 'Coronado Heights',
+				description: 'Quartiere di villette a schiera, tutte uguali e tutte recintate.\n\nTipo: Abitazioni',
+				previous: 'Abitazioni',
+				x: 16.4,
+				y: 31.8
+			},
+			{
+				name: 'Eagle Rock Stadium',
+				description: 'Vecchio stadio di periferia trasformato in villaggio di container abitativi.\n\nTipo: Container abitativi',
+				previous: 'Container abitativi',
+				x: 50.7,
+				y: 11.4
+			},
+			{
+				name: "Jack 'N' the Green",
+				description: 'Orto di guerriglia nato su un terreno abbandonato e coltivato di notte.\n\nTipo: Orto di guerriglia',
+				previous: 'Orto di guerriglia',
+				x: 71.4,
+				y: 21.8
+			},
+			{
+				name: 'Minimallism',
+				description: 'Centro commerciale semivuoto controllato da una gang, con un fixer nascosto tra i negozi chiusi.\n\nTipo: Covo di gang · Fixer',
+				previous: 'Covo di gang · Fixer',
+				x: 29.2,
+				y: 19.5
+			}
 		]
 	}
 ];

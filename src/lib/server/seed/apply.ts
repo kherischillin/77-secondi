@@ -6,7 +6,10 @@ import { NIGHT_CITY_DISTRICTS, NIGHT_CITY_IMAGE, type SeedDistrict } from './nig
 
 export class SeedError extends Error {}
 
-export type SeedResult = { created: number; updated: number; locations: number; skipped: string[] };
+export type SeedResult = { created: number; updated: number; locations: number; descriptions: number; skipped: string[] };
+
+/** Una descrizione si può sostituire se è vuota o è ancora quella messa da una versione precedente dei dati. */
+const replaceable = (current: string, previous?: string) => current.trim() === '' || (!!previous && current.trim() === previous);
 
 /** Vero se l'immagine caricata ha le stesse proporzioni di quella su cui sono state calcolate le forme. */
 export async function matchesNightCityImage(image: string | null): Promise<boolean> {
@@ -30,7 +33,7 @@ export async function applyDistricts(parentId: number, districts: SeedDistrict[]
 		if (!parent) throw new SeedError('Mappa non trovata.');
 		const maps = await tx.select().from(schema.maps);
 		const parentOf = new Map(maps.map((m) => [m.id, m.parentMapId]));
-		const result: SeedResult = { created: 0, updated: 0, locations: 0, skipped: [] };
+		const result: SeedResult = { created: 0, updated: 0, locations: 0, descriptions: 0, skipped: [] };
 
 		for (const d of districts) {
 			const names = [d.name, ...(d.aliases ?? [])].map((n) => n.toLowerCase());
@@ -42,9 +45,11 @@ export async function applyDistricts(parentId: number, districts: SeedDistrict[]
 					result.skipped.push(d.name);
 					continue;
 				}
+				const newDescription = replaceable(existing.description, d.previous) && existing.description !== d.description;
+				if (newDescription) result.descriptions++;
 				await tx
 					.update(schema.maps)
-					.set({ ...values, ...(existing.description ? {} : { description: d.description }), ...(existing.climate ? {} : { climate: parent.climate }) })
+					.set({ ...values, ...(newDescription ? { description: d.description } : {}), ...(existing.climate ? {} : { climate: parent.climate }) })
 					.where(eq(schema.maps.id, existing.id));
 				districtId = existing.id;
 				result.updated++;
@@ -57,11 +62,22 @@ export async function applyDistricts(parentId: number, districts: SeedDistrict[]
 				result.created++;
 			}
 
-			const present = new Set(
-				(await tx.select({ name: schema.locations.name }).from(schema.locations).where(eq(schema.locations.mapId, districtId))).map((l) =>
-					l.name.toLowerCase()
-				)
+			const present = new Map(
+				(
+					await tx
+						.select({ id: schema.locations.id, name: schema.locations.name, description: schema.locations.description })
+						.from(schema.locations)
+						.where(eq(schema.locations.mapId, districtId))
+				).map((l) => [l.name.toLowerCase(), l])
 			);
+			// Luoghi già creati: si aggiorna solo la descrizione, se non l'ha cambiata lo staff.
+			for (const l of d.locations) {
+				const old = present.get(l.name.toLowerCase());
+				if (old && old.description !== l.description && replaceable(old.description, l.previous)) {
+					await tx.update(schema.locations).set({ description: l.description }).where(eq(schema.locations.id, old.id));
+					result.descriptions++;
+				}
+			}
 			const fresh = d.locations.filter((l) => !present.has(l.name.toLowerCase()));
 			if (fresh.length) {
 				await tx.insert(schema.locations).values(
