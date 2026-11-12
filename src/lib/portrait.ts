@@ -1,6 +1,6 @@
 /**
  * Presta-volto da link esterno: solo HTTPS e solo dai siti ammessi dallo staff
- * (Gestione → Impostazioni). Le dimensioni massime valgono quando l'immagine viene mostrata.
+ * (Gestione → Impostazioni). Larghezza e altezza scelte lì sono il riquadro in cui l'immagine viene mostrata.
  */
 
 /** Siti di immagini ammessi all'inizio: servono link diretti all'immagine. */

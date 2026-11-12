@@ -57,17 +57,17 @@
 		</div>
 		<div class="sizes">
 			<div>
-				<label for="portraitMaxWidth">Larghezza massima (px)</label>
+				<label for="portraitMaxWidth">Larghezza (px)</label>
 				<input id="portraitMaxWidth" name="portraitMaxWidth" type="number" min="80" max="1000" required value={data.current.portraitMaxWidth} />
 				{#if errors.portraitMaxWidth}<p class="field-error">Scegli un numero tra 80 e 1000.</p>{/if}
 			</div>
 			<div>
-				<label for="portraitMaxHeight">Altezza massima (px)</label>
+				<label for="portraitMaxHeight">Altezza (px)</label>
 				<input id="portraitMaxHeight" name="portraitMaxHeight" type="number" min="80" max="1500" required value={data.current.portraitMaxHeight} />
 				{#if errors.portraitMaxHeight}<p class="field-error">Scegli un numero tra 80 e 1500.</p>{/if}
 			</div>
 		</div>
-		<p class="hint">Le immagini più grandi vengono rimpicciolite (senza deformarle) per stare in questo spazio.</p>
+		<p class="hint">Nella scheda il presta-volto occupa sempre questo riquadro (di base 350 × 500): l'immagine viene adattata senza deformarla e, se ha proporzioni diverse, i bordi in eccesso vengono tagliati.</p>
 	</fieldset>
 	<fieldset class="themes">
 		<legend>Tema grafico del sito <span class="hint">ogni giocatore può sceglierne un altro dal proprio account</span></legend>

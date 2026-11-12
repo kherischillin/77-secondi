@@ -22,7 +22,7 @@ export const settingsSchema = z.object({
 	customCss: z.string().max(50_000),
 	/** Siti da cui si possono collegare le immagini del presta-volto (solo HTTPS). */
 	portraitHosts: z.array(z.string().regex(HOST_PATTERN)).max(100),
-	/** Dimensioni massime del presta-volto nella scheda, in pixel. */
+	/** Dimensioni del riquadro del presta-volto nella scheda, in pixel (l'immagine lo riempie). */
 	portraitMaxWidth: z.number().int().min(80).max(1000),
 	portraitMaxHeight: z.number().int().min(80).max(1500)
 });
@@ -38,8 +38,8 @@ export const DEFAULT_SETTINGS: SiteSettings = {
 	theme: 'taverna',
 	customCss: '',
 	portraitHosts: DEFAULT_PORTRAIT_HOSTS,
-	portraitMaxWidth: 240,
-	portraitMaxHeight: 320
+	portraitMaxWidth: 350,
+	portraitMaxHeight: 500
 };
 
 let cache: SiteSettings | null = null;

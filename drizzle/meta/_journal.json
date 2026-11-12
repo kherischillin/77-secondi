@@ -64,6 +64,13 @@
       "when": 1794498717988,
       "tag": "0008_scheda_anagrafica",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794501221735,
+      "tag": "0009_presta_volto_350x500",
+      "breakpoints": true
     }
   ]
 }

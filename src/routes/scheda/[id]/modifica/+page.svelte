@@ -68,7 +68,7 @@
 	<div class="top-fields">
 		<fieldset class="portrait-field">
 			<legend>Presta-volto</legend>
-			<div class="portrait-box" style:--pw="{data.portrait.maxWidth}px" style:--ph="{data.portrait.maxHeight}px">
+			<div class="portrait-box" style:--pw="{data.portrait.maxWidth}px" style:--pr="{data.portrait.maxWidth} / {data.portrait.maxHeight}">
 				{#if previewSrc && !imgError}
 					<img
 						src={previewSrc}
@@ -108,9 +108,10 @@
 					</span>
 				</div>
 				<p class="hint">
-					Nella scheda l'immagine occupa al massimo <strong>{data.portrait.maxWidth} × {data.portrait.maxHeight} px</strong>:
-					se è più grande viene rimpicciolita, senza deformarla. Meglio in verticale.
-					{#if natural}<br />Questa immagine misura {natural.w} × {natural.h} px{natural.w > data.portrait.maxWidth || natural.h > data.portrait.maxHeight ? ' e sarà rimpicciolita' : ''}.{/if}
+					Nella scheda l'immagine riempie un riquadro di <strong>{data.portrait.maxWidth} × {data.portrait.maxHeight} px</strong>:
+					viene adattata senza deformarla e, se ha proporzioni diverse, i bordi in eccesso vengono tagliati
+					(l'anteprima qui accanto mostra il risultato).
+					{#if natural}<br />Questa immagine misura {natural.w} × {natural.h} px{natural.w * data.portrait.maxHeight === natural.h * data.portrait.maxWidth ? ': proporzioni perfette.' : natural.w < data.portrait.maxWidth ? ': è più piccola del riquadro, potrebbe sembrare sgranata.' : '.'}{/if}
 				</p>
 				{#if c.legacyPortraitUrl && !portraitUrl}
 					<label class="checkbox"><input type="checkbox" name="removePortrait" bind:checked={removeLegacy} /><span>Rimuovi l'immagine caricata in passato</span></label>
@@ -248,22 +249,20 @@
 	.portrait-box {
 		flex: 0 0 auto;
 		width: min(var(--pw), 40%);
-		min-height: 120px;
+		aspect-ratio: var(--pr);
 		display: grid;
 		place-items: center;
 		border: 1px dashed var(--border);
 		border-radius: var(--radius);
 		background: var(--bg-sunken);
 		text-align: center;
-		padding: 0.25rem;
+		overflow: hidden;
 	}
 	.portrait-box img {
 		display: block;
-		max-width: 100%;
-		max-height: var(--ph);
-		width: auto;
-		height: auto;
-		border-radius: calc(var(--radius) - 2px);
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
 	}
 	.profile-grid {
 		display: grid;

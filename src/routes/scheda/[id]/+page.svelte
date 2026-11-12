@@ -51,14 +51,14 @@
 <svelte:head><title>{fullName(c)} · Scheda</title></svelte:head>
 
 <article class="sheet">
-	<header class="top" style:--pw="{data.portraitBox.width}px" style:--ph="{data.portraitBox.height}px">
+	<header class="top" style:--pw="{data.portraitBox.width}px" style:--pr="{data.portraitBox.width} / {data.portraitBox.height}">
 		<div class="portrait">
 			{#if c.portraitUrl}
 				<img src={c.portraitUrl} alt="Presta-volto di {fullName(c)}" referrerpolicy="no-referrer" />
 			{:else}
 				<div class="noportrait" aria-hidden="true">{c.name.slice(0, 1)}</div>
 			{/if}
-			{#if c.portraitCredit}<p class="muted small credit">Presta-volto: {c.portraitCredit}</p>{/if}
+			{#if c.portraitCredit}<p class="credit">Presta-volto: {c.portraitCredit}</p>{/if}
 		</div>
 
 		<div class="main">
@@ -66,7 +66,13 @@
 				<div class="intro">
 					<p class="label">Scheda del personaggio</p>
 					<h1>{fullName(c)}</h1>
-					<p class="muted small">In gioco dal {formatDate(c.createdAt)}</p>
+					<div class="meta">
+						<span class="muted small">In gioco dal {formatDate(c.createdAt)}</span>
+						{#if data.viewer.canEdit}
+							<a class="button secondary compact" href="/scheda/{c.id}/modifica">Modifica scheda</a>
+						{/if}
+						{#if !owner}<ReportButton targetType="character" targetId={c.id} label="Segnala questa scheda" />{/if}
+					</div>
 					{#if data.guilds.length}
 						<ul class="guilds">
 							{#each data.guilds as g (g.id)}
@@ -79,12 +85,6 @@
 							{/each}
 						</ul>
 					{/if}
-					<div class="actions">
-						{#if data.viewer.canEdit}
-							<a class="button secondary" href="/scheda/{c.id}/modifica">Modifica scheda</a>
-						{/if}
-						{#if !owner}<ReportButton targetType="character" targetId={c.id} label="Segnala questa scheda" />{/if}
-					</div>
 				</div>
 
 				{#if data.xp}
@@ -115,12 +115,14 @@
 
 			<div class="facts">
 				<section class="card fact anag">
-					<h2>Dati anagrafici</h2>
+					<h2 class="label">Dati anagrafici</h2>
 					{#if data.profile.length}
 						<dl>
 							{#each data.profile as row (row.key)}
-								<dt>{row.label}</dt>
-								<dd>{row.value}</dd>
+								<div>
+									<dt>{row.label}</dt>
+									<dd>{row.value}</dd>
+								</div>
 							{/each}
 						</dl>
 					{:else}
@@ -131,8 +133,8 @@
 				<!-- Parte numerica: conta solo nelle quest. -->
 				<section class="card fact nums">
 					<div class="nums-head">
-						<h2>Caratteristiche e abilità</h2>
-						<span class="muted tiny">contano solo nelle quest</span>
+						<h2 class="label">Caratteristiche e abilità</h2>
+						<span class="muted tiny">contano solo nelle quest{#if owner && c.statsAllocated && data.xp}{' · sul pulsante + il costo in PX'}{/if}</span>
 					</div>
 					{#if !c.statsAllocated}
 						<p class="muted small">
@@ -181,7 +183,7 @@
 				{#if canRaise}
 					<form method="post" action="?/migliora" use:enhance>
 						<input type="hidden" name="target" value="{type}:{id}" />
-						<button class="raise" type="submit" disabled={cost > data.xp.available} title="Migliora di 1 spendendo {cost} PX" aria-label="Migliora {name} di 1 per {cost} PX">+{cost} PX</button>
+						<button class="raise" type="submit" disabled={cost > data.xp.available} title="Migliora di 1 spendendo {cost} PX" aria-label="Migliora {name} di 1 per {cost} PX">+{cost}</button>
 					</form>
 				{:else}<span class="raise max">max</span>{/if}
 			{/if}
@@ -416,7 +418,7 @@
 	.guilds {
 		list-style: none;
 		padding: 0;
-		margin: 0 0 1rem;
+		margin: 0 0 0.25rem;
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.5rem;
@@ -442,7 +444,15 @@
 		object-fit: cover;
 	}
 	.credit {
-		margin-top: 0.4rem;
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		margin: 0;
+		padding: 0.35rem 0.75rem;
+		font-size: 0.78rem;
+		color: var(--text);
+		background: color-mix(in srgb, var(--bg) 82%, transparent);
 	}
 	.label {
 		text-transform: uppercase;
@@ -588,36 +598,40 @@
 		gap: 1.5rem;
 		align-items: start;
 	}
-	@media (max-width: 720px) {
+	@media (max-width: 900px) {
 		.top {
 			grid-template-columns: 1fr;
 		}
+		.portrait {
+			justify-self: center;
+		}
 	}
 	/* Il presta-volto non supera mai le dimensioni scelte dallo staff. */
+	/* Presta-volto: riquadro fisso (di base 350×500), l'immagine lo riempie ritagliando i bordi. */
 	.portrait {
-		max-width: var(--pw);
+		position: relative;
+		width: var(--pw);
+		max-width: 100%;
+		aspect-ratio: var(--pr);
+		border-radius: var(--radius);
+		border: 1px solid var(--border);
+		overflow: hidden;
+		background: var(--bg-raised);
 	}
 	.portrait img {
 		display: block;
-		max-width: 100%;
-		max-height: var(--ph);
-		width: auto;
-		height: auto;
-		border-radius: var(--radius);
-		border: 1px solid var(--border);
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
 	}
 	.noportrait {
-		width: min(var(--pw), 200px);
-		aspect-ratio: 3 / 4;
-		max-height: var(--ph);
-		border-radius: var(--radius);
-		border: 1px solid var(--border);
+		width: 100%;
+		height: 100%;
 		display: grid;
 		place-items: center;
 		font-family: var(--font-title);
-		font-size: 4rem;
+		font-size: 6rem;
 		color: var(--accent);
-		background: var(--bg-raised);
 	}
 	.main {
 		display: grid;
@@ -632,16 +646,22 @@
 		flex-wrap: wrap;
 	}
 	.intro h1 {
-		margin: 0.1rem 0 0.2rem;
+		margin: 0.1rem 0 0.15rem;
+		line-height: 1.1;
 	}
 	.intro > p {
 		margin: 0 0 0.6rem;
 	}
-	.actions {
+	.meta {
 		display: flex;
 		align-items: center;
-		gap: 0.75rem;
+		gap: 0.4rem 0.9rem;
 		flex-wrap: wrap;
+		margin-bottom: 0.5rem;
+	}
+	.compact {
+		padding: 0.3rem 0.8rem;
+		font-size: 0.85rem;
 	}
 	.xp-box {
 		border: 1px solid var(--border);
@@ -682,34 +702,32 @@
 	}
 	.facts {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr);
 		gap: 1rem;
-		align-items: start;
-	}
-	@media (max-width: 960px) {
-		.facts {
-			grid-template-columns: 1fr;
-		}
 	}
 	.fact {
 		padding: 0.9rem 1rem;
 	}
-	.fact h2 {
-		font-size: 1.05rem;
-		margin: 0 0 0.5rem;
+	.fact h2.label {
+		margin: 0 0 0.45rem;
+		font-family: inherit;
+		font-weight: 600;
 	}
+	/* Anagrafica in una fascia compatta: etichetta sopra, valore sotto. */
 	.anag dl {
 		display: grid;
-		grid-template-columns: auto minmax(0, 1fr);
-		gap: 0.25rem 0.9rem;
+		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+		gap: 0.5rem 1rem;
 		margin: 0;
-		font-size: 0.92rem;
 	}
 	.anag dt {
+		font-size: 0.72rem;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
 		color: var(--text-muted);
 	}
 	.anag dd {
 		margin: 0;
+		font-size: 0.95rem;
 		overflow-wrap: anywhere;
 	}
 	.nums-head {
@@ -724,7 +742,7 @@
 	}
 	/* Gruppi caratteristica + abilità, su due colonne se c'è spazio. */
 	.groups {
-		columns: 2 220px;
+		columns: 3 190px;
 		column-gap: 1.25rem;
 	}
 	.group {
@@ -748,9 +766,8 @@
 		border-bottom-color: var(--border);
 	}
 	.row .name {
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
+		overflow-wrap: anywhere;
+		line-height: 1.25;
 	}
 	.value {
 		text-align: right;
