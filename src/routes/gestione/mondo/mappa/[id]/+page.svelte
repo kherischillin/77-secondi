@@ -48,7 +48,7 @@
 <section class="layout">
 	<div class="stack">
 		{#if data.display.imageUrl}
-			<MapCanvas imageUrl={data.display.imageUrl} alt="Mappa {data.map.name}" {markers} crop={data.display.crop} districts={data.districts} />
+			<MapCanvas imageUrl={data.display.imageUrl} alt="Mappa {data.map.name}" {markers} crop={data.display.crop} focus={data.display.focus} size={data.display.size} districts={data.districts} />
 			<p class="muted small">
 				Clicca su un luogo per modificarlo e posizionarlo.
 				{#if data.display.crop}Questo distretto usa il pezzo di immagine di {data.display.parent?.name}.{/if}

@@ -1,9 +1,9 @@
 import { and, asc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { db, schema } from './db/index.ts';
-import { mediaUrl } from './uploads.ts';
+import { mediaUrl, storedImageSize } from './uploads.ts';
 import { CLIMATES } from '../weather.ts';
-import { normalizeShape, type Area, type Shape } from '../districts.ts';
+import { normalizeShape, type Area, type Point, type Shape } from '../districts.ts';
 
 export type MapView = {
 	id: number;
@@ -75,18 +75,27 @@ export function areaOf(m: MapRow): Area | null {
  * Immagine da mostrare per una mappa: la sua, oppure (per un distretto senza immagine)
  * quella della mappa madre ritagliata sull'area del distretto.
  */
-export async function mapDisplay(
-	m: MapRow,
-	theme?: string | null
-): Promise<{ imageUrl: string | null; crop: Area | null; parent: { id: number; name: string } | null }> {
+export type MapDisplay = {
+	imageUrl: string | null;
+	/** Misure dell'immagine intera (anche quando se ne mostra solo un ritaglio). */
+	size: { width: number; height: number } | null;
+	crop: Area | null;
+	/** Forma del distretto sull'immagine della madre, per scurire ciò che c'è intorno. */
+	focus: Point[] | null;
+	parent: { id: number; name: string } | null;
+};
+
+export async function mapDisplay(m: MapRow, theme?: string | null): Promise<MapDisplay> {
 	const parent = m.parentMapId ? await getMap(m.parentMapId) : null;
 	const parentInfo = parent ? { id: parent.id, name: parent.name } : null;
 	const own = imageFor(m, theme);
-	if (own) return { imageUrl: mediaUrl(own), crop: null, parent: parentInfo };
+	if (own) return { imageUrl: mediaUrl(own), size: await storedImageSize(own), crop: null, focus: null, parent: parentInfo };
 	const area = areaOf(m);
 	const parentImage = parent ? imageFor(parent, theme) : null;
-	if (parentImage && area) return { imageUrl: mediaUrl(parentImage), crop: area, parent: parentInfo };
-	return { imageUrl: null, crop: null, parent: parentInfo };
+	if (parentImage && area) {
+		return { imageUrl: mediaUrl(parentImage), size: await storedImageSize(parentImage), crop: area, focus: normalizeShape(m.shape)?.points ?? null, parent: parentInfo };
+	}
+	return { imageUrl: null, size: null, crop: null, focus: null, parent: parentInfo };
 }
 
 /** Distretti di una mappa (le sue mappe figlie con un'area), in ordine. */

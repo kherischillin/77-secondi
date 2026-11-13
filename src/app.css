@@ -213,6 +213,7 @@ label {
 	font-weight: 400;
 	margin-top: 0.2rem;
 }
+input[type='search'],
 input[type='text'],
 input[type='email'],
 input[type='password'],

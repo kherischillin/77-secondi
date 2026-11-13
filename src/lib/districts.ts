@@ -201,3 +201,41 @@ export function spreadPoints(shape: Shape, count: number, taken: Point[] = []): 
 	}
 	return out;
 }
+
+// ---------------------------------------------------------------------------
+// Inquadratura della mappa (riquadro con le proporzioni dell'immagine intera)
+// ---------------------------------------------------------------------------
+
+/**
+ * Inquadratura: ingrandimento `s` e spostamento `tx`/`ty` in percentuale del riquadro.
+ * Un punto dell'immagine (x, y in %) compare nel riquadro in (tx + s·x, ty + s·y).
+ */
+export type View = { s: number; tx: number; ty: number };
+export const FULL_VIEW: View = { s: 1, tx: 0, ty: 0 };
+
+/** Inquadratura che mostra tutta l'area, centrata (stessa dello zoom al clic su un distretto). */
+export function fitView(area: Area): View {
+	const z = zoomTransform(area, { width: 100, height: 100 });
+	return { s: z.scale, tx: z.tx, ty: z.ty };
+}
+
+/** Punto dell'immagine → punto del riquadro. */
+export function toFrame(view: View, x: number, y: number): Point {
+	return [view.tx + view.s * x, view.ty + view.s * y];
+}
+
+/** Punto del riquadro → punto dell'immagine. */
+export function fromFrame(view: View, x: number, y: number): Point {
+	return [(x - view.tx) / view.s, (y - view.ty) / view.s];
+}
+
+/** Coordinate relative al ritaglio (come sono salvati i luoghi di un distretto) → coordinate dell'immagine intera. */
+export function cropToImage(crop: Area | null, x: number, y: number): Point {
+	return crop ? [crop.x + (x * crop.w) / 100, crop.y + (y * crop.h) / 100] : [x, y];
+}
+
+/** Inverso di `cropToImage`; null se il punto cade fuori dal ritaglio. */
+export function imageToCrop(crop: Area | null, x: number, y: number): Point | null {
+	const [cx, cy] = crop ? [((x - crop.x) / crop.w) * 100, ((y - crop.y) / crop.h) * 100] : [x, y];
+	return cx < 0 || cx > 100 || cy < 0 || cy > 100 ? null : [cx, cy];
+}

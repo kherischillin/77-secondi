@@ -33,6 +33,8 @@ export const load: PageServerLoad = async (event) => {
 		roomWarning: blocked?.isPrivate ? `La stanza privata «${blocked.name}» è prenotata da un altro personaggio: si entra solo su invito di chi l'ha prenotata.` : null,
 		map: { ...toMapView(map), imageUrl: display.imageUrl },
 		crop: display.crop,
+		focus: display.focus,
+		size: display.size,
 		parent: display.parent,
 		// Distretti: aree cliccabili, con quanti personaggi ci sono dentro (fuori dalle stanze private).
 		districts: districts.map((d) => ({

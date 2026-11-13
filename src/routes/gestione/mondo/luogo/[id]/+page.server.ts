@@ -41,6 +41,8 @@ export const load: PageServerLoad = async (event) => {
 		// Nei distretti senza immagine propria si posiziona sul pezzo ingrandito della mappa madre.
 		map: { ...toMapView(map), imageUrl: display.imageUrl },
 		crop: display.crop,
+		focus: display.focus,
+		size: display.size,
 		siblings: siblings
 			.filter((l) => l.id !== location.id)
 			.map((l) => ({ id: l.id, name: l.name, x: l.x, y: l.y, kind: l.kind })),

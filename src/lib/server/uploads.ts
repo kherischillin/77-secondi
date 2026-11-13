@@ -73,6 +73,21 @@ export async function deleteImage(name: string | null | undefined): Promise<void
 	await unlink(path.join(uploadDir(), name)).catch(() => {});
 }
 
+const sizeCache = new Map<string, { width: number; height: number } | null>();
+
+/**
+ * Misure di un'immagine già caricata (i nomi sono casuali e i file non cambiano: si leggono una volta sola).
+ * Servono alla pagina per dare subito al riquadro della mappa le proporzioni giuste.
+ */
+export async function storedImageSize(name: string | null | undefined): Promise<{ width: number; height: number } | null> {
+	if (!name || !isSafeName(name)) return null;
+	if (sizeCache.has(name)) return sizeCache.get(name) ?? null;
+	const file = await readImage(name);
+	const size = file ? imageSize(file.bytes) : null;
+	if (file) sizeCache.set(name, size);
+	return size;
+}
+
 /** Indirizzo pubblico di un'immagine caricata. */
 export function mediaUrl(name: string | null | undefined): string | null {
 	return name ? `/media/${name}` : null;

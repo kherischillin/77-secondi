@@ -54,6 +54,8 @@
 				alt="Mappa {data.map.name}"
 				{markers}
 				crop={data.crop}
+				focus={data.focus}
+				size={data.size}
 				onpick={(px, py) => {
 					x = px;
 					y = py;

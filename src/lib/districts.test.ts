@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { areaFromPoints, boundingArea, labelPoint, normalizeArea, normalizeShape, parseDistrictImport, rectPoints, pointInPolygon, spreadPoints, wouldCycle, zoomTransform } from './districts.ts';
+import { areaFromPoints, boundingArea, labelPoint, normalizeArea, normalizeShape, parseDistrictImport, rectPoints, pointInPolygon, spreadPoints, wouldCycle, zoomTransform, fitView, toFrame, fromFrame, cropToImage, imageToCrop, FULL_VIEW } from './districts.ts';
 
 describe('distretti', () => {
 	it("tiene l'area dentro l'immagine", () => {
@@ -79,5 +79,31 @@ describe('pointInPolygon', () => {
 		const t: [number, number][] = [[0, 0], [10, 0], [0, 10]];
 		expect(pointInPolygon([2, 2], t)).toBe(true);
 		expect(pointInPolygon([8, 8], t)).toBe(false);
+	});
+});
+
+describe('inquadratura della mappa', () => {
+	it('l\'area inquadrata riempie il riquadro, centrata', () => {
+		const v = fitView({ x: 20, y: 40, w: 50, h: 25 });
+		expect(v.s).toBe(2);
+		expect(toFrame(v, 20, 52.5)).toEqual([0, 50]);
+		expect(toFrame(v, 70, 52.5)).toEqual([100, 50]);
+		expect(toFrame(v, 45, 40)[1]).toBeCloseTo(25);
+	});
+
+	it('fromFrame è l\'inverso di toFrame', () => {
+		const v = fitView({ x: 10, y: 10, w: 30, h: 60 });
+		const [x, y] = fromFrame(v, ...toFrame(v, 33, 44));
+		expect(x).toBeCloseTo(33);
+		expect(y).toBeCloseTo(44);
+		expect(toFrame(FULL_VIEW, 12, 34)).toEqual([12, 34]);
+	});
+
+	it('converte tra coordinate del ritaglio e dell\'immagine intera', () => {
+		const crop = { x: 20, y: 40, w: 50, h: 25 };
+		expect(cropToImage(crop, 50, 50)).toEqual([45, 52.5]);
+		expect(imageToCrop(crop, 45, 52.5)).toEqual([50, 50]);
+		expect(imageToCrop(crop, 10, 52.5)).toBeNull();
+		expect(cropToImage(null, 5, 6)).toEqual([5, 6]);
 	});
 });
