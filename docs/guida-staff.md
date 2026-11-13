@@ -127,6 +127,14 @@ docker compose restart app
 
 Per aprirlo al pubblico serve un server (VPS) con Docker e un nome di dominio.
 
-1. Sul server: copia il progetto e, in `docker-compose.yml`, cambia `ORIGIN` con l'indirizzo pubblico (es. `https://miogdr.it`) e le password del database (`POSTGRES_PASSWORD` e la stessa password dentro `DATABASE_URL`).
-2. Metti davanti al gioco un server web con **HTTPS** (per esempio Caddy, che ottiene il certificato da solo) che inoltri le richieste alla porta 3000.
-3. Avvia con `docker compose up -d --build` e programma una copia di sicurezza automatica ogni giorno.
+1. Sul server: copia il progetto e, in `docker-compose.yml`, cambia `ORIGIN` con l'indirizzo pubblico (es. `https://miogdr.it`).
+2. Scegli la password del database **prima del primo avvio**: nella cartella del progetto crea un file di nome `.env` con una sola riga, per esempio `DB_PASSWORD=UnaPasswordLunga2077` (solo lettere e numeri, senza spazi né simboli). Senza questo file la password è `gdr`, uguale per chiunque scarichi il progetto.
+
+   Il database memorizza la password la prima volta che parte. Se il gioco è già stato avviato su quel server con la password vecchia, creare il file non basta: prima va cambiata anche dentro il database con `docker compose exec db psql -U gdr -d gdr -c "ALTER USER gdr PASSWORD 'UnaPasswordLunga2077'"`, poi crei il file e riavvii con `docker compose up -d`.
+3. Metti davanti al gioco un server web con **HTTPS** (per esempio Caddy, che ottiene il certificato da solo) che inoltri le richieste alla porta 3001 del server.
+4. Sempre in `docker-compose.yml`, fai queste due modifiche, che vanno **insieme**:
+   - togli il `#` davanti alle righe `ADDRESS_HEADER: X-Forwarded-For` e `XFF_DEPTH: 1`. Così il gioco riconosce il vero indirizzo di ogni giocatore. **Se le dimentichi**, tutti i giocatori sembrano arrivare dallo stesso indirizzo: bastano 30 password sbagliate in 15 minuti (di chiunque) per bloccare l'accesso a tutti, e si iscrivono al massimo 5 persone all'ora in totale;
+   - cambia `'3001:3000'` in `'127.0.0.1:3001:3000'`. Così il gioco risponde solo al server web e nessuno può raggiungerlo direttamente fingendo un altro indirizzo.
+
+   `XFF_DEPTH` è il numero di server web tra internet e il gioco: `1` con il solo Caddy, `2` se davanti c'è anche un servizio come Cloudflare.
+5. Avvia con `docker compose up -d --build` e programma una copia di sicurezza automatica ogni giorno.

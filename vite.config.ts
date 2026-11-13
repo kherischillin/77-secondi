@@ -11,7 +11,26 @@ export default defineConfig({
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
 			// Produce un server Node autonomo nella cartella build/, eseguito dal container Docker.
-			adapter: adapter()
+			adapter: adapter(),
+			// Content-Security-Policy: il browser esegue solo gli script del sito (SvelteKit firma i suoi
+			// con un codice diverso a ogni pagina). È la seconda barriera se un giorno sfuggisse del testo
+			// non neutralizzato. Le schede dei giocatori stanno in un riquadro che eredita queste regole:
+			// per questo stili e caratteri via HTTPS restano ammessi (es. Google Fonts nelle schede).
+			csp: {
+				mode: 'auto',
+				directives: {
+					'default-src': ['self'],
+					'script-src': ['self'],
+					'style-src': ['self', 'unsafe-inline', 'https:'],
+					'img-src': ['self', 'data:', 'https:'],
+					'font-src': ['self', 'data:', 'https:'],
+					'connect-src': ['self'],
+					'object-src': ['none'],
+					'base-uri': ['self'],
+					'form-action': ['self'],
+					'frame-ancestors': ['none']
+				}
+			}
 		})
 	],
 	test: {

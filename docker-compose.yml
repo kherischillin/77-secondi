@@ -11,7 +11,9 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: gdr
-      POSTGRES_PASSWORD: gdr
+      # Password del database: di base "gdr". Per cambiarla (da fare prima di mettere il gioco online)
+      # vedi docs/guida-staff.md → "Mettere il gioco online": si scrive in un file .env, non qui.
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-gdr}
       POSTGRES_DB: gdr
     volumes:
       - dati-db:/var/lib/postgresql/data
@@ -28,12 +30,18 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://gdr:gdr@db:5432/gdr
+      DATABASE_URL: postgres://gdr:${DB_PASSWORD:-gdr}@db:5432/gdr
       ORIGIN: http://localhost:3001
       PORT: 3000
       UPLOAD_DIR: /app/uploads
       # Dimensione massima di un invio (le immagini possono arrivare a 5 MB).
       BODY_SIZE_LIMIT: 64M
+      # SOLO quando il gioco è online dietro un server web (Caddy, Nginx...): togli il "#" dalle due
+      # righe qui sotto. Servono a riconoscere il vero indirizzo di ogni giocatore; senza, tutti
+      # sembrano la stessa persona e i limiti sui tentativi di accesso bloccano tutti insieme.
+      # Sul tuo PC lasciale spente. Vedi docs/guida-staff.md → "Mettere il gioco online".
+      # ADDRESS_HEADER: X-Forwarded-For
+      # XFF_DEPTH: 1
     volumes:
       - immagini:/app/uploads
     ports:

@@ -1,0 +1,22 @@
+# Controlli automatici a ogni modifica: tipi, test e costruzione del sito.
+# Il risultato si vede nella scheda "Actions" del repository su GitHub (spunta verde = tutto a posto).
+name: Controlli
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  controlli:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: npm run build

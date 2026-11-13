@@ -1,8 +1,11 @@
 import { gt, isNull, sql } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 import { db, schema } from '#lib/server/db/index.ts';
+import { requireCapability } from '#lib/server/guards.ts';
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async (event) => {
+	// Il layout controlla già, ma i load girano in parallelo: senza questo le query partirebbero comunque.
+	requireCapability(event, 'admin.access');
 	const count = sql<number>`count(*)::int`;
 	const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 

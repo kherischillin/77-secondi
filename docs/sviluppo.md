@@ -66,9 +66,10 @@ docs/                        guide
 - Password con Argon2id; gli hash phpass/MD5 importati da GDRCD si verificano una volta e si riscrivono.
 - Sessioni con token casuali, salvati solo come hash SHA-256.
 - Protezione CSRF di SvelteKit (`ORIGIN` deve essere l'indirizzo pubblico).
+- Content-Security-Policy su tutte le pagine (`csp` in `vite.config.ts`): si eseguono solo gli script del sito. Chi aggiunge script o risorse da altri siti deve aggiornare lì l'elenco.
 - Immagini controllate dai "magic bytes", salvate con nomi casuali, servite da `/media/[nome]`.
 - Il testo degli utenti è sempre neutralizzato; le pagine dello staff passano da `renderMarkup`.
-- Limiti di frequenza su accesso, messaggi in chat, bonifici e segnalazioni.
+- Limiti di frequenza su accesso, messaggi in chat, bonifici e segnalazioni. Sono per indirizzo IP (`clientIp` → `getClientAddress`): dietro un reverse proxy servono `ADDRESS_HEADER` e `XFF_DEPTH` (commentati in `docker-compose.yml`), altrimenti tutti i giocatori condividono l'indirizzo del proxy.
 
 ## Verifiche prima di consegnare
 

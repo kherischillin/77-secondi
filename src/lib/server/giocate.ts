@@ -1,4 +1,4 @@
-import { and, desc, eq, isNotNull, isNull, or, sql } from 'drizzle-orm';
+import { and, arrayOverlaps, desc, eq, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import { db, schema } from './db/index.ts';
 import { loadRange } from './chat-service.ts';
 import { awardXp } from './sheet.ts';
@@ -102,7 +102,7 @@ export async function listForUser(userId: number) {
 		.where(
 			or(
 				eq(schema.giocate.createdByUserId, userId),
-				mine.length ? sql`${schema.giocate.participantIds} && ${sql.raw(`ARRAY[${mine.join(',')}]::int[]`)}` : sql`false`
+				mine.length ? arrayOverlaps(schema.giocate.participantIds, mine) : sql`false`
 			)
 		)
 		.orderBy(desc(schema.giocate.fromAt))
