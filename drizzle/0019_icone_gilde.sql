@@ -1,0 +1,1 @@
+ALTER TABLE "guilds" ADD COLUMN "icon" text DEFAULT 'shield' NOT NULL;

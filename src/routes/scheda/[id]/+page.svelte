@@ -89,7 +89,7 @@
 							{#each data.guilds as g (g.id)}
 								<li>
 									<a href="/gilde/{g.id}">
-										{#if g.symbolUrl}<img src={g.symbolUrl} alt="" />{/if}
+										{#if g.symbolUrl}<img src={g.symbolUrl} alt="" />{:else}<JobIcon icon={g.icon} size={18} />{/if}
 										<span><strong>{g.name}</strong> <span class="muted">· {g.rank}</span></span>
 									</a>
 								</li>
@@ -132,7 +132,13 @@
 							{#each data.profile as row (row.key)}
 								<div>
 									<dt>{row.label}</dt>
-									<dd>{#if row.icon}<JobIcon icon={row.icon} size={16} /> {/if}{row.value}</dd>
+									<dd>
+										{#if row.badges}
+											{#each row.badges as b, i (b.title)}{#if i > 0}, {/if}<span class="role"
+													><JobIcon icon={b.icon} size={16} />{#if b.href}<a href={b.href}>{b.title}</a>{:else}{b.title}{/if}</span
+												>{/each}
+										{:else}{row.value}{/if}
+									</dd>
 								</div>
 							{/each}
 						</dl>
@@ -848,7 +854,9 @@
 		font-size: 0.85rem;
 		padding: 0.25rem 0.7rem;
 	}
-	dd :global(.job-icon) {
-		margin-right: 0.3rem;
+	.role {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
 	}
 </style>

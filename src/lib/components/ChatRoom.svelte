@@ -4,13 +4,14 @@
 	import { invalidateAll } from '$app/navigation';
 	import ChatLine from './ChatLine.svelte';
 	import Avatar from './Avatar.svelte';
-	import JobIcon from './JobIcon.svelte';
+	import RoleBadges from './RoleBadges.svelte';
+	import type { RoleBadge } from '#lib/role-badges.ts';
 	import { MAX_MESSAGE_LENGTH, timeAgo, type ChatMessageView, type ChosenKind } from '#lib/chat.ts';
 	import { fullName } from '#lib/format.ts';
 	import { page } from '$app/state';
 	import { playTone } from '#lib/sound.ts';
 
-	type Present = { characterId: number; name: string; surname: string | null; avatarUrl: string | null; jobName?: string | null; jobIcon?: string | null; lastPostAt: string | null };
+	type Present = { characterId: number; name: string; surname: string | null; avatarUrl: string | null; badges?: RoleBadge[]; lastPostAt: string | null };
 
 	let {
 		locationId,
@@ -314,7 +315,7 @@
 						<div class="who-box">
 							<span class="name-row">
 								<a class="name" class:me={p.characterId === me} href="/scheda/{p.characterId}" target="_blank">{fullName(p)}</a>
-								{#if p.jobName}<JobIcon icon={p.jobIcon} title={p.jobName} size={15} />{/if}
+								<RoleBadges badges={p.badges ?? []} size={15} />
 							</span>
 							<span class="muted small">ultima azione: {timeAgo(p.lastPostAt, now)}</span>
 							{#if p.characterId !== me}

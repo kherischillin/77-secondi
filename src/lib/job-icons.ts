@@ -106,6 +106,27 @@ export const JOB_ICONS = {
 	syringe: {
 		label: 'Siringa',
 		shapes: [{ d: 'M18 2l4 4' }, { d: 'M20 4l-9.5 9.5' }, { d: 'M16.5 4.5l3 3L9 18l-3-3z' }, { d: 'M6 15l-3 3-1 4 4-1 3-3' }, { d: 'M12 9.5l1.5 1.5M10 11.5l1.5 1.5' }]
+	},
+	candle: {
+		label: 'Candela',
+		shapes: [{ x: 8, y: 10, w: 8, h: 11, rx: 1 }, { d: 'M12 10V8' }, { d: 'M12 2.5c1.6 1.8 1.6 3.3 0 4.5-1.6-1.2-1.6-2.7 0-4.5z' }, { d: 'M6 21h12' }]
+	},
+	wheel: {
+		label: 'Ruota',
+		shapes: [{ cx: 12, cy: 12, r: 9 }, { cx: 12, cy: 12, r: 2.5 }, { d: 'M12 3v6.5M12 14.5V21M3 12h6.5M14.5 12H21' }]
+	},
+	skull: {
+		label: 'Teschio',
+		shapes: [
+			{ d: 'M5 11a7 7 0 0 1 14 0v3l-2 1.5V19h-2.5v-2h-1v2h-3v-2h-1v2H7v-3.5L5 14z' },
+			{ cx: 9.2, cy: 11.5, r: 1.6 },
+			{ cx: 14.8, cy: 11.5, r: 1.6 },
+			{ d: 'M12 14l-.8 1.5h1.6z' }
+		]
+	},
+	tower: {
+		label: 'Torre',
+		shapes: [{ d: 'M7 21V7l5-4 5 4v14' }, { d: 'M4 21h16' }, { d: 'M10 9h4M10 12.5h4M10 16h4' }]
 	}
 } satisfies Record<string, { label: string; shapes: IconShape[] }>;
 

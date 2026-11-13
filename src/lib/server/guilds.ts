@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import { db, schema } from './db/index.ts';
 import { mediaUrl } from './uploads.ts';
 import { canActOnMember, canAssignRank, type GuildActor } from '../social.ts';
@@ -12,6 +12,7 @@ export type GuildSummary = {
 	category: string;
 	description: string;
 	symbolUrl: string | null;
+	icon: string;
 	joinMode: 'open' | 'apply' | 'closed';
 	isActive: boolean;
 	members: number;
@@ -32,6 +33,7 @@ export async function listGuilds(includeInactive = false): Promise<GuildSummary[
 		category: g.category,
 		description: g.description,
 		symbolUrl: mediaUrl(g.symbol),
+		icon: g.icon,
 		joinMode: g.joinMode,
 		isActive: g.isActive,
 		members
@@ -92,6 +94,7 @@ export async function membershipsOf(characterId: number) {
 			guildId: schema.guilds.id,
 			guildName: schema.guilds.name,
 			symbol: schema.guilds.symbol,
+			icon: schema.guilds.icon,
 			rankName: schema.guildRanks.name,
 			level: schema.guildRanks.level,
 			canManage: schema.guildRanks.canManage
@@ -114,8 +117,20 @@ export async function actorFor(guildId: number, characterId: number | null, isSt
 	return { isStaff, rank: row ?? null };
 }
 
-/** Crea una gilda con gradi predefiniti e la sua bacheca riservata. */
-export async function createGuild(input: { name: string; category: string; description: string; joinMode: 'open' | 'apply' | 'closed'; symbol: string | null }) {
+export type RankSeed = { name: string; level: number; canManage?: boolean; salary?: number };
+
+const DEFAULT_RANKS: RankSeed[] = [
+	{ name: 'Capo', level: 100, canManage: true },
+	{ name: 'Ufficiale', level: 50, canManage: true },
+	{ name: 'Membro', level: 10 },
+	{ name: 'Recluta', level: 1 }
+];
+
+/** Crea una gilda con i suoi gradi (predefiniti se non indicati) e la sua bacheca riservata. */
+export async function createGuild(
+	input: { name: string; category: string; description: string; joinMode: 'open' | 'apply' | 'closed'; symbol: string | null; icon?: string; statute?: string },
+	ranks: RankSeed[] = DEFAULT_RANKS
+) {
 	return db.transaction(async (tx) => {
 		const [exists] = await tx
 			.select({ id: schema.guilds.id })
@@ -124,12 +139,9 @@ export async function createGuild(input: { name: string; category: string; descr
 		if (exists) throw new GuildError('Esiste già una gilda con questo nome.');
 
 		const [guild] = await tx.insert(schema.guilds).values(input).returning();
-		await tx.insert(schema.guildRanks).values([
-			{ guildId: guild.id, name: 'Capo', level: 100, canManage: true },
-			{ guildId: guild.id, name: 'Ufficiale', level: 50, canManage: true },
-			{ guildId: guild.id, name: 'Membro', level: 10 },
-			{ guildId: guild.id, name: 'Recluta', level: 1 }
-		]);
+		await tx.insert(schema.guildRanks).values(
+			ranks.map((r) => ({ guildId: guild.id, name: r.name, level: r.level, canManage: r.canManage ?? false, salary: r.salary ?? 0 }))
+		);
 		await tx.insert(schema.boards).values({
 			name: `Bacheca: ${guild.name}`,
 			description: `Bacheca riservata ai membri di ${guild.name}.`,
@@ -166,12 +178,40 @@ async function ensureCanJoin(guildId: number, characterId: number, maxGuilds: nu
 	if (n >= maxGuilds) throw new GuildError(`Puoi far parte al massimo di ${maxGuilds} gild${maxGuilds === 1 ? 'a' : 'e'}.`);
 }
 
+/**
+ * Entrata in gilda. Chi viene preso in una gilda lascia in automatico il lavoro libero:
+ * da quel momento l'occupazione (e la paga) è quella della gilda.
+ */
 async function addMemberRow(guildId: number, characterId: number) {
 	const rank = await lowestRank(guildId);
-	await db.insert(schema.guildMembers).values({ guildId, characterId, rankId: rank.id });
-	await db
-		.delete(schema.guildApplications)
-		.where(and(eq(schema.guildApplications.guildId, guildId), eq(schema.guildApplications.characterId, characterId)));
+	await db.transaction(async (tx) => {
+		await tx.insert(schema.guildMembers).values({ guildId, characterId, rankId: rank.id });
+		await tx
+			.delete(schema.guildApplications)
+			.where(and(eq(schema.guildApplications.guildId, guildId), eq(schema.guildApplications.characterId, characterId)));
+		await tx.update(schema.characters).set({ jobId: null }).where(eq(schema.characters.id, characterId));
+	});
+}
+
+/** Gilde (attive) di più personaggi in una volta, per le icone di presenti e schede. */
+export async function guildBadgesOf(characterIds: number[]) {
+	const out = new Map<number, { id: number; name: string; icon: string; rank: string }[]>();
+	if (!characterIds.length) return out;
+	const rows = await db
+		.select({
+			characterId: schema.guildMembers.characterId,
+			id: schema.guilds.id,
+			name: schema.guilds.name,
+			icon: schema.guilds.icon,
+			rank: schema.guildRanks.name
+		})
+		.from(schema.guildMembers)
+		.innerJoin(schema.guilds, eq(schema.guildMembers.guildId, schema.guilds.id))
+		.innerJoin(schema.guildRanks, eq(schema.guildMembers.rankId, schema.guildRanks.id))
+		.where(and(inArray(schema.guildMembers.characterId, characterIds), eq(schema.guilds.isActive, true)))
+		.orderBy(asc(schema.guilds.name));
+	for (const { characterId, ...g } of rows) out.set(characterId, [...(out.get(characterId) ?? []), g]);
+	return out;
 }
 
 /** Ingresso: diretto se la gilda è aperta, candidatura se è su candidatura. */

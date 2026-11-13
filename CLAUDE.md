@@ -41,7 +41,7 @@ Il proprietario del progetto non programma: tutto il codice lo scrive Claude. Sp
 - Pagine (Guida, Regolamento, Ambientazione…) nella tabella `pages`, rese con `renderMarkup` (src/lib/markup.ts, testato): mai HTML degli utenti.
 - Importatore GDRCD in `src/lib/server/import/`: `parseDump` legge i dump MySQL, `runImport` fa tutto in una transazione (anteprima = stessa importazione annullata). Password phpass/MD5 verificate da `legacy-password.ts` e riscritte in Argon2 al primo accesso; email segnaposto `@importato.invalid`. Si entra anche con il nome del personaggio.
 - Documentazione per persone in `docs/` (staff, importazione, sviluppo): aggiornarla quando cambiano le funzioni.
-- Gilde create dallo staff (`guilds.manage`) con gradi predefiniti e bacheca di gilda; il livello del grado decide la gerarchia.
+- Gilde create dallo staff (`guilds.manage`) con gradi (predefiniti o passati a `createGuild`) e bacheca di gilda; il livello del grado decide la gerarchia. `guilds.icon` (stesse icone dei lavori, scelte con `IconPicker.svelte`): in scheda, elenco gilde e presenti le icone di ruolo sono `RoleBadge` (src/lib/role-badges.ts, testato) mostrate da `RoleBadges.svelte`, e quelle di gilda portano a `/gilde/[id]`. Entrare in una gilda (`addMemberRow`) toglie il lavoro libero; `takeJob` lo rifiuta a chi è in gilda. Le quattro gilde giocabili di 77 Secondi (Residui, Aldecaldos, Maelstrom, Programma di rientro Arasaka) sono create da `seedGuilds` in bootstrap.
 
 ## Verifiche prima di consegnare
 `npm run check`, `npm test`, `npm run build`, e una prova reale dei flussi nel browser.

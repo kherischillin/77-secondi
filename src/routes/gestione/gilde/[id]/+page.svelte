@@ -1,4 +1,5 @@
 <script lang="ts">
+	import IconPicker from '#lib/components/IconPicker.svelte';
 	import { enhance } from '$app/forms';
 	import type { PageProps } from './$types';
 	import { JOIN_MODE_LABELS } from '#lib/social.ts';
@@ -40,6 +41,7 @@
 			<label for="description">Descrizione</label>
 			<textarea id="description" name="description" rows="4" maxlength="5000">{g.description}</textarea>
 		</div>
+		<IconPicker selected={g.icon} legend="Icona (in scheda e tra i presenti)" />
 		<div class="symbol-row">
 			{#if g.symbolUrl}<img src={g.symbolUrl} alt="Simbolo attuale" />{/if}
 			<div>

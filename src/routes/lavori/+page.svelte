@@ -26,7 +26,12 @@
 {#if form && 'error' in form}<div class="alert error">{form.error}</div>{/if}
 
 <section class="card my-job">
-	{#if data.current}
+	{#if data.guild}
+		<p class="in-guild">
+			<a href="/gilde/{data.guild.id}"><JobIcon icon={data.guild.icon} size={22} /></a>
+			<span>{data.me.name} è <strong>{data.guild.rank}</strong> di <a href="/gilde/{data.guild.id}">{data.guild.name}</a>: chi fa parte di una gilda lavora per lei e non può avere un lavoro libero. Lo stipendio della gilda si ritira in <a href="/banca">Banca</a>.</span>
+		</p>
+	{:else if data.current}
 		<div>
 			<span class="label">Lavoro di {data.me.name}</span>
 			<strong class="name"><JobIcon icon={data.current.icon} size={22} /> {data.current.name}</strong>
@@ -67,7 +72,7 @@
 				</div>
 				{#if data.current?.id === j.id}
 					<span class="badge accent">Il tuo lavoro</span>
-				{:else}
+				{:else if !data.guild}
 					<form method="post" action="?/scegli" use:enhance>
 						<input type="hidden" name="jobId" value={j.id} />
 						<button type="submit" class={data.current ? 'secondary' : ''}>{data.current ? 'Cambia con questo' : 'Scegli'}</button>
@@ -139,5 +144,11 @@
 	}
 	.small-btn {
 		padding: 0.35rem 0.75rem;
+	}
+	.in-guild {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		margin: 0;
 	}
 </style>

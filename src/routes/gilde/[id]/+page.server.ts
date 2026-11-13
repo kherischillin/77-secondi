@@ -22,6 +22,7 @@ import {
 } from '#lib/server/guilds.ts';
 import { findCharacterByName } from '#lib/server/messages.ts';
 import { mediaUrl } from '#lib/server/uploads.ts';
+import { currentJob } from '#lib/server/jobs.ts';
 import { audit } from '#lib/server/audit.ts';
 import { canActOnMember, canAssignRank, canManageGuild } from '#lib/social.ts';
 
@@ -63,6 +64,7 @@ export const load: PageServerLoad = async (event) => {
 			description: guild.description,
 			statute: guild.statute,
 			symbolUrl: mediaUrl(guild.symbol),
+			icon: guild.icon,
 			joinMode: guild.joinMode,
 			isActive: guild.isActive
 		},
@@ -72,6 +74,7 @@ export const load: PageServerLoad = async (event) => {
 		me: {
 			hasCharacter: !!character,
 			characterName: character?.name ?? null,
+			jobName: character ? ((await currentJob(character.id))?.job.name ?? null) : null,
 			rankName: actor.rank ? ranks.find((r) => r.level === actor.rank!.level)?.name ?? null : null,
 			isMember: !!actor.rank,
 			applied: myApplication,

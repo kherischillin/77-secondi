@@ -1,11 +1,12 @@
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
-import { and, count, eq, isNull } from 'drizzle-orm';
+import { and, count, eq, isNull, sql } from 'drizzle-orm';
 import type { ItemBonus } from '../economy.ts';
 import path from 'node:path';
 import { db, schema } from './db';
 import { ALL_CAPABILITIES, type Capability } from '../permissions';
 import { seedBoards } from './boards.ts';
 import { seedPages } from './pages.ts';
+import { createGuild, type RankSeed } from './guilds.ts';
 
 /** Nome del ruolo con tutti i poteri. È di sistema: non si può cancellare né ridurre. */
 export const ADMIN_ROLE_NAME = 'Amministratore';
@@ -58,6 +59,7 @@ export async function bootstrapDatabase(): Promise<void> {
 	await seedExampleRules();
 	await seedExampleItems();
 	await seedShops();
+	await seedGuilds();
 	await seedJobs();
 	await seedPrivateRooms();
 	await seedBoards();
@@ -346,4 +348,79 @@ async function seedShops() {
 		console.log('Negozi del mercato creati.');
 	}
 	await db.insert(schema.settings).values({ key: 'shopsSeeded', value: true }).onConflictDoNothing();
+}
+
+/**
+ * Al primo avvio crea le quattro gilde giocabili di "77 Secondi" (dal documento dell'ambientazione),
+ * ognuna con i suoi gradi, la sua icona e la sua bacheca. Il grado più alto può gestire la gilda:
+ * finché nessun PG ci arriva, il capo è un PNG dei master. Stipendi provvisori.
+ * Si fa una volta sola; le gilde con lo stesso nome già esistenti non vengono toccate.
+ */
+async function seedGuilds() {
+	const [done] = await db.select().from(schema.settings).where(eq(schema.settings.key, 'guilds77Seeded'));
+	if (done) return;
+	const guilds: { name: string; category: string; icon: string; description: string; statute: string; ranks: RankSeed[] }[] = [
+		{
+			name: 'I Residui',
+			category: 'Mutuo soccorso tra Portatori',
+			icon: 'candle',
+			description:
+				'Portatori che non si fidano di nessuno: né delle corporazioni che vogliono studiarli, né delle gang che vogliono i loro Echi. Si aiutano tra loro, si nascondono a vicenda e cercano le famiglie delle persone morte di cui portano il ricordo, per restituire a ognuna il suo nome.',
+			statute: 'Nessun Portatore si vende. Nessun Eco si strappa. Ogni nome ritrovato si scrive nel registro.',
+			ranks: [
+				{ name: 'Nuovo arrivato', level: 1, salary: 30 },
+				{ name: 'Cercatore', level: 10, salary: 45 },
+				{ name: 'Custode dei nomi', level: 100, canManage: true, salary: 70 }
+			]
+		},
+		{
+			name: 'Aldecaldos',
+			category: 'Clan nomade',
+			icon: 'wheel',
+			description:
+				'Il clan nomade delle Badlands. Per gli Aldecaldos i Portatori vanno portati fuori città, dove la rete è debole e l’Eco tace: carovane, ripari nel deserto e una famiglia che non chiede da dove vieni, ma se resterai.',
+			statute: 'La famiglia viene prima di tutto. Nessuno resta indietro sulla strada.',
+			ranks: [
+				{ name: 'Ospite', level: 1, salary: 40 },
+				{ name: 'Autista', level: 10, salary: 60 },
+				{ name: 'Capocarovana', level: 100, canManage: true, salary: 90 }
+			]
+		},
+		{
+			name: 'Maelstrom',
+			category: 'Gang',
+			icon: 'skull',
+			description:
+				'La gang cromata di Northside. Per i Maelstrom il Coro è una voce da venerare e gli Echi sono il cromo più prezioso di tutti: li comprano, li rubano e se li innestano, a caccia della sincronia perfetta.',
+			statute: 'La carne è debole. Il cromo ricorda. Chi sente il Coro non torna indietro.',
+			ranks: [
+				{ name: 'Carne nuova', level: 1, salary: 40 },
+				{ name: 'Cromato', level: 10, salary: 60 },
+				{ name: 'Capobranco', level: 100, canManage: true, salary: 90 }
+			]
+		},
+		{
+			name: 'Programma di rientro Arasaka',
+			category: 'Corporativa',
+			icon: 'tower',
+			description:
+				'Il volto gentile di Arasaka: assistenza, alloggio e un buon contratto per i Portatori che si fanno avanti. Dietro le brochure, la corporazione rivuole indietro quella che considera la sua proprietà intellettuale: i Portatori stessi.',
+			statute: 'Lealtà, riservatezza, risultati. Ciò che è di Arasaka torna ad Arasaka.',
+			ranks: [
+				{ name: 'Ospite', level: 1, salary: 55 },
+				{ name: 'Collaboratore', level: 10, salary: 80 },
+				{ name: 'Supervisore', level: 100, canManage: true, salary: 120 }
+			]
+		}
+	];
+	for (const g of guilds) {
+		const [exists] = await db
+			.select({ id: schema.guilds.id })
+			.from(schema.guilds)
+			.where(sql`lower(${schema.guilds.name}) = lower(${g.name})`);
+		if (exists) continue;
+		await createGuild({ name: g.name, category: g.category, description: g.description, statute: g.statute, joinMode: 'apply', symbol: null, icon: g.icon }, g.ranks);
+	}
+	console.log('Gilde di 77 Secondi pronte.');
+	await db.insert(schema.settings).values({ key: 'guilds77Seeded', value: true }).onConflictDoNothing();
 }

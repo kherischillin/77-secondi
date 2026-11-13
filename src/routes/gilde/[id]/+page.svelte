@@ -1,4 +1,5 @@
 <script lang="ts">
+	import JobIcon from '#lib/components/JobIcon.svelte';
 	import { enhance } from '$app/forms';
 	import type { PageProps } from './$types';
 	import { formatDate, fullName } from '#lib/format.ts';
@@ -24,7 +25,7 @@
 
 <header class="top">
 	<div class="symbol">
-		{#if g.symbolUrl}<img src={g.symbolUrl} alt="Simbolo di {g.name}" />{:else}<span>{g.name.slice(0, 1)}</span>{/if}
+		{#if g.symbolUrl}<img src={g.symbolUrl} alt="Simbolo di {g.name}" />{:else}<JobIcon icon={g.icon} size={44} />{/if}
 	</div>
 	<div>
 		<h1>{g.name}</h1>
@@ -58,11 +59,13 @@
 		<p>La candidatura di {data.me.characterName} è in attesa di risposta.</p>
 		<form method="post" action="?/ritira" use:enhance><button type="submit" class="secondary">Ritira la candidatura</button></form>
 	{:else if g.joinMode === 'open'}
+		{#if data.me.jobName}<p class="muted small">Entrando lascerai il lavoro libero ({data.me.jobName}).</p>{/if}
 		<form method="post" action="?/entra" use:enhance><button type="submit">Entra nella gilda</button></form>
 	{:else if g.joinMode === 'apply'}
 		<form method="post" action="?/entra" class="stack" use:enhance>
 			<label for="message">Candidatura di {data.me.characterName} <span class="hint">facoltativo: perché vuoi entrare</span></label>
 			<textarea id="message" name="message" rows="3" maxlength="1000"></textarea>
+			{#if data.me.jobName}<p class="muted small">Se verrai accettato lascerai il lavoro libero ({data.me.jobName}).</p>{/if}
 			<div><button type="submit">Invia candidatura</button></div>
 		</form>
 	{:else}

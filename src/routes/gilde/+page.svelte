@@ -1,4 +1,5 @@
 <script lang="ts">
+	import JobIcon from '#lib/components/JobIcon.svelte';
 	import type { PageProps } from './$types';
 	import { JOIN_MODE_LABELS } from '#lib/social.ts';
 
@@ -22,7 +23,7 @@
 		{#each data.guilds as g (g.id)}
 			<a class="card guild" href="/gilde/{g.id}">
 				<div class="symbol">
-					{#if g.symbolUrl}<img src={g.symbolUrl} alt="" />{:else}<span>{g.name.slice(0, 1)}</span>{/if}
+					{#if g.symbolUrl}<img src={g.symbolUrl} alt="" />{:else}<JobIcon icon={g.icon} size={34} />{/if}
 				</div>
 				<div>
 					<h2>{g.name}</h2>

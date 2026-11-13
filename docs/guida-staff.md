@@ -71,6 +71,9 @@ Regole anti-abuso, sempre attive: nessuno può dare permessi che non ha, né agi
 
 - **Bacheche**: sezioni ON GAME e OFF GAME, in entrambe si scrive come personaggio (con il suo avatar); visibili a tutti, ai membri di una gilda o solo allo staff; si può riservare l'apertura di discussioni allo staff. Moderazione: nascondi, chiudi, metti in evidenza, elimina.
 - **Gilde**: le crea lo staff (nascono con 4 gradi e una bacheca riservata). Ingresso libero, su candidatura o su invito. Il **livello** del grado decide la gerarchia: i capi agiscono solo su chi sta sotto.
+  - Ogni gilda ha un'**icona** (si sceglie in Gestione → Gilde), che compare nella scheda (come occupazione, con il grado), nell'elenco delle gilde e accanto al nome tra i presenti: cliccandola si apre la pagina della gilda.
+  - Chi viene preso in una gilda **lascia in automatico il lavoro libero**, e finché ne fa parte non può sceglierne un altro: lo stipendio è quello del suo grado.
+  - Al primo avvio ci sono le quattro gilde giocabili di 77 Secondi, su candidatura e con stipendi provvisori: **I Residui** (Nuovo arrivato, Cercatore, Custode dei nomi), **Aldecaldos** (Ospite, Autista, Capocarovana), **Maelstrom** (Carne nuova, Cromato, Capobranco) e **Programma di rientro Arasaka** (Ospite, Collaboratore, Supervisore). Il grado più alto gestisce la gilda; finché nessun personaggio ci arriva, il capo è un PNG dei master.
 - **Missive**: messaggi privati tra personaggi, ON o OFF game. Lo staff non le legge, salvo i singoli messaggi segnalati.
   - Ogni personaggio può **archiviarle** (fino a un massimo, di base 50) o **eliminarle** (una alla volta o selezionandone più insieme). Eliminare toglie la missiva solo a chi la elimina: se l'altro risponde, la conversazione ricompare con i soli messaggi nuovi.
   - Le missive **lette e non archiviate** si cancellano da sole dopo un certo numero di giorni dall'ultima lettura (di base 7). Quelle non lette o archiviate non si cancellano mai da sole.

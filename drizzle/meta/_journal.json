@@ -134,6 +134,13 @@
       "when": 1794526793254,
       "tag": "0018_negozi",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1794531379054,
+      "tag": "0019_icone_gilde",
+      "breakpoints": true
     }
   ]
 }

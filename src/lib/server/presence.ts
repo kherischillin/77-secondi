@@ -1,3 +1,5 @@
+import { roleBadges, type RoleBadge } from '../role-badges.ts';
+import { guildBadgesOf } from './guilds.ts';
 import { and, asc, eq, gt, isNull } from 'drizzle-orm';
 import { db, schema } from './db/index.ts';
 import { avatarResolver } from './avatars.ts';
@@ -11,9 +13,8 @@ export type PresentCharacter = {
 	surname: string | null;
 	/** Avatar quadrato già pronto da mostrare (null = iniziale del nome). */
 	avatarUrl: string | null;
-	/** Lavoro libero (Uffici → Lavori): nome e icona, se ne ha uno. */
-	jobName: string | null;
-	jobIcon: string | null;
+	/** Icone di lavoro libero e gilde (src/lib/role-badges.ts). */
+	badges: RoleBadge[];
 	lastPostAt: string | null;
 };
 
@@ -106,8 +107,13 @@ export async function listPresentAt(locationId: number): Promise<PresentCharacte
 			)
 		)
 		.orderBy(asc(schema.characters.name));
-	const src = await avatarResolver();
-	return rows.map(({ avatar, ...r }) => ({ ...r, avatarUrl: src(avatar), lastPostAt: r.lastPostAt?.toISOString() ?? null }));
+	const [src, guilds] = await Promise.all([avatarResolver(), guildBadgesOf(rows.map((r) => r.characterId))]);
+	return rows.map(({ avatar, jobName, jobIcon, ...r }) => ({
+		...r,
+		avatarUrl: src(avatar),
+		badges: roleBadges({ name: jobName, icon: jobIcon }, guilds.get(r.characterId)),
+		lastPostAt: r.lastPostAt?.toISOString() ?? null
+	}));
 }
 
 /** Tutti i personaggi in gioco in questo momento, con il luogo in cui si trovano. */
@@ -134,10 +140,11 @@ export async function listOnline(): Promise<OnlineCharacter[]> {
 		.leftJoin(schema.locations, eq(schema.characterPresence.locationId, schema.locations.id))
 		.where(and(gt(schema.characterPresence.lastSeenAt, onlineSince()), isNull(schema.characters.deletedAt)))
 		.orderBy(asc(schema.characters.name));
-	const src = await avatarResolver();
-	return rows.map(({ avatar, ...r }) => ({
+	const [src, guilds] = await Promise.all([avatarResolver(), guildBadgesOf(rows.map((r) => r.characterId))]);
+	return rows.map(({ avatar, jobName, jobIcon, ...r }) => ({
 		...r,
 		avatarUrl: src(avatar),
+		badges: roleBadges({ name: jobName, icon: jobIcon }, guilds.get(r.characterId)),
 		locationPrivate: r.locationPrivate ?? false,
 		lastPostAt: r.lastPostAt?.toISOString() ?? null
 	}));

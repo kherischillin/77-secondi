@@ -20,6 +20,7 @@ import { getRules } from '#lib/server/settings.ts';
 import { requiredPoints, skillRaiseCost, statRaiseCost, type Allocation } from '#lib/rules.ts';
 import { profileRows } from '#lib/profile.ts';
 import { occupationOf } from '#lib/server/jobs.ts';
+import type { RoleBadge } from '#lib/role-badges.ts';
 import { audit } from '#lib/server/audit.ts';
 import { listPublicForCharacter } from '#lib/server/giocate.ts';
 import { fullName } from '#lib/format.ts';
@@ -72,8 +73,10 @@ export const load: PageServerLoad = async (event) => {
 		profile: [
 			...profileRows(sheet.character.profile),
 			// Occupazione: compilata in automatico dal lavoro scelto (Uffici → Lavori).
-			...((job) => (job ? [{ key: 'occupation', label: 'Occupazione', value: job.name, icon: job.icon }] : []))(await occupationOf(character.id))
-		] as { key: string; label: string; value: string; icon?: string }[],
+			...((badges) => (badges.length ? [{ key: 'occupation', label: 'Occupazione', value: badges.map((b) => b.title).join(', '), badges }] : []))(
+				await occupationOf(character.id)
+			)
+		] as { key: string; label: string; value: string; badges?: RoleBadge[] }[],
 		portraitBox: { width: settings.portraitMaxWidth, height: settings.portraitMaxHeight },
 		giocate: await listPublicForCharacter(character.id),
 		// L'equipaggiamento è la parte "visibile" in gioco: lo vedono tutti.
@@ -87,7 +90,7 @@ export const load: PageServerLoad = async (event) => {
 		})),
 		staffInventory: staffInventory.map((i) => ({ id: i.id, name: i.item.name, quantity: i.quantity, equipped: i.equipped })),
 		giveable: catalog.filter((i) => !i.archived).map((i) => ({ id: i.id, name: i.name })),
-		guilds: guilds.map((g) => ({ id: g.guildId, name: g.guildName, rank: g.rankName, symbolUrl: g.symbolUrl })),
+		guilds: guilds.map((g) => ({ id: g.guildId, name: g.guildName, rank: g.rankName, symbolUrl: g.symbolUrl, icon: g.icon })),
 		stats: sheet.stats.map((s) => ({ ...s, raiseCost: statRaiseCost(s.value, rules) })),
 		skills: sheet.skills.map((s) => ({ ...s, raiseCost: skillRaiseCost(s.rank, rules) })),
 		xp: seesPrivate ? sheet.xp : null,

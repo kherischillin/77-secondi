@@ -1,3 +1,5 @@
+import { roleBadges, type RoleBadge } from '../role-badges.ts';
+import { guildBadgesOf } from './guilds.ts';
 import { and, asc, count, eq, gt, isNull, lte, or, sql } from 'drizzle-orm';
 import { db, schema } from './db/index.ts';
 import { move } from './money.ts';
@@ -79,6 +81,14 @@ export async function currentJob(characterId: number) {
 export async function takeJob(characterId: number, jobId: number) {
 	const job = await getJob(jobId);
 	if (!job || !job.isOpen) throw new JobError('Questo lavoro non è disponibile.');
+	// Chi è in una gilda lavora per la gilda: niente lavoro libero.
+	const [inGuild] = await db
+		.select({ name: schema.guilds.name })
+		.from(schema.guildMembers)
+		.innerJoin(schema.guilds, eq(schema.guildMembers.guildId, schema.guilds.id))
+		.where(and(eq(schema.guildMembers.characterId, characterId), eq(schema.guilds.isActive, true)))
+		.limit(1);
+	if (inGuild) throw new JobError(`Fai parte di ${inGuild.name}: chi è in una gilda non può avere un lavoro libero.`);
 	await db
 		.update(schema.characters)
 		.set({ jobId: job.id, lastJobPayAt: sql`coalesce(${schema.characters.lastJobPayAt}, now())` })
@@ -125,8 +135,8 @@ export async function claimJobPay(tx: Parameters<Parameters<typeof db.transactio
 	return row.pay;
 }
 
-/** Occupazione mostrata nella scheda, compilata in automatico: nome e icona del lavoro libero. */
-export async function occupationOf(characterId: number): Promise<{ name: string; icon: string } | null> {
-	const row = await currentJob(characterId);
-	return row ? { name: row.job.name, icon: row.job.icon } : null;
+/** Occupazione mostrata nella scheda, compilata in automatico: le gilde (con il grado) oppure il lavoro libero. */
+export async function occupationOf(characterId: number): Promise<RoleBadge[]> {
+	const [row, guilds] = await Promise.all([currentJob(characterId), guildBadgesOf([characterId])]);
+	return roleBadges(row ? { name: row.job.name, icon: row.job.icon } : null, guilds.get(characterId));
 }

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import IconPicker from '#lib/components/IconPicker.svelte';
 	import { enhance } from '$app/forms';
 	import type { PageProps } from './$types';
 	import { JOIN_MODE_LABELS } from '#lib/social.ts';
@@ -58,6 +59,7 @@
 		<label for="description">Descrizione</label>
 		<textarea id="description" name="description" rows="4" maxlength="5000">{form?.values?.description ?? ''}</textarea>
 	</div>
+	<IconPicker selected={form?.values?.icon ?? 'shield'} legend="Icona (in scheda e tra i presenti)" />
 	<div>
 		<label for="symbol">Simbolo <span class="hint">immagine quadrata, massimo 5 MB</span></label>
 		<input id="symbol" name="symbol" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />

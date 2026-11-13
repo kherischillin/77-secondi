@@ -3,21 +3,24 @@ import type { Actions, PageServerLoad } from './$types';
 import { requireCharacter } from '#lib/server/guards.ts';
 import { currentJob, JobError, jobPay, leaveJob, listJobs, takeJob } from '#lib/server/jobs.ts';
 import { balances } from '#lib/server/money.ts';
+import { membershipsOf } from '#lib/server/guilds.ts';
 import { getEconomy } from '#lib/server/settings.ts';
 import { fullName } from '#lib/format.ts';
 
 export const load: PageServerLoad = async (event) => {
 	const { character } = requireCharacter(event);
 	const economy = await getEconomy();
-	const [jobs, mine, pay, purse] = await Promise.all([
+	const [jobs, mine, pay, purse, memberships] = await Promise.all([
 		listJobs(),
 		currentJob(character.id),
 		jobPay(character.id, economy.salaryIntervalHours),
-		balances(character.id)
+		balances(character.id),
+		membershipsOf(character.id)
 	]);
 	return {
 		me: { name: fullName(character) },
 		jobs,
+		guild: memberships[0] ? { id: memberships[0].guildId, name: memberships[0].guildName, icon: memberships[0].icon, rank: memberships[0].rankName } : null,
 		current: mine ? { id: mine.job.id, name: mine.job.name, icon: mine.job.icon, isOpen: mine.job.isOpen } : null,
 		pay,
 		purse,

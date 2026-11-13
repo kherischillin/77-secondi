@@ -20,7 +20,8 @@ export const actions: Actions = {
 			name: String(form.get('name') ?? ''),
 			category: String(form.get('category') ?? ''),
 			description: String(form.get('description') ?? ''),
-			joinMode: String(form.get('joinMode') ?? 'apply')
+			joinMode: String(form.get('joinMode') ?? 'apply'),
+			icon: String(form.get('icon') ?? 'shield')
 		};
 		const parsed = guildFormSchema.safeParse(values);
 		if (!parsed.success) return fail(400, { errors: fieldErrors(parsed.error), values });

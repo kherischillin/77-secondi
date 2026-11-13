@@ -2,7 +2,7 @@
 	import type { PageProps } from './$types';
 	import { fullName } from '#lib/format.ts';
 	import Avatar from '#lib/components/Avatar.svelte';
-	import JobIcon from '#lib/components/JobIcon.svelte';
+	import RoleBadges from '#lib/components/RoleBadges.svelte';
 
 	let { data }: PageProps = $props();
 </script>
@@ -34,7 +34,7 @@
 								<span class="mail-slot" aria-hidden="true"></span>
 							{/if}
 							<a class="who" href="/scheda/{p.characterId}"><Avatar src={p.avatarUrl} name={p.name} size={30} /><span>{fullName(p)}</span></a>
-							{#if p.jobName}<JobIcon icon={p.jobIcon} title={p.jobName} size={16} />{/if}
+							<RoleBadges badges={p.badges} size={16} />
 						</li>
 					{/each}
 				</ul>

@@ -50,7 +50,8 @@ export const actions: Actions = {
 			name: String(form.get('name') ?? ''),
 			category: String(form.get('category') ?? ''),
 			description: String(form.get('description') ?? ''),
-			joinMode: String(form.get('joinMode') ?? 'apply')
+			joinMode: String(form.get('joinMode') ?? 'apply'),
+			icon: String(form.get('icon') ?? guild.icon)
 		});
 		if (!parsed.success) return fail(400, { error: parsed.error.issues[0].message });
 

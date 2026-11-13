@@ -2,6 +2,7 @@
  * Regole della parte social (bacheche, gilde, missive).
  * Logica pura, senza database: usata dal server per decidere e dall'interfaccia per mostrare.
  */
+import { isJobIcon } from './job-icons.ts';
 import { z } from 'zod';
 
 // ---------------------------------------------------------------------------
@@ -113,7 +114,8 @@ export const guildFormSchema = z.object({
 	name: z.string().trim().min(2, 'Il nome deve avere almeno 2 caratteri.').max(60, 'Nome troppo lungo.'),
 	category: z.string().trim().max(40, 'Tipo troppo lungo.'),
 	description: z.string().trim().max(5000, 'Descrizione troppo lunga.'),
-	joinMode: z.enum(['open', 'apply', 'closed'])
+	joinMode: z.enum(['open', 'apply', 'closed']),
+	icon: z.string().refine(isJobIcon, 'Scegli un’icona dall’elenco.').catch('shield')
 });
 
 export const JOIN_MODE_LABELS = {

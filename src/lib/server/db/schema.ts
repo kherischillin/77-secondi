@@ -478,6 +478,8 @@ export const guilds = pgTable(
 		description: text('description').notNull().default(''),
 		statute: text('statute').notNull().default(''),
 		symbol: text('symbol'),
+		/** Icona (chiave di src/lib/job-icons.ts) mostrata in scheda e tra i presenti; porta alla pagina della gilda. */
+		icon: text('icon').notNull().default('shield'),
 		/** Come si entra: libero, su candidatura, solo su invito dei capi. */
 		joinMode: text('join_mode', { enum: ['open', 'apply', 'closed'] }).notNull().default('apply'),
 		isActive: boolean('is_active').notNull().default(true),
