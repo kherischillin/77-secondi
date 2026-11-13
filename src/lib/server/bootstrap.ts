@@ -6,6 +6,7 @@ import { db, schema } from './db';
 import { ALL_CAPABILITIES, type Capability } from '../permissions';
 import { seedBoards } from './boards.ts';
 import { seedPages } from './pages.ts';
+import { seedNews } from './news.ts';
 import { createGuild, type RankSeed } from './guilds.ts';
 
 /** Nome del ruolo con tutti i poteri. È di sistema: non si può cancellare né ridurre. */
@@ -64,6 +65,7 @@ export async function bootstrapDatabase(): Promise<void> {
 	await seedPrivateRooms();
 	await seedBoards();
 	await seedPages();
+	await seedNews();
 
 	// L'Amministratore deve sempre avere tutte le capacità, anche quelle aggiunte in versioni future.
 	await db

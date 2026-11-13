@@ -866,3 +866,23 @@ export const pages = pgTable(
 	},
 	(t) => [uniqueIndex('pages_slug_idx').on(t.slug)]
 );
+
+/** News della pagina iniziale (pannello "Notizie"), scritte dallo staff in Gestione → Pagina iniziale. */
+export const news = pgTable(
+	'news',
+	{
+		id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+		title: text('title').notNull(),
+		/** Riga breve sotto il titolo. */
+		summary: text('summary').notNull().default(''),
+		/** Testo completo (formattazione semplice di markup.ts), si apre cliccando la news. */
+		body: text('body').notNull().default(''),
+		isPublished: boolean('is_published').notNull().default(true),
+		/** In evidenza: resta in cima all'elenco. */
+		isPinned: boolean('is_pinned').notNull().default(false),
+		createdAt: createdAt(),
+		updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+		authorUserId: integer('author_user_id').references(() => users.id, { onDelete: 'set null' })
+	},
+	(t) => [index('news_created_idx').on(t.createdAt)]
+);

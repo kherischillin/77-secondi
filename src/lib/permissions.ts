@@ -23,6 +23,7 @@ export const CAPABILITY_GROUPS = [
 			'economy.manage': 'Gestire l’economia (valuta, stipendi, correzioni del denaro)',
 			'items.manage': 'Gestire il catalogo degli oggetti e il mercato',
 			'pages.manage': 'Scrivere le pagine informative (guida, regolamento, ambientazione)',
+			'home.manage': 'Gestire la pagina iniziale (benvenuto, sfondo e news)',
 			'import.run': 'Importare i dati da un vecchio gioco GDRCD'
 		}
 	},

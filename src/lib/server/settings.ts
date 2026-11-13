@@ -5,6 +5,7 @@ import { DEFAULT_RULES, rulesSchema, type Rules } from '../rules.ts';
 import { DEFAULT_ECONOMY, economySchema, type Economy } from '../economy.ts';
 import { DEFAULT_THEME, THEME_IDS, type ThemeId } from '../themes.ts';
 import { DEFAULT_PORTRAIT_HOSTS, HOST_PATTERN } from '../portrait.ts';
+import { DEFAULT_HOME, homeSchema, type HomeSettings } from '../home.ts';
 
 /**
  * Impostazioni del sito, con valori predefiniti e validazione.
@@ -137,4 +138,27 @@ export async function updateEconomy(values: Economy): Promise<void> {
 		.values({ key: 'economy', value: parsed })
 		.onConflictDoUpdate({ target: schema.settings.key, set: { value: parsed, updatedAt: new Date() } });
 	economyCache = parsed;
+}
+
+// ---------------------------------------------------------------------------
+// Pagina iniziale (chiave "home")
+// ---------------------------------------------------------------------------
+
+let homeCache: HomeSettings | null = null;
+
+export async function getHome(): Promise<HomeSettings> {
+	if (homeCache) return homeCache;
+	const [row] = await db.select().from(schema.settings).where(eq(schema.settings.key, 'home'));
+	const parsed = homeSchema.safeParse({ ...DEFAULT_HOME, ...((row?.value as object) ?? {}) });
+	homeCache = parsed.success ? parsed.data : DEFAULT_HOME;
+	return homeCache;
+}
+
+export async function updateHome(values: HomeSettings): Promise<void> {
+	const parsed = homeSchema.parse(values);
+	await db
+		.insert(schema.settings)
+		.values({ key: 'home', value: parsed })
+		.onConflictDoUpdate({ target: schema.settings.key, set: { value: parsed, updatedAt: new Date() } });
+	homeCache = parsed;
 }
