@@ -13,7 +13,7 @@
 <svelte:head><title>Pagina iniziale · Gestione</title></svelte:head>
 
 <h1>Pagina iniziale</h1>
-<p class="muted intro">È la prima cosa che vede chi apre il sito: titolo, riquadro di benvenuto, numero dei presenti e news. <a href="/" target="_blank">Apri la pagina iniziale ↗</a></p>
+<p class="muted intro">È la prima cosa che vede chi apre il sito: titolo, riquadro di benvenuto, numero dei presenti e news. <a href="/?anteprima" target="_blank">Guarda la pagina iniziale ↗</a> (da entrato la vedi solo così: chi ha già fatto l'accesso viene portato alla mappa).</p>
 
 <div class="layout">
 	<form method="post" action="?/benvenuto" enctype="multipart/form-data" class="stack card" use:enhance={keep}>
