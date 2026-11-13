@@ -24,8 +24,8 @@ import { audit } from '#lib/server/audit.ts';
 import { weatherFor } from '#lib/weather.ts';
 import { boundingArea, normalizeArea, normalizeShape, parseDistrictImport, wouldCycle } from '#lib/districts.ts';
 import { mediaUrl } from '#lib/server/uploads.ts';
-import { matchesNightCityImage, seedNightCity } from '#lib/server/seed/apply.ts';
-import { NIGHT_CITY_DISTRICTS } from '#lib/server/seed/night-city.ts';
+import { hasNightCity2077Image, seedNightCity2077 } from '#lib/server/seed/apply.ts';
+import { NIGHT_CITY_2077 } from '#lib/server/seed/night-city-2077.ts';
 
 type Errors = Record<string, string>;
 
@@ -77,9 +77,9 @@ export const load: PageServerLoad = async (event) => {
 		nightCity:
 			map.name.trim().toLowerCase() === 'night city'
 				? {
-						districts: NIGHT_CITY_DISTRICTS.length,
-						locations: NIGHT_CITY_DISTRICTS.reduce((n, d) => n + d.locations.length, 0),
-						imageOk: await matchesNightCityImage(map.image)
+						districts: NIGHT_CITY_2077.length,
+						locations: NIGHT_CITY_2077.reduce((n, d) => n + d.locations.length, 0),
+						imageOk: await hasNightCity2077Image(map)
 					}
 				: null,
 		locations: locations.map(toLocationView),
@@ -230,14 +230,14 @@ export const actions: Actions = {
 		const { user } = requireCapability(event, 'world.manage');
 		const map = await loadMapOr404(event.params.id);
 		if (map.name.trim().toLowerCase() !== 'night city') error(404, 'Non disponibile per questa mappa.');
-		if (!(await matchesNightCityImage(map.image))) {
-			return fail(400, { action: 'preparaNightCity', errors: { nightCity: 'Prima carica come immagine di questa mappa il file night-city.webp (le forme dei distretti sono calcolate su quello).' } as Errors });
+		if (!(await hasNightCity2077Image(map))) {
+			return fail(400, { action: 'preparaNightCity', errors: { nightCity: 'Prima carica le versioni per tema della mappa di Cyberpunk 2077 (le forme dei distretti sono calcolate su quella).' } as Errors });
 		}
-		const r = await seedNightCity(map.id);
+		const r = await seedNightCity2077(map.id);
 		await audit({ actorUserId: user.id, action: 'world.seed', targetType: 'map', targetId: map.id, details: { mappa: map.name, ...r }, ip: clientIp(event) });
 		return {
 			action: 'preparaNightCity',
-			success: `Night City pronta: ${r.created} distretti nuovi, ${r.updated} aggiornati, ${r.locations} luoghi aggiunti, ${r.descriptions} descrizioni aggiornate.${r.skipped.length ? ' Saltati: ' + r.skipped.join(', ') + '.' : ''}`
+			success: `Night City 2077 pronta: ${r.created} distretti nuovi, ${r.updated} aggiornati, ${r.removed} vecchi distretti tolti, ${r.moved} luoghi spostati, ${r.added} luoghi aggiunti.${r.baseImageRemoved ? ' La vecchia immagine della mappa è stata tolta: ora si usano le versioni per tema.' : ''}`
 		};
 	},
 

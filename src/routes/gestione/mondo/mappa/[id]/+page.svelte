@@ -179,18 +179,19 @@
 		</form>
 
 		{#if data.nightCity}
-			<h2>Distretti di Night City</h2>
+			<h2>Distretti di Night City (Cyberpunk 2077)</h2>
 			<form method="post" action="?/preparaNightCity" class="stack card" use:enhance={() => async ({ update }) => update({ reset: false })}>
 				<p class="muted small">
-					Crea in un colpo i {data.nightCity.districts} distretti con la loro forma sulla mappa e i {data.nightCity.locations} luoghi della
-					legenda (ogni luogo è una chat, già posizionata), ognuno con una breve descrizione. Se un distretto esiste già con lo stesso nome viene
-					aggiornato; i luoghi già presenti non vengono duplicati e le descrizioni scritte da voi non vengono toccate, quindi si può rilanciare.
+					Prepara gli {data.nightCity.districts} distretti della mappa di Cyberpunk 2077 (Watson, Westbrook, City Center, Heywood, Santo Domingo,
+					Pacifica, Dogtown, l'aeroporto e le Badlands) con la loro forma e {data.nightCity.locations} luoghi. I vecchi distretti di Cyberpunk RED
+					passano i loro luoghi (con le chat) al distretto 2077 corrispondente e poi spariscono; i luoghi spostati vengono messi dentro il
+					distretto nuovo, e potete sistemarli voi. Si può rilanciare senza doppioni.
 				</p>
 				{#if !data.nightCity.imageOk}
-					<p class="hint">Prima carica qui sopra, come immagine della mappa, il file <strong>night-city.webp</strong>.</p>
+					<p class="hint">Prima carica qui sopra, nelle <strong>versioni per tema</strong>, le immagini della mappa di Cyberpunk 2077 (2200×2330).</p>
 				{/if}
 				{#if errors.nightCity}<p class="field-error">{errors.nightCity}</p>{/if}
-				<div><button type="submit" disabled={!data.nightCity.imageOk}>Crea distretti e luoghi</button></div>
+				<div><button type="submit" disabled={!data.nightCity.imageOk}>Prepara Night City 2077</button></div>
 			</form>
 		{/if}
 

@@ -150,3 +150,54 @@ export function parseDistrictImport(text: string): { districts: DistrictImport[]
 	});
 	return { districts, errors };
 }
+
+/** Il punto sta dentro il poligono? (regola pari-dispari) */
+export function pointInPolygon([x, y]: Point, pts: Point[]): boolean {
+	let inside = false;
+	for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+		const [xi, yi] = pts[i];
+		const [xj, yj] = pts[j];
+		if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+	}
+	return inside;
+}
+
+/**
+ * Posizioni per `count` nuovi luoghi dentro un distretto, lontane tra loro e da quelli già presenti.
+ * `taken` e il risultato sono in percentuale del riquadro del distretto (come le coordinate dei luoghi);
+ * la forma è in percentuale dell'immagine della mappa madre. Deterministico: stessi dati, stesse posizioni.
+ */
+export function spreadPoints(shape: Shape, count: number, taken: Point[] = []): Point[] {
+	const area = boundingArea(shape.points);
+	if (count <= 0 || area.w <= 0 || area.h <= 0) return [];
+	const toLocal = ([x, y]: Point): Point => [((x - area.x) / area.w) * 100, ((y - area.y) / area.h) * 100];
+	// Griglia di candidati dentro la forma, lontani dai bordi del riquadro.
+	const steps = 28;
+	const candidates: Point[] = [];
+	for (let i = 1; i < steps; i++) {
+		for (let j = 1; j < steps; j++) {
+			const p: Point = [area.x + (area.w * i) / steps, area.y + (area.h * j) / steps];
+			if (pointInPolygon(p, shape.points)) candidates.push(toLocal(p));
+		}
+	}
+	if (!candidates.length) candidates.push([50, 50]);
+	const placed: Point[] = [...taken];
+	const out: Point[] = [];
+	const dist = (a: Point, b: Point) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2;
+	for (let k = 0; k < count; k++) {
+		let best = candidates[0];
+		let bestD = -1;
+		for (const c of candidates) {
+			// Senza luoghi già piazzati si parte dal candidato più vicino al centro della forma.
+			const d = placed.length ? Math.min(...placed.map((p) => dist(c, p))) : -dist(c, [50, 50]);
+			if (d > bestD) {
+				bestD = d;
+				best = c;
+			}
+		}
+		const p: Point = [round(best[0]), round(best[1])];
+		out.push(p);
+		placed.push(p);
+	}
+	return out;
+}

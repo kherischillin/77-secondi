@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { areaFromPoints, boundingArea, labelPoint, normalizeArea, normalizeShape, parseDistrictImport, rectPoints, wouldCycle, zoomTransform } from './districts.ts';
+import { areaFromPoints, boundingArea, labelPoint, normalizeArea, normalizeShape, parseDistrictImport, rectPoints, pointInPolygon, spreadPoints, wouldCycle, zoomTransform } from './districts.ts';
 
 describe('distretti', () => {
 	it("tiene l'area dentro l'immagine", () => {
@@ -53,5 +53,31 @@ describe('forme libere', () => {
 	});
 	it('un rettangolo diventa un poligono di 4 vertici', () => {
 		expect(rectPoints({ x: 1, y: 2, w: 3, h: 4 })).toEqual([[1, 2], [4, 2], [4, 6], [1, 6]]);
+	});
+});
+
+describe('spreadPoints', () => {
+	const square = { points: [[10, 10], [30, 10], [30, 30], [10, 30]] as [number, number][] };
+	const triangle = { points: [[0, 0], [40, 0], [0, 40]] as [number, number][] };
+	it('mette i luoghi dentro la forma, in coordinate del riquadro', () => {
+		const pts = spreadPoints(triangle, 5);
+		expect(pts).toHaveLength(5);
+		for (const [x, y] of pts) expect(x + y).toBeLessThanOrEqual(100);
+	});
+	it('li tiene lontani tra loro e da quelli già presenti', () => {
+		const [a, b] = spreadPoints(square, 2, [[50, 50]]);
+		expect(Math.hypot(a[0] - 50, a[1] - 50)).toBeGreaterThan(30);
+		expect(Math.hypot(a[0] - b[0], a[1] - b[1])).toBeGreaterThan(30);
+	});
+	it('è deterministico', () => {
+		expect(spreadPoints(square, 3)).toEqual(spreadPoints(square, 3));
+	});
+});
+
+describe('pointInPolygon', () => {
+	it('dentro e fuori', () => {
+		const t: [number, number][] = [[0, 0], [10, 0], [0, 10]];
+		expect(pointInPolygon([2, 2], t)).toBe(true);
+		expect(pointInPolygon([8, 8], t)).toBe(false);
 	});
 });
