@@ -1,6 +1,10 @@
-import { error } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
-import { requireCharacter } from '#lib/server/guards.ts';
+import { error, fail } from '@sveltejs/kit';
+import { and, eq, inArray } from 'drizzle-orm';
+import type { Actions, PageServerLoad } from './$types';
+import { clientIp, requireCapability, requireCharacter } from '#lib/server/guards.ts';
+import { db, schema } from '#lib/server/db/index.ts';
+import { audit } from '#lib/server/audit.ts';
+import { readPositions } from '#lib/districts.ts';
 import { getLocation, getMap, listDistricts, listLocations, mapDisplay, toLocationView, toMapView } from '#lib/server/world.ts';
 import { enterMap, getPresence, listOnline } from '#lib/server/presence.ts';
 import { broadcastPresence } from '#lib/server/realtime.ts';
@@ -30,6 +34,8 @@ export const load: PageServerLoad = async (event) => {
 	const blockedId = Number(event.url.searchParams.get('stanza-occupata'));
 	const blocked = Number.isInteger(blockedId) && blockedId > 0 ? await getLocation(blockedId) : null;
 	return {
+		// Chi gestisce il mondo può spostare i luoghi trascinandoli sulla mappa.
+		canMove: event.locals.user?.capabilities.has('world.manage') ?? false,
 		roomWarning: blocked?.isPrivate ? `La stanza privata «${blocked.name}» è prenotata da un altro personaggio: si entra solo su invito di chi l'ha prenotata.` : null,
 		map: { ...toMapView(map), imageUrl: display.imageUrl },
 		crop: display.crop,
@@ -51,4 +57,34 @@ export const load: PageServerLoad = async (event) => {
 			booked: booked.has(l.id)
 		}))
 	};
+};
+
+export const actions: Actions = {
+	/** Nuove posizioni dei luoghi di questa mappa, spostati trascinandoli (solo staff con world.manage). */
+	posizioni: async (event) => {
+		const { user } = requireCapability(event, 'world.manage');
+		const map = await getMap(Number(event.params.id));
+		if (!map) error(404, 'Mappa non trovata.');
+		const positions = readPositions((await event.request.formData()).get('positions'));
+		if (!positions) return fail(400, { error: 'Posizioni non valide.' });
+		if (positions.length === 0) return { success: 'Nessun luogo spostato.' };
+		const ids = positions.map((p) => p.id);
+		const own = await db
+			.select({ id: schema.locations.id, name: schema.locations.name })
+			.from(schema.locations)
+			.where(and(eq(schema.locations.mapId, map.id), inArray(schema.locations.id, ids)));
+		if (own.length !== ids.length) return fail(400, { error: 'Alcuni luoghi non appartengono a questa mappa.' });
+		await db.transaction(async (tx) => {
+			for (const p of positions) await tx.update(schema.locations).set({ x: p.x, y: p.y }).where(eq(schema.locations.id, p.id));
+		});
+		await audit({
+			actorUserId: user.id,
+			action: 'location.move',
+			targetType: 'map',
+			targetId: map.id,
+			details: { mappa: map.name, luoghi: own.map((l) => l.name).join(', ') },
+			ip: clientIp(event)
+		});
+		return { success: positions.length === 1 ? 'Posizione salvata.' : `Posizioni salvate (${positions.length} luoghi).` };
+	}
 };

@@ -45,6 +45,7 @@ export const AUDIT_LABELS: Record<string, string> = {
 	'map.delete': 'Cancellazione mappa',
 	'location.create': 'Creazione luogo',
 	'location.update': 'Modifica luogo',
+	'location.move': 'Spostamento luoghi sulla mappa',
 	'location.delete': 'Cancellazione luogo',
 	'chat.hide': 'Messaggio nascosto in chat',
 	'chat.unhide': 'Messaggio ripristinato in chat',

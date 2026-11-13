@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { areaFromPoints, boundingArea, labelPoint, normalizeArea, normalizeShape, parseDistrictImport, rectPoints, pointInPolygon, spreadPoints, wouldCycle, zoomTransform, fitView, toFrame, fromFrame, cropToImage, imageToCrop, FULL_VIEW } from './districts.ts';
+import { areaFromPoints, boundingArea, labelPoint, normalizeArea, normalizeShape, parseDistrictImport, rectPoints, pointInPolygon, spreadPoints, wouldCycle, zoomTransform, fitView, toFrame, fromFrame, cropToImage, imageToCrop, FULL_VIEW, readPositions, clampPercent } from './districts.ts';
 
 describe('distretti', () => {
 	it("tiene l'area dentro l'immagine", () => {
@@ -105,5 +105,25 @@ describe('inquadratura della mappa', () => {
 		expect(imageToCrop(crop, 45, 52.5)).toEqual([50, 50]);
 		expect(imageToCrop(crop, 10, 52.5)).toBeNull();
 		expect(cropToImage(null, 5, 6)).toEqual([5, 6]);
+	});
+});
+
+describe('posizioni trascinate', () => {
+	it('legge un elenco valido e arrotonda', () => {
+		expect(readPositions('[{"id":3,"x":12.345,"y":99.99}]')).toEqual([{ id: 3, x: 12.3, y: 100 }]);
+		expect(readPositions('[]')).toEqual([]);
+	});
+	it('rifiuta contenuti non validi', () => {
+		expect(readPositions('non json')).toBeNull();
+		expect(readPositions('[{"id":3,"x":120,"y":5}]')).toBeNull();
+		expect(readPositions('[{"id":-1,"x":1,"y":5}]')).toBeNull();
+		expect(readPositions('[{"id":2,"x":1,"y":5},{"id":2,"x":3,"y":4}]')).toBeNull();
+		expect(readPositions('[{"id":2,"x":"1","y":5}]')).toBeNull();
+		expect(readPositions(null)).toBeNull();
+	});
+	it('clampPercent resta tra 0 e 100', () => {
+		expect(clampPercent(-4)).toBe(0);
+		expect(clampPercent(104)).toBe(100);
+		expect(clampPercent(33.333)).toBe(33.3);
 	});
 });

@@ -11,11 +11,13 @@
 	 * - `districts`: aree cliccabili; al clic la mappa zooma sull'area mentre il distretto si carica.
 	 * - `onpick`: cliccando sull'immagine si sceglie una posizione (pannello di gestione).
 	 * - `onhover`: il luogo sotto il mouse (per evidenziarlo anche nell'elenco accanto).
+	 * - `editing` + `onmove`: i luoghi si trascinano (o si spostano con le frecce); `onmove` riceve
+	 *   la nuova posizione nelle stesse coordinate dei luoghi (relative al ritaglio, se c'è).
 	 */
 	import { goto, preloadData } from '$app/navigation';
 	import { tick } from 'svelte';
 	import { fade } from 'svelte/transition';
-	import { cropToImage, fitView, fromFrame, FULL_VIEW, imageToCrop, labelPoint, rectPoints, toFrame, type Area, type Point } from '#lib/districts.ts';
+	import { clampPercent, cropToImage, fitView, fromFrame, FULL_VIEW, imageToCrop, labelPoint, rectPoints, toFrame, type Area, type Point } from '#lib/districts.ts';
 	import { placeLabels, type LabelSide } from '#lib/map-labels.ts';
 
 	type Marker = {
@@ -40,7 +42,9 @@
 		focus = null,
 		districts = [],
 		onpick,
-		onhover
+		onhover,
+		editing = false,
+		onmove
 	}: {
 		imageUrl: string;
 		alt: string;
@@ -51,6 +55,8 @@
 		districts?: District[];
 		onpick?: (x: number, y: number) => void;
 		onhover?: (id: number | null) => void;
+		editing?: boolean;
+		onmove?: (id: number, x: number, y: number) => void;
 	} = $props();
 
 	let box = $state<HTMLElement>();
@@ -140,6 +146,40 @@
 		if (p) onpick(Math.round(p[0] * 10) / 10, Math.round(p[1] * 10) / 10);
 	}
 
+	// Trascinamento dei luoghi (modalità "sposta i luoghi").
+	let dragging = $state<number | null>(null);
+	function pointerToPlace(event: PointerEvent): [number, number] | null {
+		if (!box) return null;
+		const rect = box.getBoundingClientRect();
+		const [ix, iy] = fromFrame(view, ((event.clientX - rect.left) / rect.width) * 100, ((event.clientY - rect.top) / rect.height) * 100);
+		const [cx, cy] = crop ? [((ix - crop.x) / crop.w) * 100, ((iy - crop.y) / crop.h) * 100] : [ix, iy];
+		return [clampPercent(cx), clampPercent(cy)];
+	}
+	function dragStart(event: PointerEvent, id: number) {
+		if (!editing || !onmove || event.button !== 0) return;
+		event.preventDefault();
+		(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+		dragging = id;
+	}
+	function dragMove(event: PointerEvent, id: number) {
+		if (dragging !== id) return;
+		const p = pointerToPlace(event);
+		if (p) onmove?.(id, p[0], p[1]);
+	}
+	function dragEnd(id: number) {
+		if (dragging === id) dragging = null;
+	}
+	// Con la tastiera: frecce = mezzo punto, con Maiusc = due punti e mezzo.
+	function nudge(event: KeyboardEvent, m: { id: number; x: number | null; y: number | null }) {
+		if (!editing || !onmove || m.x === null || m.y === null) return;
+		const step = event.shiftKey ? 2.5 : 0.5;
+		const delta: Record<string, [number, number]> = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] };
+		const d = delta[event.key];
+		if (!d) return;
+		event.preventDefault();
+		onmove(m.id, clampPercent(m.x + d[0]), clampPercent(m.y + d[1]));
+	}
+
 	const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 	async function openDistrict(event: MouseEvent, d: District) {
@@ -164,6 +204,8 @@
 	class:picking={!!onpick}
 	class:zooming={zooming !== null}
 	class:focused={!!crop}
+	class:editing
+	class:dragging={dragging !== null}
 	bind:this={box}
 	bind:clientWidth={boxW}
 	bind:clientHeight={boxH}
@@ -223,21 +265,27 @@
 				{/each}
 				{#each placed as m (m.id)}
 					<svelte:element
-						this={m.href ? 'a' : 'span'}
+						this={m.href && !editing ? 'a' : 'span'}
 						class="marker side-{sides.get(m.id) ?? 'right'}"
 						class:tight={sides.get(m.id) === null}
 						class:link={m.kind === 'map_link'}
-						class:highlight={m.highlight}
+						class:highlight={m.highlight || dragging === m.id}
 						class:busy={!!m.count}
 						style="left: {m.fx}%; top: {m.fy}%"
-						href={m.href}
-						title={m.name}
-						role={m.href ? undefined : 'img'}
-						aria-label={m.href ? undefined : m.name}
+						href={editing ? undefined : m.href}
+						title={editing ? `${m.name}: trascina per spostarlo` : m.name}
+						role={editing ? 'button' : m.href ? undefined : 'img'}
+						tabindex={editing ? 0 : undefined}
+						aria-label={editing ? `Sposta ${m.name} (frecce della tastiera)` : m.href ? undefined : m.name}
 						onmouseenter={() => onhover?.(m.id)}
 						onmouseleave={() => onhover?.(null)}
 						onfocus={() => onhover?.(m.id)}
 						onblur={() => onhover?.(null)}
+						onpointerdown={(e: PointerEvent) => dragStart(e, m.id)}
+						onpointermove={(e: PointerEvent) => dragMove(e, m.id)}
+						onpointerup={() => dragEnd(m.id)}
+						onpointercancel={() => dragEnd(m.id)}
+						onkeydown={(e: KeyboardEvent) => nudge(e, m)}
 					>
 						<span class="dot" aria-hidden="true"></span>
 						<span class="label" data-label={m.id}>
@@ -406,8 +454,25 @@
 		z-index: 3;
 	}
 	.picking .marker,
-	.picking .district-layer {
+	.picking .district-layer,
+	.editing .district {
 		pointer-events: none;
+	}
+	/* Modalità "sposta i luoghi": i puntini si afferrano e si trascinano. */
+	.editing .marker {
+		cursor: grab;
+		touch-action: none;
+	}
+	.editing.dragging,
+	.editing.dragging .marker {
+		cursor: grabbing;
+	}
+	.editing .dot {
+		outline: 2px dashed var(--focus);
+		outline-offset: 3px;
+	}
+	.editing .marker:focus-visible {
+		outline: none;
 	}
 	.dot {
 		position: absolute;

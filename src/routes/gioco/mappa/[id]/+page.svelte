@@ -2,8 +2,11 @@
 	import type { PageProps } from './$types';
 	import MapCanvas from '#lib/components/MapCanvas.svelte';
 	import Avatar from '#lib/components/Avatar.svelte';
+	import { enhance } from '$app/forms';
+	import { beforeNavigate } from '$app/navigation';
+	import { SvelteMap } from 'svelte/reactivity';
 
-	let { data }: PageProps = $props();
+	let { data, form }: PageProps = $props();
 
 	// Descrizione breve (primo paragrafo) per il suggerimento al passaggio del mouse, e riga "Tipo:" sotto il nome.
 	const summary = (text: string | null | undefined) => (text ?? '').split(/\n\s*\n/)[0].trim() || undefined;
@@ -22,12 +25,35 @@
 	let query = $state('');
 	const norm = (t: string) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
+	// Staff: "Sposta i luoghi". Le nuove posizioni restano in sospeso finché non si salva.
+	let editing = $state(false);
+	let saving = $state(false);
+	const pending = new SvelteMap<number, { x: number; y: number }>();
+	/** Luogo senza posizione da mettere sulla mappa con un clic. */
+	let placing = $state<number | null>(null);
+	const placingName = $derived(data.locations.find((l) => l.id === placing)?.name ?? '');
+	const positionsJson = $derived(JSON.stringify([...pending].map(([id, p]) => ({ id, x: p.x, y: p.y }))));
+
+	function stopEditing() {
+		editing = false;
+		placing = null;
+		pending.clear();
+	}
+	beforeNavigate(({ cancel }) => {
+		if (editing && pending.size > 0 && !confirm('Ci sono spostamenti non salvati. Uscire lo stesso?')) cancel();
+	});
+	// Cambiando mappa si esce dalla modalità.
+	$effect(() => {
+		void data.map.id;
+		stopEditing();
+	});
+
 	const markers = $derived(
 		data.locations.map((l) => ({
 			id: l.id,
 			name: l.name,
-			x: l.x,
-			y: l.y,
+			x: pending.get(l.id)?.x ?? l.x,
+			y: pending.get(l.id)?.y ?? l.y,
 			kind: l.kind,
 			href: hrefOf(l),
 			count: l.present,
@@ -63,7 +89,43 @@
 			<span class="moon"><span aria-hidden="true">{data.weather.moon.icon}</span> {data.weather.moon.name}</span>
 		</p>
 	{/if}
+	{#if data.canMove && data.map.imageUrl && data.locations.length && !editing}
+		<button type="button" class="secondary edit-open" onclick={() => (editing = true)}>✥ Sposta i luoghi</button>
+	{/if}
 </div>
+{#if form && 'success' in form}<div class="alert success">{form.success}</div>{/if}
+{#if form && 'error' in form}<div class="alert error">{form.error}</div>{/if}
+{#if data.canMove && data.map.imageUrl && data.locations.length}
+	{#if editing}
+		<form
+			class="edit-bar"
+			method="post"
+			action="?/posizioni"
+			use:enhance={() => {
+				saving = true;
+				return async ({ result, update }) => {
+					saving = false;
+					if (result.type === 'success') stopEditing();
+					await update();
+				};
+			}}
+		>
+			<input type="hidden" name="positions" value={positionsJson} />
+			<span class="edit-hint">
+				{#if placing !== null}
+					Clicca sulla mappa dove mettere <strong>{placingName}</strong>.
+				{:else}
+					Trascina i puntini nel punto che preferisci (oppure selezionali e usa le frecce).
+					{#if pending.size}<strong>{pending.size} {pending.size === 1 ? 'luogo spostato' : 'luoghi spostati'}.</strong>{/if}
+				{/if}
+			</span>
+			<span class="edit-actions">
+				<button type="submit" disabled={saving || pending.size === 0}>Salva posizioni</button>
+				<button type="button" class="secondary" onclick={stopEditing}>Annulla</button>
+			</span>
+		</form>
+	{/if}
+{/if}
 {#if data.roomWarning}<div class="alert error" role="alert">{data.roomWarning}</div>{/if}
 
 <div class="layout" class:with-map={!!data.map.imageUrl} style:--ratio={ratio}>
@@ -78,6 +140,14 @@
 				focus={data.focus}
 				districts={districtAreas}
 				onhover={(id) => (hoverId = id)}
+				{editing}
+				onmove={(id, x, y) => pending.set(id, { x, y })}
+				onpick={placing !== null
+					? (x, y) => {
+							pending.set(placing!, { x, y });
+							placing = null;
+						}
+					: undefined}
 			/>
 		</div>
 	{/if}
@@ -125,6 +195,11 @@
 									<span class="badge accent" title="{l.present} present{l.present === 1 ? 'e' : 'i'}">{l.present}</span>
 								{/if}
 							</a>
+							{#if editing && l.x === null && !pending.has(l.id)}
+								<button type="button" class="link small place-btn" onclick={() => (placing = placing === l.id ? null : l.id)}>
+									{placing === l.id ? 'Annulla' : '📍 Metti sulla mappa'}
+								</button>
+							{/if}
 							{#if l.people.length}
 								<div class="people">
 									{#each l.people as p (p.id)}<a href="/scheda/{p.id}" title={p.name}><Avatar src={p.avatarUrl} name={p.name} size={22} /></a>{/each}
@@ -208,6 +283,32 @@
 			position: static;
 			max-height: 55vh;
 		}
+	}
+	.edit-open {
+		margin-left: auto;
+		align-self: center;
+	}
+	.edit-bar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem 1rem;
+		margin: 0 0 0.75rem;
+		padding: 0.6rem 0.9rem;
+		border: 1px dashed var(--focus);
+		border-radius: var(--radius);
+		background: color-mix(in srgb, var(--focus) 8%, transparent);
+	}
+	.edit-hint {
+		font-size: 0.92rem;
+	}
+	.edit-actions {
+		display: flex;
+		gap: 0.5rem;
+	}
+	.place-btn {
+		margin: 0 0.3rem 0.4rem;
 	}
 	.search {
 		width: 100%;

@@ -239,3 +239,34 @@ export function imageToCrop(crop: Area | null, x: number, y: number): Point | nu
 	const [cx, cy] = crop ? [((x - crop.x) / crop.w) * 100, ((y - crop.y) / crop.h) * 100] : [x, y];
 	return cx < 0 || cx > 100 || cy < 0 || cy > 100 ? null : [cx, cy];
 }
+
+/** Porta un valore dentro 0-100, arrotondato al decimo (posizione di un luogo trascinato). */
+export function clampPercent(v: number): number {
+	return Math.round(Math.min(100, Math.max(0, v)) * 10) / 10;
+}
+
+/**
+ * Legge le posizioni inviate dalla mappa ("sposta i luoghi"): JSON `[{ id, x, y }]`, al massimo 500,
+ * id interi positivi e senza doppioni, coordinate 0-100. Null se il contenuto non è valido.
+ */
+export function readPositions(raw: unknown): { id: number; x: number; y: number }[] | null {
+	if (typeof raw !== 'string' || raw.length > 50_000) return null;
+	let list: unknown;
+	try {
+		list = JSON.parse(raw);
+	} catch {
+		return null;
+	}
+	if (!Array.isArray(list) || list.length > 500) return null;
+	const out: { id: number; x: number; y: number }[] = [];
+	const seen = new Set<number>();
+	for (const item of list) {
+		const { id, x, y } = (item ?? {}) as Record<string, unknown>;
+		if (!Number.isInteger(id) || (id as number) <= 0 || seen.has(id as number)) return null;
+		if (typeof x !== 'number' || typeof y !== 'number' || !Number.isFinite(x) || !Number.isFinite(y)) return null;
+		if (x < 0 || x > 100 || y < 0 || y > 100) return null;
+		seen.add(id as number);
+		out.push({ id: id as number, x: clampPercent(x), y: clampPercent(y) });
+	}
+	return out;
+}
