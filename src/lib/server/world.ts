@@ -42,7 +42,7 @@ export function toMapView(m: typeof schema.maps.$inferSelect): MapView {
 		id: m.id,
 		name: m.name,
 		description: m.description,
-		imageUrl: mediaUrl(m.image),
+		imageUrl: mediaUrl(imageFor(m)),
 		isStart: m.isStart,
 		climate: m.climate,
 		weatherOverride: m.weatherOverride,
@@ -55,6 +55,16 @@ export function toMapView(m: typeof schema.maps.$inferSelect): MapView {
 
 type MapRow = typeof schema.maps.$inferSelect;
 
+/**
+ * File dell'immagine di una mappa per un tema: la versione di quel tema se c'è,
+ * altrimenti l'immagine normale, altrimenti una qualsiasi delle versioni per tema.
+ * Le versioni devono avere le stesse proporzioni, perché distretti e luoghi sono in percentuale.
+ */
+export function imageFor(m: Pick<MapRow, 'image' | 'themeImages'>, theme?: string | null): string | null {
+	const versions = m.themeImages ?? {};
+	return (theme ? versions[theme] : undefined) ?? m.image ?? Object.values(versions)[0] ?? null;
+}
+
 export function areaOf(m: MapRow): Area | null {
 	return m.areaX !== null && m.areaY !== null && m.areaW !== null && m.areaH !== null
 		? { x: m.areaX, y: m.areaY, w: m.areaW, h: m.areaH }
@@ -65,12 +75,17 @@ export function areaOf(m: MapRow): Area | null {
  * Immagine da mostrare per una mappa: la sua, oppure (per un distretto senza immagine)
  * quella della mappa madre ritagliata sull'area del distretto.
  */
-export async function mapDisplay(m: MapRow): Promise<{ imageUrl: string | null; crop: Area | null; parent: { id: number; name: string } | null }> {
+export async function mapDisplay(
+	m: MapRow,
+	theme?: string | null
+): Promise<{ imageUrl: string | null; crop: Area | null; parent: { id: number; name: string } | null }> {
 	const parent = m.parentMapId ? await getMap(m.parentMapId) : null;
 	const parentInfo = parent ? { id: parent.id, name: parent.name } : null;
-	if (m.image) return { imageUrl: mediaUrl(m.image), crop: null, parent: parentInfo };
+	const own = imageFor(m, theme);
+	if (own) return { imageUrl: mediaUrl(own), crop: null, parent: parentInfo };
 	const area = areaOf(m);
-	if (parent?.image && area) return { imageUrl: mediaUrl(parent.image), crop: area, parent: parentInfo };
+	const parentImage = parent ? imageFor(parent, theme) : null;
+	if (parentImage && area) return { imageUrl: mediaUrl(parentImage), crop: area, parent: parentInfo };
 	return { imageUrl: null, crop: null, parent: parentInfo };
 }
 
@@ -124,7 +139,7 @@ export async function getStartMap() {
 		.orderBy(
 			sql`(${schema.maps.isStart} and ${schema.maps.parentMapId} is null) desc`,
 			sql`(${schema.maps.parentMapId} is null) desc`,
-			sql`(${schema.maps.image} is not null) desc`,
+			sql`(${schema.maps.image} is not null or ${schema.maps.themeImages} <> '{}'::jsonb) desc`,
 			sql`${schema.maps.isStart} desc`,
 			asc(schema.maps.sortOrder),
 			asc(schema.maps.id)

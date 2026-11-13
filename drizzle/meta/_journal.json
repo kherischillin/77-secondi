@@ -141,6 +141,13 @@
       "when": 1794531379054,
       "tag": "0019_icone_gilde",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1794532251395,
+      "tag": "0020_immagini_per_tema",
+      "breakpoints": true
     }
   ]
 }

@@ -111,9 +111,27 @@
 				<input id="image" name="image" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
 				{#if errors.image}<p class="field-error">{errors.image}</p>{/if}
 			</div>
-			{#if data.map.imageUrl}
+			{#if data.baseImageUrl}
 				<label class="checkbox"><input type="checkbox" name="removeImage" /><span>Rimuovi l'immagine</span></label>
 			{/if}
+			<fieldset class="theme-images">
+				<legend>Versioni per tema</legend>
+				<p class="hint">
+					Facoltative: ogni tema mostra la sua versione dell'immagine (stesse proporzioni per tutte). Se un tema non ne ha una, usa
+					l'immagine qui sopra.
+				</p>
+				{#each data.themeImages as t (t.id)}
+					<div class="theme-row">
+						{#if t.url}<img src={t.url} alt="" />{:else}<span class="no-img">—</span>{/if}
+						<div>
+							<label for="themeImage_{t.id}">{t.label}</label>
+							<input id="themeImage_{t.id}" name="themeImage_{t.id}" type="file" accept="image/png,image/jpeg,image/webp" />
+							{#if t.url}<label class="checkbox"><input type="checkbox" name="removeThemeImage_{t.id}" /><span>Rimuovi</span></label>{/if}
+						</div>
+					</div>
+				{/each}
+				{#if errors.themeImages}<p class="field-error">{errors.themeImages}</p>{/if}
+			</fieldset>
 			<div>
 				<label for="sortOrder">Ordine <span class="hint">numeri più bassi compaiono prima</span></label>
 				<input id="sortOrder" name="sortOrder" type="number" min="-1000" max="1000" value={data.map.sortOrder} />
@@ -282,5 +300,25 @@
 		height: 1px;
 		overflow: hidden;
 		clip: rect(0 0 0 0);
+	}
+	.theme-images {
+		padding: 0.75rem;
+	}
+	.theme-row {
+		display: flex;
+		gap: 0.75rem;
+		align-items: center;
+		margin-top: 0.6rem;
+	}
+	.theme-row img,
+	.no-img {
+		width: 64px;
+		height: 64px;
+		object-fit: cover;
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		display: grid;
+		place-items: center;
+		flex-shrink: 0;
 	}
 </style>

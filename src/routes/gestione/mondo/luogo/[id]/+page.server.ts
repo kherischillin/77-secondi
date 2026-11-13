@@ -34,7 +34,7 @@ export const load: PageServerLoad = async (event) => {
 	const [siblings, maps, display] = await Promise.all([
 		listLocations(map.id, { includeInactive: true }),
 		listMaps(),
-		mapDisplay(map)
+		mapDisplay(map, event.locals.theme)
 	]);
 	return {
 		location: { ...toLocationView(location), sortOrder: location.sortOrder },

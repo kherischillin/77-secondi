@@ -10,13 +10,15 @@ import {
 	listMaps,
 	mapDisplay,
 	areaOf,
+	imageFor,
 	readMapForm,
 	setStartMap,
 	weatherOverrideSchema,
 	toLocationView,
 	toMapView
 } from '#lib/server/world.ts';
-import { deleteImage, saveImage, UploadError } from '#lib/server/uploads.ts';
+import { deleteImage, imageSize, readImage, saveImage, UploadError } from '#lib/server/uploads.ts';
+import { THEME_IDS, THEMES } from '#lib/themes.ts';
 import { fieldErrors } from '#lib/validation.ts';
 import { audit } from '#lib/server/audit.ts';
 import { weatherFor } from '#lib/weather.ts';
@@ -26,6 +28,13 @@ import { matchesNightCityImage, seedNightCity } from '#lib/server/seed/apply.ts'
 import { NIGHT_CITY_DISTRICTS } from '#lib/server/seed/night-city.ts';
 
 type Errors = Record<string, string>;
+
+/** Larghezza/altezza di un'immagine caricata (per controllare che le versioni per tema combacino). */
+async function imageRatio(file: string): Promise<number | null> {
+	const f = await readImage(file);
+	const size = f ? imageSize(f.bytes) : null;
+	return size ? size.width / size.height : null;
+}
 
 async function loadMapOr404(id: string) {
 	const map = await getMap(Number(id));
@@ -40,22 +49,25 @@ export const load: PageServerLoad = async (event) => {
 		listLocations(map.id, { includeInactive: true }),
 		listMaps(),
 		listDistricts(map.id),
-		mapDisplay(map)
+		mapDisplay(map, event.locals.theme)
 	]);
 	const parentOf = new Map(maps.map((m) => [m.id, m.parentMapId]));
 	return {
 		map: { ...toMapView(map), sortOrder: map.sortOrder },
+		// Versioni dell'immagine per ogni tema.
+		themeImages: THEME_IDS.map((id) => ({ id, label: THEMES[id].label, url: mediaUrl(map.themeImages?.[id] ?? null) })),
+		baseImageUrl: mediaUrl(map.image),
 		display,
 		districts: districts.flatMap((d) =>
 			d.area ? [{ id: d.id, name: d.name, area: d.area, points: d.shape?.points, label: d.shape?.label, href: `/gestione/mondo/mappa/${d.id}` }] : []
 		),
 		// Mappe che possono contenere questa come distretto: con un'immagine e senza creare giri.
 		parentOptions: maps
-			.filter((m) => m.id !== map.id && m.image && !wouldCycle(map.id, m.id, parentOf))
+			.filter((m) => m.id !== map.id && imageFor(m) && !wouldCycle(map.id, m.id, parentOf))
 			.map((m) => ({
 				id: m.id,
 				name: m.name,
-				imageUrl: mediaUrl(m.image)!,
+				imageUrl: mediaUrl(imageFor(m, event.locals.theme))!,
 				siblings: maps
 					.filter((s) => s.parentMapId === m.id && s.id !== map.id && areaOf(s))
 					.map((s) => ({ name: s.name, area: areaOf(s)!, points: normalizeShape(s.shape)?.points ?? null }))
@@ -93,8 +105,35 @@ export const actions: Actions = {
 		}
 		if (form.get('removeImage') === 'on') image = null;
 
-		await db.update(schema.maps).set({ ...parsed.data, image }).where(eq(schema.maps.id, map.id));
+		// Versioni per tema: stesse proporzioni tra loro, perché distretti e luoghi sono in percentuale.
+		const themeImages: Record<string, string> = { ...(map.themeImages ?? {}) };
+		const replaced: string[] = [];
+		for (const id of THEME_IDS) {
+			try {
+				const uploaded = await saveImage(form.get(`themeImage_${id}`));
+				if (uploaded) {
+					if (themeImages[id]) replaced.push(themeImages[id]);
+					themeImages[id] = uploaded;
+				}
+			} catch (e) {
+				if (e instanceof UploadError) return fail(400, { action: 'salva', errors: { themeImages: `${THEMES[id].label}: ${e.message}` } as Errors });
+				throw e;
+			}
+			if (form.get(`removeThemeImage_${id}`) === 'on' && themeImages[id]) {
+				replaced.push(themeImages[id]);
+				delete themeImages[id];
+			}
+		}
+		const ratios = await Promise.all(Object.values(themeImages).map(imageRatio));
+		const known = ratios.filter((r): r is number => r !== null);
+		if (known.some((r) => Math.abs(r - known[0]) / known[0] > 0.01)) {
+			for (const f of Object.values(themeImages)) if (!Object.values(map.themeImages ?? {}).includes(f)) await deleteImage(f);
+			return fail(400, { action: 'salva', errors: { themeImages: 'Le versioni per tema devono avere tutte le stesse proporzioni (stessa larghezza e altezza).' } as Errors });
+		}
+
+		await db.update(schema.maps).set({ ...parsed.data, image, themeImages }).where(eq(schema.maps.id, map.id));
 		if (image !== map.image) await deleteImage(map.image);
+		for (const f of replaced) await deleteImage(f);
 		if (form.get('isStart') === 'on' && !map.isStart) await setStartMap(map.id);
 
 		await audit({
@@ -121,7 +160,7 @@ export const actions: Actions = {
 		}
 		const parent = await getMap(Number(rawParent));
 		const maps = await listMaps();
-		if (!parent || !parent.image || wouldCycle(map.id, parent.id, new Map(maps.map((m) => [m.id, m.parentMapId])))) {
+		if (!parent || !imageFor(parent) || wouldCycle(map.id, parent.id, new Map(maps.map((m) => [m.id, m.parentMapId])))) {
 			return fail(400, { action: 'distretto', errors: { parentMapId: 'Scegli una mappa con un\'immagine (e non un distretto di questa).' } as Errors });
 		}
 		// Forma libera (se disegnata) oppure rettangolo.
@@ -250,6 +289,7 @@ export const actions: Actions = {
 		const locations = await listLocations(map.id, { includeInactive: true });
 		await db.delete(schema.maps).where(eq(schema.maps.id, map.id));
 		await deleteImage(map.image);
+		for (const f of Object.values(map.themeImages ?? {})) await deleteImage(f);
 		for (const l of locations) await deleteImage(l.image);
 		await audit({
 			actorUserId: user.id,

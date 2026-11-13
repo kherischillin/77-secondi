@@ -17,7 +17,7 @@ export const load: PageServerLoad = async (event) => {
 	await enterMap(character.id, map.id);
 	if (before?.locationId) void broadcastPresence(before.locationId);
 
-	const [locations, online, districts, display] = await Promise.all([listLocations(map.id), listOnline(), listDistricts(map.id), mapDisplay(map)]);
+	const [locations, online, districts, display] = await Promise.all([listLocations(map.id), listOnline(), listDistricts(map.id), mapDisplay(map, event.locals.theme)]);
 	const people = new Map<number, { id: number; name: string; avatarUrl: string | null }[]>();
 	for (const c of online) {
 		if (!c.locationId || c.locationPrivate) continue;

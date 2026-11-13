@@ -49,6 +49,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	// Tema grafico: quello scelto dal giocatore, altrimenti quello del sito.
 	const theme = isTheme(event.locals.user?.theme) ? event.locals.user.theme : event.locals.settings.theme;
+	event.locals.theme = theme;
 	const response = await resolve(event, {
 		transformPageChunk: ({ html }) => html.replace('%gdr.theme%', theme)
 	});

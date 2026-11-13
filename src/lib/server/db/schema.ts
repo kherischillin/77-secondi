@@ -213,6 +213,8 @@ export const maps = pgTable('maps', {
 	description: text('description').notNull().default(''),
 	/** Nome del file immagine caricato (servito da /media/...). */
 	image: text('image'),
+		/** Versioni dell'immagine per tema (id del tema → file in /media); se manca, si usa `image`. */
+		themeImages: jsonb('theme_images').$type<Record<string, string>>().notNull().default({}),
 	/** La mappa su cui arrivano i personaggi al primo ingresso. */
 	isStart: boolean('is_start').notNull().default(false),
 	sortOrder: integer('sort_order').notNull().default(0),

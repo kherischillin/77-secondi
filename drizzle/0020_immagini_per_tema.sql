@@ -1,0 +1,1 @@
+ALTER TABLE "maps" ADD COLUMN "theme_images" jsonb DEFAULT '{}'::jsonb NOT NULL;
