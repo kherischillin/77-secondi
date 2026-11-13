@@ -2,7 +2,7 @@ import { and, asc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { db, schema } from './db/index.ts';
 import { mediaUrl, storedImageSize } from './uploads.ts';
-import { CLIMATES } from '../weather.ts';
+import { CLIMATES, weatherFor } from '../weather.ts';
 import { normalizeShape, type Area, type Point, type Shape } from '../districts.ts';
 
 export type MapView = {
@@ -155,6 +155,31 @@ export async function getStartMap() {
 		)
 		.limit(1);
 	return start ?? null;
+}
+
+/**
+ * Mappa che decide il meteo: la madre più in alto (es. Night City). Tutti i distretti e i luoghi della
+ * città hanno così lo stesso cielo. Se quella mappa non ha meteo (es. la mappa delle stanze private),
+ * si usa quello della mappa principale.
+ */
+export async function weatherSourceOf(m: MapRow): Promise<MapRow> {
+	let current = m;
+	for (let i = 0; i < 20 && current.parentMapId; i++) {
+		const parent = await getMap(current.parentMapId);
+		if (!parent) break;
+		current = parent;
+	}
+	if (!current.climate && !current.weatherOverride) {
+		const start = await getStartMap();
+		if (start && start.id !== current.id) return start;
+	}
+	return current;
+}
+
+/** Meteo di una mappa (quello della città a cui appartiene) e, se diversa, la mappa da cui arriva. */
+export async function mapWeather(m: MapRow, date = new Date()) {
+	const source = await weatherSourceOf(m);
+	return { weather: weatherFor(source, date), source: source.id === m.id ? null : { id: source.id, name: source.name } };
 }
 
 export async function listLocations(mapId: number, opts: { includeInactive?: boolean } = {}) {

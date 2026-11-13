@@ -66,6 +66,7 @@ export async function bootstrapDatabase(): Promise<void> {
 	await seedBoards();
 	await seedPages();
 	await seedNews();
+	await seedCityClimate();
 
 	// L'Amministratore deve sempre avere tutte le capacità, anche quelle aggiunte in versioni future.
 	await db
@@ -425,4 +426,18 @@ async function seedGuilds() {
 	}
 	console.log('Gilde di 77 Secondi pronte.');
 	await db.insert(schema.settings).values({ key: 'guilds77Seeded', value: true }).onConflictDoNothing();
+}
+
+/**
+ * Una volta sola: Night City (la mappa madre) riceve un clima, così il meteo automatico funziona
+ * subito in tutta la città (i distretti usano quello della madre). Lo staff può cambiarlo in Gestione.
+ */
+async function seedCityClimate() {
+	const [done] = await db.select().from(schema.settings).where(eq(schema.settings.key, 'cityClimateSeeded'));
+	if (done) return;
+	await db
+		.update(schema.maps)
+		.set({ climate: 'mediterranean' })
+		.where(sql`${schema.maps.parentMapId} is null and lower(${schema.maps.name}) = 'night city' and ${schema.maps.climate} is null`);
+	await db.insert(schema.settings).values({ key: 'cityClimateSeeded', value: true }).onConflictDoNothing();
 }

@@ -14,6 +14,8 @@ import {
 	readMapForm,
 	setStartMap,
 	weatherOverrideSchema,
+	mapWeather,
+	weatherSourceOf,
 	toLocationView,
 	toMapView
 } from '#lib/server/world.ts';
@@ -21,7 +23,6 @@ import { deleteImage, imageSize, readImage, saveImage, UploadError } from '#lib/
 import { THEME_IDS, THEMES } from '#lib/themes.ts';
 import { fieldErrors } from '#lib/validation.ts';
 import { audit } from '#lib/server/audit.ts';
-import { weatherFor } from '#lib/weather.ts';
 import { boundingArea, normalizeArea, normalizeShape, parseDistrictImport, wouldCycle } from '#lib/districts.ts';
 import { mediaUrl } from '#lib/server/uploads.ts';
 import { hasNightCity2077Image, seedNightCity2077 } from '#lib/server/seed/apply.ts';
@@ -72,7 +73,7 @@ export const load: PageServerLoad = async (event) => {
 					.filter((s) => s.parentMapId === m.id && s.id !== map.id && areaOf(s))
 					.map((s) => ({ name: s.name, area: areaOf(s)!, points: normalizeShape(s.shape)?.points ?? null }))
 			})),
-		weather: weatherFor(map, new Date()),
+		...(await mapWeather(map).then((w) => ({ weather: w.weather, weatherSource: w.source }))),
 		// Preparazione automatica di 77 Secondi: solo sulla mappa "Night City".
 		nightCity:
 			map.name.trim().toLowerCase() === 'night city'
@@ -244,7 +245,8 @@ export const actions: Actions = {
 	/** Meteo deciso dallo staff per qualche ora (0 ore = torna automatico). */
 	meteo: async (event) => {
 		const { user } = requireCapability(event, 'world.manage');
-		const map = await loadMapOr404(event.params.id);
+		// Il meteo è uno per tutta la città: su un distretto si imposta quello della mappa madre.
+		const map = await weatherSourceOf(await loadMapOr404(event.params.id));
 		const form = await event.request.formData();
 		const parsed = weatherOverrideSchema.safeParse({ text: String(form.get('text') ?? ''), hours: form.get('hours') ?? 0 });
 		if (!parsed.success) return fail(400, { action: 'meteo', errors: fieldErrors(parsed.error) });

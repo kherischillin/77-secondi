@@ -3,7 +3,7 @@ import { randomInt } from 'node:crypto';
 import { z } from 'zod';
 import type { Actions, PageServerLoad, RequestEvent } from './$types';
 import { requireCharacter, clientIp } from '#lib/server/guards.ts';
-import { getLocation, getMap, getStartMap, toLocationView } from '#lib/server/world.ts';
+import { getLocation, getMap, getStartMap, mapWeather, toLocationView } from '#lib/server/world.ts';
 import { enterLocation, listPresentAt } from '#lib/server/presence.ts';
 import { ChatError, characterPostTimes, loadHistory, postCheck, postMessage, postSystem, setHidden } from '#lib/server/chat-service.ts';
 import { currentScene, LEAD_OPTIONS, leadLabel, recordWindow } from '#lib/scene.ts';
@@ -23,7 +23,6 @@ import { balances } from '#lib/server/money.ts';
 import { getEconomy } from '#lib/server/settings.ts';
 import { inventory, ItemError, useItem } from '#lib/server/items.ts';
 import { canPostNow, postItemUse } from '#lib/server/chat-service.ts';
-import { weatherFor } from '#lib/weather.ts';
 import { MAX_TAG_LENGTH } from '#lib/chat.ts';
 
 async function findPlayable(idParam: string) {
@@ -61,7 +60,7 @@ export const load: PageServerLoad = async (event) => {
 	const map = await getMap(location.mapId);
 	const canModerate = user.capabilities.has('chat.moderate');
 	const access = await roomAccess(location, character.id, canModerate);
-	const weather = map ? weatherFor(map, new Date()) : null;
+	const weather = map ? (await mapWeather(map)).weather : null;
 	const room = location.isPrivate
 		? {
 				hourlyPrice: location.hourlyPrice,

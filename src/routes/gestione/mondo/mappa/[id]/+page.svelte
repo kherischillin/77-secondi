@@ -140,13 +140,18 @@
 				<input type="checkbox" name="isStart" checked={data.map.isStart} disabled={data.map.isStart} />
 				<span>Mappa di partenza</span>
 			</label>
-			<div>
-				<label for="climate">Clima <span class="hint">decide il meteo automatico di questa mappa e dei suoi luoghi</span></label>
-				<select id="climate" name="climate" value={data.map.climate ?? ''}>
-					<option value="">Nessun meteo</option>
-					{#each CLIMATES as c (c)}<option value={c}>{CLIMATE_LABELS[c]}</option>{/each}
-				</select>
-			</div>
+			{#if data.weatherSource}
+				<!-- Il clima di un distretto non conta: il meteo è quello della città. Si rimanda il valore attuale così il salvataggio non lo cambia. -->
+				<input type="hidden" name="climate" value={data.map.climate ?? ''} />
+			{:else}
+				<div>
+					<label for="climate">Clima <span class="hint">decide il meteo automatico di questa mappa, dei suoi distretti e di tutti i loro luoghi</span></label>
+					<select id="climate" name="climate" value={data.map.climate ?? ''}>
+						<option value="">Nessun meteo</option>
+						{#each CLIMATES as c (c)}<option value={c}>{CLIMATE_LABELS[c]}</option>{/each}
+					</select>
+				</div>
+			{/if}
 			<div><button type="submit">Salva mappa</button></div>
 		</form>
 
@@ -209,6 +214,14 @@
 		{/if}
 
 		<h2>Meteo</h2>
+		{#if data.weatherSource}
+			<div class="card stack">
+				<p class="muted">
+					{#if data.weather}Adesso: <span aria-hidden="true">{data.weather.icon}</span> {data.weather.label}{#if data.weather.temperature !== null}, {data.weather.temperature}°C{/if} · {data.weather.moon.name}.{:else}Nessun meteo.{/if}
+				</p>
+				<p class="muted">Il cielo è lo stesso in tutta la città: questa mappa usa il meteo di <a href="/gestione/mondo/mappa/{data.weatherSource.id}">{data.weatherSource.name}</a>. Il clima e il meteo speciale si cambiano lì.</p>
+			</div>
+		{:else}
 		<form method="post" action="?/meteo" class="stack card" use:enhance={() => async ({ update }) => update({ reset: false })}>
 			{#if data.weather}
 				<p class="muted">
@@ -239,6 +252,7 @@
 			</div>
 			{#if form && 'action' in form && form.action === 'meteo' && 'success' in form}<p class="muted">{form.success}</p>{/if}
 		</form>
+		{/if}
 
 		<section class="danger-zone">
 			{#if !confirmDelete && !errors.confirm}

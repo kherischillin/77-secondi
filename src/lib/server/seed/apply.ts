@@ -130,6 +130,8 @@ export async function seedNightCity2077(parentId: number): Promise<Seed2077Resul
 	const oldBase = await db.transaction(async (tx) => {
 		const [parent] = await tx.select().from(schema.maps).where(eq(schema.maps.id, parentId)).for('update');
 		if (!parent) throw new SeedError('Mappa non trovata.');
+		// Il meteo della città (ereditato da tutti i distretti): clima mediterraneo, se lo staff non ne ha scelto uno.
+		if (!parent.climate) await tx.update(schema.maps).set({ climate: 'mediterranean' }).where(eq(schema.maps.id, parent.id));
 		const children = await tx.select().from(schema.maps).where(eq(schema.maps.parentMapId, parent.id));
 		const byName = new Map(children.map((m) => [m.name.trim().toLowerCase(), m]));
 		const target = new Map<string, number>(); // nome 2077 → id del distretto

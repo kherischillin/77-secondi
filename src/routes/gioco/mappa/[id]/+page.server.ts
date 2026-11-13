@@ -5,11 +5,10 @@ import { clientIp, requireCapability, requireCharacter } from '#lib/server/guard
 import { db, schema } from '#lib/server/db/index.ts';
 import { audit } from '#lib/server/audit.ts';
 import { readPositions } from '#lib/districts.ts';
-import { getLocation, getMap, listDistricts, listLocations, mapDisplay, toLocationView, toMapView } from '#lib/server/world.ts';
+import { getLocation, getMap, mapWeather, listDistricts, listLocations, mapDisplay, toLocationView, toMapView } from '#lib/server/world.ts';
 import { enterMap, getPresence, listOnline } from '#lib/server/presence.ts';
 import { broadcastPresence } from '#lib/server/realtime.ts';
 import { bookedLocationIds } from '#lib/server/rooms.ts';
-import { weatherFor } from '#lib/weather.ts';
 
 export const load: PageServerLoad = async (event) => {
 	const { character } = requireCharacter(event);
@@ -47,7 +46,7 @@ export const load: PageServerLoad = async (event) => {
 			...d,
 			present: online.filter((c) => c.mapId === d.id && !c.locationPrivate).length
 		})),
-		weather: weatherFor(map, new Date()),
+		weather: (await mapWeather(map)).weather,
 		locations: locations.map((l) => ({
 			...toLocationView(l),
 			// Nelle stanze private non si mostra quante persone ci sono: solo se sono occupate.
