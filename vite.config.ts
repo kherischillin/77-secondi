@@ -35,6 +35,11 @@ export default defineConfig({
 	],
 	test: {
 		include: ['src/**/*.test.ts'],
+		// I test con il database (`*.db.test.ts`) condividono un solo database: un file alla volta.
+		// Senza TEST_DATABASE_URL si saltano da soli (vedi src/tests/db.ts e `npm run test:db`).
+		fileParallelism: !process.env.TEST_DATABASE_URL,
+		testTimeout: 30_000,
+		hookTimeout: 60_000,
 		environment: 'node'
 	}
 });

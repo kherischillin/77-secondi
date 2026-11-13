@@ -11,6 +11,7 @@ cp .env.example .env      # imposta DATABASE_URL
 npm install
 npm run dev               # http://localhost:5173
 npm test                  # test automatici (logica pura)
+npm run test:db           # test con un vero database (serve TEST_DATABASE_URL, vedi sotto)
 npm run check             # controllo dei tipi
 npm run build             # build di produzione (deve funzionare anche senza .env)
 ```
@@ -57,6 +58,7 @@ docs/                        guide
 - Contenuti non accessibili (bacheche, discussioni, missive, giocate, esiti) rispondono **404**, non 403.
 - Le azioni rilevanti scrivono nel registro con `audit()` e hanno un'etichetta in `AUDIT_LABELS`.
 - La logica che si può testare senza database sta in moduli puri in `src/lib/` con i loro `*.test.ts`.
+- Ciò che dipende dal database (denaro, stipendi, mercato, account, sessioni, permessi) ha i test in `src/tests/*.db.test.ts`. Usano un vero PostgreSQL e provano anche le richieste simultanee (doppia spesa, doppio stipendio, ultimo pezzo in negozio). Si lanciano con `TEST_DATABASE_URL=postgres://gdr:gdr@localhost:5432/gdr_test npm run test:db`: **ogni file svuota quel database**, quindi il nome deve contenere `test` (altrimenti i test si rifiutano di partire) e non va mai usato quello del gioco. Senza la variabile si saltano. Gli strumenti comuni (`freshDatabase`, `makeUser`, `makeCharacter`, `outcomes`) sono in `src/tests/db.ts`. Su GitHub girano da soli a ogni modifica (`.github/workflows/ci.yml`).
 - Denaro e oggetti si muovono solo con aggiornamenti condizionati dentro transazioni (`move()` in `money.ts`, `items.ts`), con vincoli CHECK nel database: niente saldi negativi né doppie spese.
 - Testi dell'interfaccia in italiano; codice e identificatori in inglese.
 - I colori dei componenti usano le variabili di `app.css` (`--accent`, `--c-master`, `--c-positive`…), così funzionano con tutti i temi.
@@ -73,4 +75,4 @@ docs/                        guide
 
 ## Verifiche prima di consegnare
 
-`npm run check`, `npm test`, `npm run build` senza `.env`, e una prova reale dei flussi nel browser.
+`npm run check`, `npm test`, `npm run test:db`, `npm run build` senza `.env`, e una prova reale dei flussi nel browser.

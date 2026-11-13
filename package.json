@@ -15,6 +15,7 @@
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"test": "vitest run",
+		"test:db": "vitest run src/tests",
 		"db:generate": "drizzle-kit generate"
 	},
 	"devDependencies": {
