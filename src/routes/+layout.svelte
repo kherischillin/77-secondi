@@ -16,7 +16,7 @@
 	const here = (prefix: string) =>
 		page.url.pathname === prefix || page.url.pathname.startsWith(prefix + '/') ? ('page' as const) : undefined;
 	const OFFICES = ['/gilde', '/banca', '/mercato', '/lavori', '/stanze-private', '/archivio-giocate', '/pagine'];
-	const mapHref = $derived(data.currentMapId ? `/gioco/mappa/${data.currentMapId}` : '/gioco');
+	const mapHref = $derived(data.mainMapId ? `/gioco/mappa/${data.mainMapId}` : '/gioco');
 	const staffCount = $derived((data.masterPending ?? 0) + (canManage ? data.reportsOpen : 0));
 
 	// Menu ☰ su schermi stretti: si chiude cambiando pagina.
