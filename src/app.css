@@ -1,47 +1,71 @@
 /*
- * Tema base ("Taverna"). Tutti i colori sono variabili: gli altri temi
- * (in fondo al file) ridefiniscono solo queste variabili.
+ * Temi grafici cyberpunk. Tutti i colori e i caratteri sono variabili: il tema base ("Night City")
+ * sta in :root, gli altri due (in fondo al file) ridefiniscono le stesse variabili.
+ * Caratteri inclusi nel sito (nessun servizio esterno): Orbitron, Oxanium, Chakra Petch, Share Tech Mono.
  */
+@import '@fontsource/chakra-petch/latin-400.css';
+@import '@fontsource/chakra-petch/latin-400-italic.css';
+@import '@fontsource/chakra-petch/latin-600.css';
+@import '@fontsource/orbitron/latin-600.css';
+@import '@fontsource/orbitron/latin-800.css';
+@import '@fontsource/oxanium/latin-600.css';
+@import '@fontsource/oxanium/latin-700.css';
+@import '@fontsource/share-tech-mono/latin-400.css';
+
+/* Night City: nero d'asfalto, giallo segnaletica e ciano. */
 :root {
-	--bg: #14110f;
-	--bg-raised: #1d1916;
-	--bg-sunken: #0f0d0b;
-	--border: #3a322b;
-	--text: #ece4d8;
-	--text-muted: #a89c8c;
-	--accent: #d4a24c;
-	--accent-strong: #e8b860;
-	--accent-text: #1a1408;
-	--danger: #e0715f;
-	--danger-bg: #3a1d18;
-	--success: #8fbf7a;
-	--success-bg: #1d2b18;
-	--focus: #f0c674;
+	--bg: #0a0b0f;
+	--bg-raised: #12141b;
+	--bg-sunken: #06070a;
+	--border: #2b2f3d;
+	--text: #ebe8dc;
+	--text-muted: #8f94a6;
+	--accent: #fcee0a;
+	--accent-strong: #fff66b;
+	--accent-text: #0a0b0f;
+	--accent-2: #00e5ff;
+	--danger: #ff3b55;
+	--danger-bg: #2a0c13;
+	--success: #3dffa2;
+	--success-bg: #0b2419;
+	--focus: #00e5ff;
 
 	/* Colori dei tipi di intervento in chat e dei valori */
-	--c-master: #c0504d;
-	--c-master-text: #e58c88;
-	--c-npc: #6f9b6a;
-	--c-npc-text: #a8cf9f;
-	--c-whisper: #5d7fa8;
-	--c-whisper-text: #c7d6ea;
-	--c-whisper-strong: #9cbbe0;
-	--c-system: #8a7bb0;
-	--c-system-text: #c6b8ea;
-	--c-item: #6fa58a;
-	--c-tag: #b9a8d9;
-	--c-speech: #f3e2bf;
-	--c-positive: #9fd3b8;
-	--c-negative: #e39a8f;
-	--c-error-text: #f6c3b9;
-	--c-success-text: #cfe8c3;
-	--header-bg: rgba(15, 13, 11, 0.85);
-	--glow: #2a2018;
-	--shadow: rgba(0, 0, 0, 0.5);
+	--c-master: #ff3b55;
+	--c-master-text: #ff8496;
+	--c-npc: #3dffa2;
+	--c-npc-text: #9dffd0;
+	--c-whisper: #00e5ff;
+	--c-whisper-text: #b8f6ff;
+	--c-whisper-strong: #5cefff;
+	--c-system: #a77bff;
+	--c-system-text: #d2bcff;
+	--c-item: #3dffa2;
+	--c-tag: #00e5ff;
+	--c-speech: #fff7b0;
+	--c-positive: #3dffa2;
+	--c-negative: #ff6b7f;
+	--c-error-text: #ffc2cb;
+	--c-success-text: #c2ffe2;
+	--header-bg: rgba(10, 11, 15, 0.88);
+	--glow: rgba(252, 238, 10, 0.07);
+	--shadow: rgba(0, 0, 0, 0.6);
 
-	--font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-	--font-title: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
-	--radius: 8px;
+	/* Decorazioni: griglia sullo sfondo, angolo colorato delle schede, bagliore dei titoli, righe da monitor */
+	--grid-line: rgba(0, 229, 255, 0.045);
+	--grid-size: 48px;
+	--card-corner: var(--accent);
+	--title-glow: 0 0 18px rgba(252, 238, 10, 0.25);
+	--button-glow: 0 0 14px rgba(252, 238, 10, 0.45);
+	--scanlines: 0;
+
+	--font-body: 'Chakra Petch', system-ui, 'Segoe UI', sans-serif;
+	--font-title: 'Chakra Petch', system-ui, sans-serif;
+	--font-display: 'Orbitron', 'Chakra Petch', system-ui, sans-serif;
+	--font-mono: 'Share Tech Mono', ui-monospace, Consolas, monospace;
+	--title-transform: uppercase;
+	--title-spacing: 0.06em;
+	--radius: 3px;
 	--gap: 1rem;
 	--max: 1100px;
 	color-scheme: dark;
@@ -62,11 +86,30 @@ body {
 	min-height: 100vh;
 	background:
 		radial-gradient(ellipse at top, var(--glow) 0%, transparent 60%),
+		linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0 / var(--grid-size) var(--grid-size),
+		linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0 / var(--grid-size) var(--grid-size),
 		var(--bg);
+	background-attachment: fixed;
 	color: var(--text);
 	font-family: var(--font-body);
-	font-size: 1rem;
+	font-size: 1.02rem;
 	line-height: 1.6;
+}
+
+/* Righe da vecchio monitor (solo nei temi che le accendono con --scanlines). */
+body::after {
+	content: '';
+	position: fixed;
+	inset: 0;
+	pointer-events: none;
+	z-index: 9999;
+	opacity: var(--scanlines);
+	background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.55) 0 1px, transparent 1px 3px);
+}
+
+::selection {
+	background: var(--accent);
+	color: var(--accent-text);
 }
 
 h1,
@@ -76,7 +119,13 @@ h3 {
 	font-weight: 600;
 	line-height: 1.2;
 	margin: 0 0 0.6em;
-	letter-spacing: 0.01em;
+	letter-spacing: 0.02em;
+}
+h1 {
+	font-family: var(--font-display);
+	text-transform: var(--title-transform);
+	letter-spacing: var(--title-spacing);
+	text-shadow: var(--title-glow);
 }
 h1 {
 	font-size: clamp(1.8rem, 4vw, 2.6rem);
@@ -117,7 +166,10 @@ a:hover {
 }
 
 .card {
-	background: var(--bg-raised);
+	/* L'angolo in alto a destra colorato è il segno distintivo dei temi cyberpunk. */
+	background:
+		linear-gradient(225deg, var(--card-corner) 0 7px, transparent 7px) top right / 14px 14px no-repeat,
+		var(--bg-raised);
 	border: 1px solid var(--border);
 	border-radius: var(--radius);
 	padding: 1.25rem;
@@ -134,6 +186,18 @@ a:hover {
 }
 
 /* Form */
+fieldset {
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+}
+legend {
+	padding: 0 0.4rem;
+	font-family: var(--font-mono);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	font-size: 0.85rem;
+	color: var(--accent);
+}
 form.stack {
 	max-width: 480px;
 }
@@ -172,6 +236,8 @@ input:focus,
 textarea:focus,
 select:focus {
 	border-color: var(--accent);
+	box-shadow: 0 0 0 1px var(--accent), 0 0 12px color-mix(in srgb, var(--accent) 25%, transparent);
+	outline: none;
 }
 .checkbox {
 	display: flex;
@@ -211,13 +277,23 @@ button,
 	color: var(--accent-text);
 	font: inherit;
 	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	font-size: 0.92em;
 	text-decoration: none;
 	cursor: pointer;
+	transition:
+		box-shadow 0.15s,
+		background 0.15s;
 }
 button:hover,
 .button:hover {
 	background: var(--accent-strong);
 	color: var(--accent-text);
+}
+/* Bagliore solo sui pulsanti pieni; i componenti con pulsanti propri possono spegnerlo (box-shadow: none). */
+:where(button, .button):hover:not(:disabled, .secondary, .link, .danger) {
+	box-shadow: var(--button-glow);
 }
 button:disabled {
 	opacity: 0.6;
@@ -247,6 +323,9 @@ button.link {
 	padding: 0;
 	color: var(--accent);
 	font-weight: 400;
+	text-transform: none;
+	letter-spacing: normal;
+	font-size: inherit;
 	text-decoration: underline;
 	text-underline-offset: 3px;
 }
@@ -287,7 +366,8 @@ td {
 }
 th {
 	color: var(--text-muted);
-	font-weight: 600;
+	font-family: var(--font-mono);
+	font-weight: 400;
 	font-size: 0.85rem;
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
@@ -296,7 +376,9 @@ th {
 .badge {
 	display: inline-block;
 	padding: 0.1rem 0.5rem;
-	border-radius: 999px;
+	border-radius: var(--radius);
+	font-family: var(--font-mono);
+	letter-spacing: 0.04em;
 	border: 1px solid var(--border);
 	font-size: 0.8rem;
 	color: var(--text-muted);
@@ -314,103 +396,106 @@ th {
 /* ===========================================================================
  * Temi alternativi. Il tema attivo è l'attributo data-theme di <html>
  * (scelto dallo staff per tutto il sito o da ogni giocatore nel proprio account).
- * Per crearne uno nuovo: copia un blocco, cambia i colori e aggiungilo a src/lib/themes.ts.
+ * Per crearne uno nuovo: copia un blocco, cambia colori e caratteri e aggiungilo a src/lib/themes.ts.
  * ======================================================================== */
 
-/* Pergamena: chiaro, carta antica e inchiostro. */
-:root[data-theme='pergamena'] {
-	--bg: #efe5cf;
-	--bg-raised: #f8f1e1;
-	--bg-sunken: #e4d7ba;
-	--border: #cdb98f;
-	--text: #2b2118;
-	--text-muted: #6b5a45;
-	--accent: #8a4b12;
-	--accent-strong: #6d3a0c;
-	--accent-text: #fff8ea;
-	--danger: #a33a2c;
-	--danger-bg: #f3d9d2;
-	--success: #4f7a3c;
-	--success-bg: #dde9cf;
-	--focus: #b5651d;
-	--c-master: #a33a2c;
-	--c-master-text: #8c2b20;
-	--c-npc: #4f7a3c;
-	--c-npc-text: #3d6430;
-	--c-whisper: #3f5f86;
-	--c-whisper-text: #2f4a6b;
-	--c-whisper-strong: #2f4a6b;
-	--c-system: #6a5596;
-	--c-system-text: #57427f;
-	--c-item: #3f7a5c;
-	--c-tag: #6a4c93;
-	--c-speech: #7a3d0c;
-	--c-positive: #2f6b4b;
-	--c-negative: #a33a2c;
-	--c-error-text: #6f2017;
-	--c-success-text: #2d4a22;
-	--header-bg: rgba(239, 229, 207, 0.9);
-	--glow: #fbf3df;
-	--shadow: rgba(60, 40, 10, 0.25);
-	color-scheme: light;
-}
-
-/* Neon: notte metropolitana, insegne magenta e ciano (adatto a un'ambientazione cyberpunk). */
-:root[data-theme='neon'] {
-	--bg: #0a0b12;
-	--bg-raised: #12141f;
-	--bg-sunken: #07080d;
-	--border: #262a40;
-	--text: #e6e8f2;
-	--text-muted: #8e93ad;
-	--accent: #ff3d8b;
-	--accent-strong: #ff6ea8;
-	--accent-text: #13020a;
-	--danger: #ff5c5c;
-	--danger-bg: #2c0f14;
-	--success: #36e0a0;
-	--success-bg: #0d2620;
-	--focus: #2ee6ff;
-	--c-master: #ff4d6d;
-	--c-master-text: #ff8fa3;
-	--c-npc: #36e0a0;
-	--c-npc-text: #8af2c9;
-	--c-whisper: #2ee6ff;
-	--c-whisper-text: #b5f4ff;
-	--c-whisper-strong: #6defff;
-	--c-system: #9b6bff;
-	--c-system-text: #c9b0ff;
-	--c-item: #f5d90a;
-	--c-tag: #2ee6ff;
-	--c-speech: #ffd6e7;
-	--c-positive: #36e0a0;
-	--c-negative: #ff6e7f;
-	--c-error-text: #ffc2c2;
-	--c-success-text: #b6f5dc;
-	--header-bg: rgba(10, 11, 18, 0.88);
-	--glow: #251036;
-	--shadow: rgba(0, 0, 0, 0.6);
-	--font-title: 'Bahnschrift', 'DIN Alternate', 'Arial Narrow', system-ui, sans-serif;
+/* Pioggia al neon: viola profondo, insegne magenta e ciano, bagliori synthwave. */
+:root[data-theme='neonrain'] {
+	--bg: #0c0616;
+	--bg-raised: #170c27;
+	--bg-sunken: #07030e;
+	--border: #3b2259;
+	--text: #f3eaff;
+	--text-muted: #a891c7;
+	--accent: #ff2a6d;
+	--accent-strong: #ff5c90;
+	--accent-text: #19020b;
+	--accent-2: #05d9e8;
+	--danger: #ff4f5e;
+	--danger-bg: #2d0a17;
+	--success: #2bf5c3;
+	--success-bg: #0a2523;
+	--focus: #05d9e8;
+	--c-master: #ff4f5e;
+	--c-master-text: #ff96a0;
+	--c-npc: #2bf5c3;
+	--c-npc-text: #9ffbe4;
+	--c-whisper: #05d9e8;
+	--c-whisper-text: #b4f6fb;
+	--c-whisper-strong: #5ae9f2;
+	--c-system: #b47cff;
+	--c-system-text: #dbc1ff;
+	--c-item: #ffd23f;
+	--c-tag: #05d9e8;
+	--c-speech: #ffd0e2;
+	--c-positive: #2bf5c3;
+	--c-negative: #ff7a8a;
+	--c-error-text: #ffc4cc;
+	--c-success-text: #bdfbeb;
+	--header-bg: rgba(12, 6, 22, 0.86);
+	--glow: rgba(255, 42, 109, 0.16);
+	--shadow: rgba(0, 0, 0, 0.65);
+	--grid-line: rgba(255, 42, 109, 0.05);
+	--grid-size: 40px;
+	--card-corner: var(--accent-2);
+	--title-glow: 0 0 10px rgba(255, 42, 109, 0.75), 0 0 28px rgba(255, 42, 109, 0.35), 2px 0 0 rgba(5, 217, 232, 0.55);
+	--button-glow: 0 0 16px rgba(255, 42, 109, 0.6), 0 0 32px rgba(255, 42, 109, 0.25);
+	--scanlines: 0;
+	--font-title: 'Oxanium', 'Chakra Petch', system-ui, sans-serif;
+	--font-display: 'Oxanium', 'Chakra Petch', system-ui, sans-serif;
+	--title-transform: uppercase;
+	--title-spacing: 0.08em;
+	--radius: 6px;
 	color-scheme: dark;
 }
 
-/* Notte: blu freddo, sobrio e riposante per le sessioni lunghe. */
-:root[data-theme='notte'] {
-	--bg: #0f141b;
-	--bg-raised: #161d27;
-	--bg-sunken: #0b0f14;
-	--border: #2a3646;
-	--text: #e2e8f0;
-	--text-muted: #93a1b5;
-	--accent: #7fb2ff;
-	--accent-strong: #a6c9ff;
-	--accent-text: #08121f;
-	--danger: #f07d74;
-	--danger-bg: #2e1817;
-	--success: #82c99a;
-	--success-bg: #15261c;
-	--focus: #a6c9ff;
-	--glow: #1a2638;
-	--header-bg: rgba(15, 20, 27, 0.88);
+/* Netrunner: terminale a fosfori verdi, testo a spaziatura fissa e righe da vecchio monitor. */
+:root[data-theme='netrunner'] {
+	--bg: #020705;
+	--bg-raised: #06110b;
+	--bg-sunken: #010302;
+	--border: #164a2e;
+	--text: #c9ffdc;
+	--text-muted: #5f9d78;
+	--accent: #00ff9c;
+	--accent-strong: #70ffc6;
+	--accent-text: #00140a;
+	--accent-2: #ffb000;
+	--danger: #ff5a4f;
+	--danger-bg: #2a0c09;
+	--success: #00ff9c;
+	--success-bg: #04210f;
+	--focus: #ffb000;
+	--c-master: #ff5a4f;
+	--c-master-text: #ff9a91;
+	--c-npc: #ffb000;
+	--c-npc-text: #ffd27a;
+	--c-whisper: #3ed7ff;
+	--c-whisper-text: #bdf1ff;
+	--c-whisper-strong: #7fe4ff;
+	--c-system: #8fa8ff;
+	--c-system-text: #c8d4ff;
+	--c-item: #ffb000;
+	--c-tag: #3ed7ff;
+	--c-speech: #eaffef;
+	--c-positive: #00ff9c;
+	--c-negative: #ff7f75;
+	--c-error-text: #ffc6c1;
+	--c-success-text: #b9ffdf;
+	--header-bg: rgba(2, 7, 5, 0.9);
+	--glow: rgba(0, 255, 156, 0.08);
+	--shadow: rgba(0, 0, 0, 0.7);
+	--grid-line: rgba(0, 255, 156, 0.04);
+	--grid-size: 24px;
+	--card-corner: var(--accent-2);
+	--title-glow: 0 0 8px rgba(0, 255, 156, 0.6);
+	--button-glow: 0 0 14px rgba(0, 255, 156, 0.55);
+	--scanlines: 0.35;
+	--font-body: 'Share Tech Mono', ui-monospace, Consolas, monospace;
+	--font-title: 'Share Tech Mono', ui-monospace, Consolas, monospace;
+	--font-display: 'Share Tech Mono', ui-monospace, Consolas, monospace;
+	--title-transform: uppercase;
+	--title-spacing: 0.12em;
+	--radius: 0px;
 	color-scheme: dark;
 }

@@ -25,7 +25,7 @@ export const actions: Actions = {
 			registrationsOpen: form.get('registrationsOpen') === 'on',
 			maxCharactersPerUser: Number(form.get('maxCharactersPerUser')),
 			maxGuildsPerCharacter: Number(form.get('maxGuildsPerCharacter')),
-			theme: String(form.get('theme') ?? 'taverna'),
+			theme: String(form.get('theme') ?? 'nightcity'),
 			customCss: String(form.get('customCss') ?? '').replace(/\r\n/g, '\n'),
 			portraitHosts: hostList.hosts,
 			portraitMaxWidth: Number(form.get('portraitMaxWidth')),

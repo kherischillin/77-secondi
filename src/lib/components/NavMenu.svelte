@@ -52,6 +52,7 @@
 		font: inherit;
 		color: var(--text-muted);
 		cursor: pointer;
+		box-shadow: none;
 	}
 	.trigger:hover,
 	.open .trigger,
@@ -103,6 +104,7 @@
 		text-align: left;
 		cursor: pointer;
 		min-height: 0;
+		box-shadow: none;
 	}
 	.panel :global(a:hover),
 	.panel :global(button:hover),

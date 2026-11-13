@@ -77,6 +77,7 @@
 		margin-bottom: 0.5rem;
 	}
 	.tabs button {
+		box-shadow: none;
 		background: transparent;
 		color: var(--text-muted);
 		border: 1px solid var(--border);

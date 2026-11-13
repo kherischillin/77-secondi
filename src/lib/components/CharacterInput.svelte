@@ -147,6 +147,8 @@
 		color: var(--text);
 		font: inherit;
 		font-weight: 400;
+		text-transform: none;
+		letter-spacing: normal;
 		text-align: left;
 		cursor: pointer;
 	}

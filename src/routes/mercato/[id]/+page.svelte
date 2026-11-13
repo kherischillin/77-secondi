@@ -117,6 +117,7 @@
 		margin-bottom: 1rem;
 	}
 	.filters button {
+		box-shadow: none;
 		background: transparent;
 		border: 1px solid var(--border);
 		color: var(--text-muted);

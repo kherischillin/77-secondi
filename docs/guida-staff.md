@@ -88,7 +88,7 @@ Regole anti-abuso, sempre attive: nessuno può dare permessi che non ha, né agi
 ## Pagine e temi
 
 - **Pagine**: testo con formattazione semplice (`# Titolo`, `**grassetto**`, `*corsivo*`, `- elenco`, `[link](/pagine/guida)`), con anteprima. Si sceglie se mostrarle in fondo al sito e se sono leggibili senza account. L'HTML scritto a mano non viene eseguito.
-- **Temi**: Taverna (scuro e caldo), Pergamena (chiaro), Neon (cyberpunk), Notte (blu). Il tema del sito si sceglie in Impostazioni; ogni giocatore può sceglierne un altro dal proprio account. Chi conosce il CSS può aggiungere regole nel campo **CSS personalizzato**.
+- **Temi** (tutti cyberpunk): **Night City** (nero, giallo segnaletica e ciano; è il tema base), **Pioggia al neon** (viola, magenta e ciano con bagliori) e **Netrunner** (terminale a fosfori verdi, testo a spaziatura fissa e righe da monitor). Il tema del sito si sceglie in Impostazioni; ogni giocatore può sceglierne un altro dal proprio account. Chi conosce il CSS può aggiungere regole nel campo **CSS personalizzato**.
 
 ## Moderazione
 

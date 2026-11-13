@@ -178,6 +178,7 @@
 <style>
 	.site-header {
 		border-bottom: 1px solid var(--border);
+		box-shadow: 0 1px 0 color-mix(in srgb, var(--accent) 35%, transparent);
 		background: var(--header-bg);
 		backdrop-filter: blur(6px);
 		position: sticky;
@@ -194,13 +195,20 @@
 		padding-block: 0.5rem;
 	}
 	.brand {
-		font-family: var(--font-title);
-		font-size: 1.4rem;
-		font-weight: 600;
-		color: var(--text);
+		font-family: var(--font-display);
+		font-size: 1.3rem;
+		font-weight: 800;
+		text-transform: var(--title-transform);
+		letter-spacing: var(--title-spacing);
+		color: var(--accent);
+		text-shadow: var(--title-glow);
 		text-decoration: none;
 	}
 	.main-nav {
+		font-family: var(--font-mono);
+		font-size: 0.9rem;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
 		display: flex;
 		align-items: center;
 		gap: 0.4rem 1.1rem;

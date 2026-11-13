@@ -361,7 +361,7 @@
 		width: 8px;
 		height: 8px;
 		border-radius: 50%;
-		background: #a0a0a0;
+		background: var(--text-muted);
 	}
 	.status[data-status='online']::before {
 		background: var(--success);

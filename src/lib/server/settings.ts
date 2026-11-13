@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { db, schema } from './db';
 import { DEFAULT_RULES, rulesSchema, type Rules } from '../rules.ts';
 import { DEFAULT_ECONOMY, economySchema, type Economy } from '../economy.ts';
-import { THEME_IDS, type ThemeId } from '../themes.ts';
+import { DEFAULT_THEME, THEME_IDS, type ThemeId } from '../themes.ts';
 import { DEFAULT_PORTRAIT_HOSTS, HOST_PATTERN } from '../portrait.ts';
 
 /**
@@ -43,7 +43,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
 	registrationsOpen: true,
 	maxCharactersPerUser: 3,
 	maxGuildsPerCharacter: 2,
-	theme: 'taverna',
+	theme: DEFAULT_THEME,
 	customCss: '',
 	portraitHosts: DEFAULT_PORTRAIT_HOSTS,
 	portraitMaxWidth: 350,
@@ -61,8 +61,17 @@ export async function getSettings(): Promise<SiteSettings> {
 	const rows = await db.select().from(schema.settings);
 	const own = Object.keys(DEFAULT_SETTINGS);
 	const stored = Object.fromEntries(rows.filter((r) => own.includes(r.key)).map((r) => [r.key, r.value]));
-	const merged = { ...DEFAULT_SETTINGS, ...stored };
-	const parsed = settingsSchema.safeParse(merged);
+	const merged: Record<string, unknown> = { ...DEFAULT_SETTINGS, ...stored };
+	let parsed = settingsSchema.safeParse(merged);
+	if (!parsed.success) {
+		// Un valore non più valido (es. un tema che non esiste più) torna al suo predefinito,
+		// senza perdere tutte le altre impostazioni.
+		for (const issue of parsed.error.issues) {
+			const key = String(issue.path[0]);
+			if (key in DEFAULT_SETTINGS) merged[key] = DEFAULT_SETTINGS[key as keyof SiteSettings];
+		}
+		parsed = settingsSchema.safeParse(merged);
+	}
 	cache = parsed.success ? parsed.data : DEFAULT_SETTINGS;
 	return cache;
 }

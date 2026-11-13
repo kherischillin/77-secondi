@@ -194,6 +194,7 @@
 		user-select: none;
 	}
 	.surface {
+		box-shadow: none;
 		position: absolute;
 		inset: 0;
 		width: 100%;
