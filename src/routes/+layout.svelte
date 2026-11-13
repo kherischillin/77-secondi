@@ -73,6 +73,7 @@
 		}, 0);
 		return () => clearTimeout(timer);
 	});
+	const landing = $derived(page.url.pathname === '/' && !data.user);
 </script>
 
 <svelte:head>
@@ -81,6 +82,8 @@
 	<title>{data.siteName}</title>
 </svelte:head>
 
+<!-- Nella pagina iniziale, per chi non è entrato, niente barra: accesso e iscrizione sono già nella pagina. -->
+{#if !landing}
 <header class="site-header">
 	<div class="container bar">
 		<a class="brand" href="/">{data.siteName}</a>
@@ -161,8 +164,9 @@
 		</nav>
 	</div>
 </header>
+{/if}
 
-<main class="container page">
+<main class="container page" class:landing>
 	{@render children()}
 </main>
 
@@ -280,6 +284,9 @@
 	.page {
 		padding-block: 2rem 3rem;
 		min-height: calc(100vh - 140px);
+	}
+	.page.landing {
+		min-height: calc(100vh - 80px);
 	}
 	.site-footer {
 		padding-block: 1.5rem;

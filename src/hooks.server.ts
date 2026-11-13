@@ -1,4 +1,7 @@
-import { isTheme } from '#lib/themes.ts';
+import { isTheme, type ThemeId } from '#lib/themes.ts';
+
+/** Cookie con l'ultimo tema personale usato in questo browser. */
+const THEME_COOKIE = 'gdr_tema';
 import type { Handle, ServerInit } from '@sveltejs/kit/hooks';
 import { bootstrapDatabase } from '#lib/server/bootstrap.ts';
 import { getSettings } from '#lib/server/settings.ts';
@@ -48,7 +51,21 @@ export const handle: Handle = async ({ event, resolve }) => {
 	}
 
 	// Tema grafico: quello scelto dal giocatore, altrimenti quello del sito.
-	const theme = isTheme(event.locals.user?.theme) ? event.locals.user.theme : event.locals.settings.theme;
+	// Il browser ricorda l'ultimo tema personale usato (cookie), così anche chi non è entrato
+	// (pagina iniziale, accesso, iscrizione) vede il tema che usa di solito.
+	const remembered = event.cookies.get(THEME_COOKIE);
+	let theme: ThemeId;
+	if (event.locals.user) {
+		const own = isTheme(event.locals.user.theme) ? event.locals.user.theme : null;
+		theme = own ?? event.locals.settings.theme;
+		if (own && remembered !== own) {
+			event.cookies.set(THEME_COOKIE, own, { path: '/', maxAge: 60 * 60 * 24 * 365, httpOnly: true, sameSite: 'lax', secure: event.url.protocol === 'https:' });
+		} else if (!own && remembered) {
+			event.cookies.delete(THEME_COOKIE, { path: '/' });
+		}
+	} else {
+		theme = isTheme(remembered) ? remembered : event.locals.settings.theme;
+	}
 	event.locals.theme = theme;
 	const response = await resolve(event, {
 		transformPageChunk: ({ html }) => html.replace('%gdr.theme%', theme)

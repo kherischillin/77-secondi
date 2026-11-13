@@ -5,7 +5,6 @@
 
 	let { data }: PageProps = $props();
 	const paragraphs = $derived(data.home.welcomeText.split(/\n\s*\n/).filter((p) => p.trim()));
-	const inGame = $derived(!!data.user && !!data.character);
 </script>
 
 <svelte:head><title>{data.siteName}{data.siteTagline ? ` · ${data.siteTagline}` : ''}</title></svelte:head>
@@ -29,7 +28,7 @@
 	<div class="grid">
 		<aside class="left">
 			<div class="panel present">
-				<p class="count"><span>Presenti</span> <strong>{data.stats.online}</strong></p>
+				<p class="count"><span>Presenti</span> <strong>{data.online}</strong></p>
 				{#if data.home.presentLine}<p class="line">{data.home.presentLine}</p>{/if}
 			</div>
 
@@ -70,37 +69,8 @@
 			{/if}
 		</aside>
 
-		<div class="center">
-			{#if data.city}
-				<div class="panel city">
-					<p class="city-name">{data.city.name}</p>
-					{#if data.city.weather}
-						<p class="weather">
-							<span class="icon" aria-hidden="true">{data.city.weather.icon}</span>
-							<span>{data.city.weather.label}{#if data.city.weather.temperature !== null} · {data.city.weather.temperature}°C{/if}</span>
-							<span class="moon"><span aria-hidden="true">{data.city.weather.moon.icon}</span> {data.city.weather.moon.name}</span>
-						</p>
-					{/if}
-					<dl class="numbers">
-						<div><dt>Online ora</dt><dd>{data.stats.online}</dd></div>
-						<div><dt>Personaggi</dt><dd>{data.stats.characters}</dd></div>
-						<div><dt>Gilde</dt><dd>{data.stats.guilds}</dd></div>
-					</dl>
-					{#if data.hotspots.length}
-						<p class="hot-title">Si gioca ora a</p>
-						<ul class="hot">
-							{#each data.hotspots as h (h.id)}
-								<li>
-									{#if inGame}<a href="/gioco/luogo/{h.id}">{h.name}</a>{:else}<span>{h.name}</span>{/if}
-									{#if h.mapName}<span class="muted"> · {h.mapName}</span>{/if}
-									<span class="badge accent">{h.present}</span>
-								</li>
-							{/each}
-						</ul>
-					{/if}
-				</div>
-			{/if}
-		</div>
+		<!-- Colonna centrale vuota: lascia vedere lo sfondo. -->
+		<div class="spacer"></div>
 
 		<aside class="panel news" aria-labelledby="news-title">
 			<header class="news-head">
@@ -157,7 +127,7 @@
 			linear-gradient(to right, color-mix(in srgb, var(--bg) 45%, transparent), transparent 30%, transparent 70%, color-mix(in srgb, var(--bg) 45%, transparent));
 	}
 	.home {
-		min-height: calc(100vh - 210px);
+		min-height: calc(100vh - 150px);
 		display: flex;
 		flex-direction: column;
 		gap: 1.25rem;
@@ -197,9 +167,8 @@
 		.grid {
 			grid-template-columns: 1fr 1fr;
 		}
-		.center {
-			grid-column: 1 / -1;
-			order: 3;
+		.spacer {
+			display: none;
 		}
 	}
 	@media (max-width: 680px) {
@@ -278,84 +247,6 @@
 		margin: 0;
 		text-align: center;
 		color: var(--text-muted);
-	}
-	/* Centro: lascia vedere lo sfondo; lo stato della città sta in basso. */
-	.center {
-		align-self: end;
-		display: flex;
-		justify-content: center;
-	}
-	.city {
-		width: min(100%, 420px);
-	}
-	.city-name {
-		margin: 0;
-		font-family: var(--font-display);
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		color: var(--accent-2);
-	}
-	.weather {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 0.4rem;
-		margin: 0.25rem 0 0.6rem;
-		font-size: 0.92rem;
-	}
-	.weather .icon {
-		font-size: 1.2rem;
-	}
-	.moon {
-		padding-left: 0.5rem;
-		border-left: 1px solid var(--border);
-		color: var(--text-muted);
-	}
-	.numbers {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 0.5rem;
-		margin: 0;
-		text-align: center;
-	}
-	.numbers div {
-		border: 1px solid var(--border);
-		border-radius: calc(var(--radius) / 2);
-		padding: 0.35rem 0.25rem;
-	}
-	.numbers dt {
-		font-size: 0.72rem;
-		text-transform: uppercase;
-		letter-spacing: 0.06em;
-		color: var(--text-muted);
-	}
-	.numbers dd {
-		margin: 0;
-		font-family: var(--font-display);
-		font-size: 1.3rem;
-		color: var(--accent);
-	}
-	.hot-title {
-		margin: 0.75rem 0 0.25rem;
-		font-size: 0.78rem;
-		text-transform: uppercase;
-		letter-spacing: 0.06em;
-		color: var(--text-muted);
-	}
-	.hot {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-		font-size: 0.9rem;
-	}
-	.hot li {
-		display: flex;
-		align-items: center;
-		gap: 0.3rem;
-		padding: 0.15rem 0;
-	}
-	.hot .badge {
-		margin-left: auto;
 	}
 	.news-head {
 		display: flex;

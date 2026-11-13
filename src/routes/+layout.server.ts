@@ -6,7 +6,6 @@ import { pendingReviewCount } from '#lib/server/giocate.ts';
 import { openReportsCount } from '#lib/server/reports.ts';
 import { footerPages } from '#lib/server/pages.ts';
 import { getStartMap } from '#lib/server/world.ts';
-import { isTheme } from '#lib/themes.ts';
 import { readNotify } from '#lib/notify.ts';
 import { allowedWithoutCharacter } from '#lib/navigation.ts';
 
@@ -36,7 +35,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		siteName: locals.settings.siteName,
 		siteTagline: locals.settings.siteTagline,
 		customCss: locals.settings.customCss.length > 0,
-		theme: isTheme(user?.theme) ? user.theme : locals.settings.theme,
+		theme: locals.theme,
 		footerPages: await footerPages(!!user),
 		user: user
 			? {
