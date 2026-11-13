@@ -154,7 +154,7 @@
 				<div>
 					<span class="label-like">Occupazione</span>
 					<p class="auto">
-						{#if data.occupation.length}{#each data.occupation as b (b.title)}<JobIcon icon={b.icon} size={16} /> {b.title} {/each}{:else}Nessun lavoro{/if}
+						{#if data.occupation.length}{#each data.occupation as b (b.title)}<JobIcon icon={b.icon} size={16} /> {b.label} {/each}{:else}Nessun lavoro{/if}
 						<span class="hint">viene dalla gilda o dal lavoro scelto in <a href="/lavori">Uffici → Lavori</a></span>
 					</p>
 				</div>

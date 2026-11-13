@@ -56,6 +56,7 @@ export async function listMembers(guildId: number) {
 			characterId: schema.characters.id,
 			name: schema.characters.name,
 			surname: schema.characters.surname,
+			avatar: schema.characters.avatar,
 			rankId: schema.guildRanks.id,
 			rankName: schema.guildRanks.name,
 			level: schema.guildRanks.level,

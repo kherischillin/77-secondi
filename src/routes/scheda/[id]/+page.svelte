@@ -135,7 +135,7 @@
 									<dd>
 										{#if row.badges}
 											{#each row.badges as b, i (b.title)}{#if i > 0}, {/if}<span class="role"
-													><JobIcon icon={b.icon} size={16} />{#if b.href}<a href={b.href}>{b.title}</a>{:else}{b.title}{/if}</span
+														>{#if b.href}<a class="role-icon" href={b.href} title="Pagina della gilda" aria-label="Pagina della gilda"><JobIcon icon={b.icon} size={16} /></a>{:else}<JobIcon icon={b.icon} size={16} />{/if}{b.label}</span
 												>{/each}
 										{:else}{row.value}{/if}
 									</dd>
@@ -858,5 +858,13 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.3rem;
+	}
+	.role-icon {
+		display: inline-flex;
+		text-decoration: none;
+	}
+	.role-icon:hover :global(.job-icon) {
+		color: var(--accent-strong);
+		filter: drop-shadow(0 0 4px var(--accent));
 	}
 </style>

@@ -73,7 +73,7 @@ export const load: PageServerLoad = async (event) => {
 		profile: [
 			...profileRows(sheet.character.profile),
 			// Occupazione: compilata in automatico dal lavoro scelto (Uffici → Lavori).
-			...((badges) => (badges.length ? [{ key: 'occupation', label: 'Occupazione', value: badges.map((b) => b.title).join(', '), badges }] : []))(
+			...((badges) => (badges.length ? [{ key: 'occupation', label: 'Occupazione', value: badges.map((b) => b.label).join(', '), badges }] : []))(
 				await occupationOf(character.id)
 			)
 		] as { key: string; label: string; value: string; badges?: RoleBadge[] }[],

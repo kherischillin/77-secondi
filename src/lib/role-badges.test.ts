@@ -3,11 +3,11 @@ import { roleBadges } from './role-badges.ts';
 
 describe('roleBadges', () => {
 	it('lavoro libero: icona senza collegamento', () => {
-		expect(roleBadges({ name: 'Barista', icon: 'cocktail' })).toEqual([{ icon: 'cocktail', title: 'Barista', href: null }]);
+		expect(roleBadges({ name: 'Barista', icon: 'cocktail' })).toEqual([{ icon: 'cocktail', title: 'Barista', label: 'Barista', href: null }]);
 	});
-	it('gilda: icona con grado e collegamento alla pagina della gilda', () => {
+	it('gilda: icona con grado (in scheda solo il grado) e collegamento alla pagina della gilda', () => {
 		expect(roleBadges(null, [{ id: 3, name: 'Maelstrom', icon: 'skull', rank: 'Cromato' }])).toEqual([
-			{ icon: 'skull', title: 'Cromato · Maelstrom', href: '/gilde/3' }
+			{ icon: 'skull', title: 'Cromato · Maelstrom', label: 'Cromato', href: '/gilde/3' }
 		]);
 	});
 	it('nessun ruolo: nessuna icona', () => {
